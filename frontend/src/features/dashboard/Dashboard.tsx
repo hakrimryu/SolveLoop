@@ -1,20 +1,20 @@
 import { useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
-import { demoAsOf, formatDemoDate, getDashboardData, statusLabels } from '../../lib/mockData'
-import type { DemoRole, RequestStatus } from '../../lib/mockData'
+import { formatDemoDate, getDashboardData, statusLabels } from '../../lib/mockData'
+import type { DemoRole, MockRequest, RequestStatus } from '../../lib/mockData'
 import RadarPanel from './RadarPanel'
 import styles from './Dashboard.module.css'
 
 type DisplayMode = 'normal' | 'empty' | 'loading' | 'error'
 const statuses: RequestStatus[] = ['open', 'in_progress', 'resolved']
 
-export default function Dashboard({ role }: { role: DemoRole }) {
+export default function Dashboard({ role, requests }: { role: DemoRole; requests: MockRequest[] }) {
   const [mode, setMode] = useState<DisplayMode>('normal')
   const [searchParams, setSearchParams] = useSearchParams()
   const titleRef = useRef<HTMLHeadingElement>(null)
   const radarLinkRef = useRef<HTMLAnchorElement>(null)
-  const data = getDashboardData(role, mode === 'empty' ? 'empty' : 'normal')
+  const data = getDashboardData(role, mode === 'empty' ? 'empty' : 'normal', requests)
   const isOperator = role === 'operator'
   const selectedCandidate = searchParams.get('radar')
   const showRadar = isOperator && mode === 'normal' && selectedCandidate !== null
@@ -65,7 +65,7 @@ export default function Dashboard({ role }: { role: DemoRole }) {
         </div>
         <div className={styles.asOf}>
           <span>{isOperator ? '全問い合わせ' : '自分の問い合わせ'} <strong>{data.total}件</strong> · 合成データ</span>
-          <span>集計基準日時 <time dateTime={demoAsOf}>{formatDemoDate(demoAsOf)} JST</time></span>
+          <span>集計基準日時 <time dateTime={data.asOf}>{formatDemoDate(data.asOf)} JST</time></span>
         </div>
         {mode === 'loading' ? (
           <section className="notice" aria-busy="true" aria-label="ダッシュボードの読み込み">
@@ -158,7 +158,7 @@ export default function Dashboard({ role }: { role: DemoRole }) {
                   </tbody>
                 </table>
               </div>
-              <p className={styles.tableNote}>日時は日本時間 · {isOperator ? '自分の担当分を表示' : `自分の問い合わせ ${data.total}件`} · リンク先の業務画面は準備中です。</p>
+              <p className={styles.tableNote}>日時は日本時間 · {isOperator ? '自分の担当分を表示' : `自分の問い合わせ ${data.total}件`} · このタブ内の操作結果を反映します。</p>
             </section>
             {isOperator ? (
               <div className={styles.workQueue}>
@@ -197,7 +197,7 @@ export default function Dashboard({ role }: { role: DemoRole }) {
                     </h2>
                     <span className="sampleLabel">分析結果のサンプル</span>
                   </div>
-                  <p className={styles.sampleNote}>表示確認用のサンプルです。実際の分析は行っていません。</p>
+                  <p className={styles.sampleNote}>初期資料に基づく固定サンプルです。操作後も判定・候補は再計算されません。実際の分析は行っていません。</p>
                   {data.radar ? (
                     <div className={styles.radarCandidate}>
                       <div>
@@ -240,7 +240,7 @@ export default function Dashboard({ role }: { role: DemoRole }) {
                   <Link className="button buttonPrimary" to="/knowledge">承認済みナレッジを探す</Link>
                   <Link to="/requests?new=1">問い合わせを登録 →</Link>
                 </div>
-                <p className="muted">検索・登録画面は準備中です。</p>
+                <p className="muted">ナレッジ検索は準備中です。問い合わせは登録をシミュレーションできます。</p>
               </section>
             )}
           </>

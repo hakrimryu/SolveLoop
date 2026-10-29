@@ -39,7 +39,7 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
     if (previousPath.current !== location.pathname) heading?.focus()
     previousPath.current = location.pathname
     document.title = `${heading?.textContent ?? 'SolveLoop'} | SolveLoop`
-  }, [location.pathname])
+  }, [location.pathname, role])
 
   function closeMenu() {
     setMenuOpen(false)
@@ -83,7 +83,7 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
         </div>
       </header>
       <div className={styles.mockBar}>
-        <p><strong>画面モック</strong> 保存・権限・AIはシミュレーションです。</p>
+        <p><strong>画面モック</strong> 合成データの操作はこのタブ内のみ。再読み込みで初期化されます。実際の保存・認証・権限検査・AI処理は行いません。</p>
         <p className="srOnly" role="status">{user.roleLabel}のデモ画面を表示しています。</p>
       </div>
       <div className={styles.workspace}>
@@ -107,7 +107,7 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
               <MenuIcon kind="dashboard" />ダッシュボード
             </NavLink>
             <NavLink to="/requests" onClick={closeMenu}>
-              <MenuIcon kind="requests" />問い合わせ<span className={styles.pending}>準備中</span>
+              <MenuIcon kind="requests" />問い合わせ
             </NavLink>
             <NavLink
               to="/knowledge"
@@ -126,7 +126,7 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
         </div>
         <main id="main-content" tabIndex={-1} ref={mainRef} className={styles.main}>{children}</main>
       </div>
-      <footer className={styles.footer}>SolveLoop · ローカル操作デモ · 実際の保存・認証・AI処理は行いません。</footer>
+      <footer className={styles.footer}>SolveLoop · ローカル操作デモ · 操作日時は初期基準日時から1分ずつ進む合成時刻です。</footer>
     </>
   )
 }
