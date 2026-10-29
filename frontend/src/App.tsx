@@ -1,11 +1,42 @@
-export default function App() {
+import { useState } from 'react'
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router'
+import AppLayout from './components/AppLayout'
+import Dashboard from './features/dashboard/Dashboard'
+import type { DemoRole } from './lib/mockData'
+
+function PendingScreen({ title, restricted = false }: { title: string; restricted?: boolean }) {
+  const location = useLocation()
+
   return (
-    <main>
-      <h1>SolveLoop</h1>
-      <p>株式会社 柳 — 社内問い合わせ・ナレッジ管理</p>
-      <h2>開発環境の動作確認</h2>
-      <p>React・TypeScript・Vite の最小構成が起動しています。</p>
-      <p>業務画面・データ保存・認証・AI 機能は未実装です。</p>
-    </main>
+    <>
+      <p className="eyebrow">画面モック・移動先の確認</p>
+      <h1 tabIndex={-1}>{title}</h1>
+      <div className="notice">
+        <p>{restricted ? 'この情報を表示する権限がありません。' : 'この画面は準備中です。業務操作はまだ利用できません。'}</p>
+        {!restricted && <p>移動先：<code>{location.pathname}{location.search}</code></p>}
+        <Link to="/dashboard">ダッシュボードに戻る</Link>
+      </div>
+    </>
+  )
+}
+
+export default function App() {
+  const [role, setRole] = useState<DemoRole>('operator')
+
+  return (
+    <AppLayout role={role} onRoleChange={setRole}>
+      <Routes>
+        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/dashboard" element={<Dashboard key={role} role={role} />} />
+        <Route path="/requests/*" element={<PendingScreen title="問い合わせ" />} />
+        <Route
+          path="/knowledge/reviews/*"
+          element={<PendingScreen title="ナレッジレビュー" restricted={role === 'employee'} />}
+        />
+        <Route path="/knowledge/*" element={<PendingScreen title="ナレッジ" />} />
+        <Route path="/login" element={<PendingScreen title="ログイン" />} />
+        <Route path="*" element={<PendingScreen title="ページが見つかりません" />} />
+      </Routes>
+    </AppLayout>
   )
 }

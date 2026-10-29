@@ -1,22 +1,47 @@
 :root {
-  font-family: system-ui, sans-serif;
-  line-height: 1.6;
-  color: #202124;
-  background-color: #fff;
+  font-family: "Yu Gothic UI", "Yu Gothic", "Hiragino Kaku Gothic ProN", Meiryo, system-ui, sans-serif;
+  font-size: 100%; line-height: 1.55; color: #243047; background: #f5f6f8;
+  --surface: #fff; --muted: #606b7b; --border: #e0e5ed;
+  --accent: #315bc7; --accent-hover: #2449ab; --selected: #edf2ff;
+  --space-1: 4px; --space-2: 8px; --space-3: 12px;
+  --space-4: 16px; --space-6: 24px; --space-8: 32px;
 }
-
-body {
-  margin: 0;
-}
-
-main {
-  padding: 24px;
-}
-
-h1 {
-  font-size: 24px;
-}
-
-h2 {
-  font-size: 18px;
+* { box-sizing: border-box; }
+body { margin: 0; font-size: .875rem; }
+a { color: var(--accent); text-decoration: none; text-underline-offset: 3px; }
+a:hover, a:focus-visible { color: var(--accent-hover); text-decoration: underline; }
+button, select, input { font: inherit; }
+button, select { min-height: 40px; }
+select { color: inherit; background: var(--surface); border: 1px solid #8390a3; border-radius: 5px; padding: 6px 28px 6px 10px; max-width: 100%; }
+button, a, select, summary { -webkit-tap-highlight-color: transparent; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: 1.625rem; line-height: 1.35; font-weight: 700; letter-spacing: -.025em; margin-bottom: 8px; }
+h2 { font-size: 1rem; line-height: 1.5; font-weight: 700; }
+h3 { font-size: .9375rem; line-height: 1.55; font-weight: 600; }
+p + p { margin-top: 8px; }
+code { overflow-wrap: anywhere; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { height: 48px; padding: 12px; border-bottom: 1px solid #edf0f4; vertical-align: middle; }
+thead { background: #f8f9fb; color: #637084; font-size: .75rem; }
+th { font-weight: 600; }
+tbody tr:hover, tbody tr:focus-within { background: #f7f9fe; }
+tbody tr:last-child > * { border-bottom: 0; }
+.muted { color: var(--muted); }
+.eyebrow { color: var(--muted); font-size: .75rem; margin-bottom: 8px; }
+.button { display: inline-flex; gap: 12px; justify-content: center; align-items: center; min-height: 40px; padding: 8px 14px; border: 1px solid #b7c1d0; border-radius: 5px; background: var(--surface); color: #36465d; text-decoration: none; font-size: .8125rem; font-weight: 600; cursor: pointer; }
+.button:hover { color: #243047; background: #f2f5fa; text-decoration: none; }
+.buttonPrimary { color: white; background: var(--accent); border-color: var(--accent); }
+.buttonPrimary:hover { color: white; background: var(--accent-hover); border-color: var(--accent-hover); }
+.notice { margin-top: 20px; padding: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 7px; }
+.notice p { margin-bottom: 16px; }
+.status, .sampleLabel { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: .75rem; font-weight: 500; padding: 3px 8px; border-radius: 4px; line-height: 1.4; }
+.status::before { content: ''; width: 5px; height: 5px; background: currentColor; border-radius: 50%; }
+.status.open { color: #865b19; background: #fff5e1; }
+.status.in_progress { color: #3159b8; background: #eef3ff; }
+.status.resolved { color: #27694f; background: #edf7f1; }
+.sampleLabel { color: #606b7b; background: #f3f5f8; border: 1px solid #e5e9ef; font-size: .75rem; }
+.srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  a, button, summary { transition: background-color 100ms ease, color 100ms ease; }
 }
