@@ -1,0 +1,41 @@
+# 非公開の計画・作業記録
+/.docs/
+AGENTS.md
+AGENTS.override.md
+/.agents/
+/.codex/
+
+# 認証情報・ローカル設定
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+
+# JavaScript
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+
+# Python
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# 実行時データ・個人用ファイル
+/.local/
+*.log
+*.sqlite3
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
