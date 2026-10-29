@@ -1,0 +1,32 @@
+.table table { min-width: 760px; }
+.version { white-space: nowrap; font-size: .75rem; }
+.fullWidth { width: 100%; display: block; margin-top: 8px; }
+.previewTitle { margin-top: 20px; overflow-wrap: anywhere; }
+.historySection { margin-top: 20px; }
+.readGrid, .editorGrid { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 20px; align-items: start; }
+.readGrid > *, .editorGrid > * { min-width: 0; }
+.document { max-width: 44rem; overflow-wrap: anywhere; }
+.document h2 { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+.document > p:first-of-type { margin-bottom: 8px; }
+.document h2 + p { margin-top: 16px; }
+.modeBar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; padding-bottom: 16px; border-bottom: 1px solid var(--border); }
+.modeBar button[aria-pressed="true"] { background: var(--selected); border-color: var(--accent); color: var(--accent); }
+.modeBar > span { margin-left: auto; font-size: .75rem; color: #865b19; }
+.editorBody { min-height: 360px !important; line-height: 1.8; }
+.evidence > div { border-top: 1px solid var(--border); margin-top: 16px; padding-top: 16px; }
+.evidence p { overflow-wrap: anywhere; }
+.evidence h3 { margin-top: 16px; }
+.evidenceText { white-space: pre-wrap; line-height: 1.8; margin-top: 8px; font-size: .8125rem; }
+.reviewActions { margin-top: 20px; padding: 20px; border: 1px solid var(--border); background: var(--surface); border-radius: 7px; }
+.reviewActions > div { display: flex; justify-content: flex-end; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+.reviewActions p { color: var(--muted); font-size: .8125rem; }
+.warning { border-left: 3px solid #a57626; background: #fff8e9; padding: 12px 16px; margin-bottom: 16px; }
+.inlineLink { display: inline-block; margin-left: 16px; }
+.login { max-width: 620px; }
+.login fieldset { border: 0; padding: 0; margin: 24px 0; }
+.login legend { font-weight: 600; margin-bottom: 12px; }
+.account { display: flex; align-items: flex-start; gap: 12px; padding: 16px 0; border-bottom: 1px solid var(--border); }
+.account input { margin-top: 5px; }
+.account small { display: block; color: var(--muted); margin-top: 6px; }
+@media (max-width: 1200px) { .editorGrid, .readGrid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) { .reviewActions { padding: 16px; } .modeBar > span { margin-left: 0; } }

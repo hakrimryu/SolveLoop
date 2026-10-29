@@ -11,6 +11,7 @@ export type RequestProps = {
   requests: MockRequest[]
   onRequestsChange: (requests: MockRequest[]) => void
   onDirtyChange: (dirty: boolean) => void
+  getNextTimestamp: () => string
 }
 export type DisplayMode = 'normal' | 'empty' | 'loading' | 'error'
 

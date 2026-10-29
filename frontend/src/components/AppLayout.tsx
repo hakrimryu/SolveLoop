@@ -39,7 +39,7 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
     if (previousPath.current !== location.pathname) heading?.focus()
     previousPath.current = location.pathname
     document.title = `${heading?.textContent ?? 'SolveLoop'} | SolveLoop`
-  }, [location.pathname, role])
+  }, [location.pathname, role, children])
 
   function closeMenu() {
     setMenuOpen(false)
@@ -77,7 +77,7 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
                 <option value="employee">社員：佐藤 美咲</option>
               </select>
               <p>表示する役割を切り替えます。実際のログインではありません。</p>
-              <Link to="/login">ログイン画面<span className={styles.pending}>準備中</span></Link>
+              <Link to="/login">デモアカウントを選択</Link>
             </div>
           </details>
         </div>
@@ -114,11 +114,11 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
               end={location.pathname.startsWith('/knowledge/reviews')}
               onClick={closeMenu}
             >
-              <MenuIcon kind="knowledge" />ナレッジ<span className={styles.pending}>準備中</span>
+              <MenuIcon kind="knowledge" />ナレッジ
             </NavLink>
             {role === 'operator' && (
               <NavLink to="/knowledge/reviews" onClick={closeMenu}>
-                <MenuIcon kind="review" />ナレッジレビュー<span className={styles.pending}>準備中</span>
+                <MenuIcon kind="review" />ナレッジレビュー
               </NavLink>
             )}
             <p className={styles.navNote}><span>ローカルデモ</span>すべて合成データです。</p>

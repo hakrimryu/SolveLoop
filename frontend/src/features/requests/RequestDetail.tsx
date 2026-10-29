@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
-import { formatDemoDate, getVisibleRequests, nextMockTimestamp, operators, personName, statusLabels, updateRequest } from '../../lib/mockData'
+import { formatDemoDate, getVisibleRequests, operators, personName, statusLabels, updateRequest } from '../../lib/mockData'
 import type { MockRequest, RequestAction } from '../../lib/mockData'
 import { DisplayControl } from './Requests'
 import type { DisplayMode, RequestProps } from './Requests'
@@ -25,7 +25,7 @@ export default function RequestDetail(props: RequestProps) {
   )
 }
 
-function Detail({ role, requests, request, onRequestsChange, onDirtyChange }: RequestProps & { request: MockRequest }) {
+function Detail({ role, requests, request, onRequestsChange, onDirtyChange, getNextTimestamp }: RequestProps & { request: MockRequest }) {
   const location = useLocation()
   const [mode, setMode] = useState<DisplayMode>('normal')
   const [assignee, setAssignee] = useState(request.assigneeId ?? '')
@@ -64,7 +64,7 @@ function Detail({ role, requests, request, onRequestsChange, onDirtyChange }: Re
       return
     }
     try {
-      onRequestsChange(updateRequest(requests, role, request.id, action, nextMockTimestamp(requests)))
+      onRequestsChange(updateRequest(requests, role, request.id, action, getNextTimestamp()))
       if (action.type === 'resolve') {
         setResolution('')
         headingRef.current?.focus()
@@ -203,8 +203,8 @@ function Detail({ role, requests, request, onRequestsChange, onDirtyChange }: Re
                 {isOperator && (
                   <div className={styles.nextStep}>
                     <h3>解決記録をナレッジへ</h3>
-                    <p>この解決内容から、ナレッジレビューで下書きを作成する予定です。下書きの生成・編集・承認は準備中です。</p>
-                    <button className="button" disabled>ナレッジの下書きを作成（準備中）</button>
+                    <p>問い合わせ番号と解決内容を確認し、手動で下書きを作成します。保存した後に、人が内容を確認して承認します。</p>
+                    <Link className="button" to={`/knowledge/reviews/new?source=${request.id}`}>ナレッジの下書きを作成</Link>
                   </div>
                 )}
               </section>

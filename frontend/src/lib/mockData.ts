@@ -90,11 +90,6 @@ export const mockRequests: MockRequest[] = requestSummaries.map(request => {
   return { ...request, createdAt, body: requestBodies[request.id], resolution: resolutions[request.id] ?? '', resolvedAt: request.status === 'resolved' ? request.updatedAt : null, events }
 })
 
-const mockReviews = [
-  { id: 'KB-0016', version: 1, title: 'MFA端末変更後のVPN認証手順', sourceId: 'REQ-0003', updatedAt: '2026-10-29T17:00:00+09:00' },
-  { id: 'KB-0017', version: 1, title: '貸与PCの返却前に確認すること', sourceId: 'REQ-0011', updatedAt: '2026-10-23T17:00:00+09:00' },
-]
-
 const mockRadar = {
   id: 'mfa-vpn',
   title: 'MFA端末変更後のVPN認証エラー',
@@ -120,7 +115,7 @@ export function getCoverageCounts(evidence: readonly { coverage: CoverageStatus 
   return counts
 }
 
-export function getDashboardData(role: DemoRole, scenario: 'normal' | 'empty' = 'normal', source = mockRequests) {
+export function getDashboardData(role: DemoRole, scenario: 'normal' | 'empty' = 'normal', source = mockRequests, knowledge = mockKnowledge) {
   const requests = scenario === 'empty' ? [] : source
   const user = demoUsers[role]
   const visible = getVisibleRequests(requests, role)
@@ -129,14 +124,14 @@ export function getDashboardData(role: DemoRole, scenario: 'normal' | 'empty' = 
   const assigned = visible.filter(request => request.assigneeId === user.id)
 
   return {
-    asOf: latestMockTimestamp(requests),
+    asOf: latestMockTimestamp(requests, scenario === 'empty' ? [] : knowledge),
     counts,
     total: visible.length,
     recentRequests: [...(role === 'operator' ? assigned : visible)]
       .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)).slice(0, 5),
     unassignedCount: visible.filter(request => request.assigneeId === null && request.status !== 'resolved').length,
     ownOpenCount: assigned.filter(request => request.status !== 'resolved').length,
-    reviews: role === 'operator' && scenario !== 'empty' ? mockReviews : [],
+    reviews: scenario !== 'empty' ? getKnowledgeReviews(knowledge, role).filter(item => item.status === 'draft') : [],
     radar: role === 'operator' && scenario !== 'empty' ? {
       ...mockRadar,
       coverageCounts: getCoverageCounts(mockRadar.evidence),
@@ -190,12 +185,12 @@ export function getRequestList(requests: MockRequest[], role: DemoRole, params: 
 
 export type RequestInput = { title: string; body: string; department: string }
 
-function latestMockTimestamp(requests: MockRequest[]) {
-  return new Date(Math.max(Date.parse(demoAsOf), ...requests.map(request => Date.parse(request.updatedAt)))).toISOString()
+function latestMockTimestamp(requests: MockRequest[], knowledge: KnowledgeVersion[] = []) {
+  return new Date(Math.max(Date.parse(demoAsOf), ...requests.map(request => Date.parse(request.updatedAt)), ...knowledge.map(item => Date.parse(item.updatedAt)))).toISOString()
 }
 
-export function nextMockTimestamp(requests: MockRequest[]) {
-  return new Date(Date.parse(latestMockTimestamp(requests)) + 60_000).toISOString()
+export function nextMockTimestamp(requests: MockRequest[], knowledge: KnowledgeVersion[] = []) {
+  return new Date(Date.parse(latestMockTimestamp(requests, knowledge)) + 60_000).toISOString()
 }
 
 export function validateRequest(input: RequestInput) {
@@ -259,5 +254,144 @@ export function updateRequest(requests: MockRequest[], role: DemoRole, id: strin
   return requests.map(item => item.id === id ? {
     ...item, ...changes, updatedAt: at,
     events: [...item.events, { actorId: demoUsers[role].id, at, description }],
+  } : item)
+}
+
+export type KnowledgeInput = { title: string; audience: string; department: string; body: string }
+export type KnowledgeSource = { requestId: string; title: string; body: string; resolution: string; updatedAt: string; resolvedAt: string }
+export type KnowledgeVersion = KnowledgeInput & {
+  id: string
+  version: number
+  status: 'draft' | 'approved' | 'rejected'
+  updatedAt: string
+  sources: KnowledgeSource[]
+  events: { at: string; description: string }[]
+}
+export const knowledgeStatusLabels = { draft: '下書き', approved: '承認済み', rejected: '差し戻し' }
+export const emptyKnowledgeInput: KnowledgeInput = { title: '', audience: '', department: '', body: '' }
+
+function snapshotResolution(request: MockRequest): KnowledgeSource {
+  if (request.status !== 'resolved' || !request.resolution.trim() || !request.resolvedAt) {
+    throw new Error('解決内容が記録された問い合わせのみ根拠にできます。')
+  }
+  return { requestId: request.id, title: request.title, body: request.body, resolution: request.resolution, updatedAt: request.updatedAt, resolvedAt: request.resolvedAt }
+}
+
+export const mockKnowledge: KnowledgeVersion[] = [
+  { id: 'KB-0001', version: 1, status: 'approved', title: 'VPNの基本接続手順', audience: '社外から貸与PCで接続する社員', department: 'IT',
+    body: '対象の症状\n社外から社内システムを利用する際の基本手順です。\n\n接続手順\n1. 貸与PCをインターネットに接続します。\n2. VPNアプリを開き、社内アカウントを入力します。\n3. 登録済み端末で追加認証を行います。\n4. 業務終了後はVPNから切断します。\n\n注意事項\n私物PCからは接続しないでください。認証端末を交換した場合の再設定はこの文書の対象外です。接続できない場合はIT担当へ問い合わせてください。', updatedAt: '2026-10-20T10:00:00+09:00', sources: [], events: [] },
+  { id: 'KB-0002', version: 1, status: 'approved', title: '経費精算を申請する前の確認事項', audience: '交通費・出張費を申請する社員', department: '経理',
+    body: '対象\n業務で立て替えた交通費・出張費の申請です。\n\n申請手順\n1. 利用日・目的・金額を入力します。\n2. 領収書と申請金額を照合します。\n3. 承認者を確認して申請します。\n\n注意事項\n差し戻しの場合は理由を読み、不明点を経理担当へ確認してください。', updatedAt: '2026-10-21T11:00:00+09:00', sources: [], events: [] },
+  { id: 'KB-0003', version: 2, status: 'approved', title: '会議室の予約と利用後の確認', audience: '会議室を予約する全社員', department: '総務',
+    body: '予約手順\n1. 社内カレンダーで空き時間を確認します。\n2. 利用人数と設備を確認して予約します。\n3. 終了後に設備の電源と忘れ物を確認します。\n\n予約が重複した場合\n予約者同士で利用目的を確認し、調整が難しい場合は総務担当へ連絡してください。', updatedAt: '2026-10-22T09:30:00+09:00', sources: [], events: [] },
+  { id: 'KB-0016', version: 1, status: 'draft', title: 'MFA端末変更後のVPN認証手順', audience: '業務用認証端末を交換した社員', department: 'IT',
+    body: '対象の症状\n端末交換後、VPNの追加認証コードが受け付けられない場合。\n\n対応手順\n1. IT担当へ端末変更を連絡します。\n2. 担当者の本人確認を受けます。\n3. 旧端末の登録解除と新端末の再登録を担当者と行います。\n4. 新端末のコードで接続できることを確認します。\n\n注意事項\n認証コードは問い合わせ本文に記載しないでください。登録解除を自己判断で行わないでください。',
+    updatedAt: '2026-10-29T17:00:00+09:00', sources: [snapshotResolution(mockRequests.find(item => item.id === 'REQ-0003')!)], events: [{ at: '2026-10-29T17:00:00+09:00', description: '山田 花子が下書きを保存しました（合成資料）。' }] },
+  { id: 'KB-0017', version: 1, status: 'draft', title: '貸与PCの返却前に確認すること', audience: '貸与PCを返却する社員', department: 'IT',
+    body: '返却手順\n1. 業務資料を所定の共有領域へ移します。\n2. IT窓口に返却日を確認します。\n3. 貸与品をそろえ、受領確認を受けます。\n\n注意事項\n端末の初期化は自己判断で行わず、担当者の案内に従ってください。',
+    updatedAt: '2026-10-23T17:00:00+09:00', sources: [snapshotResolution(mockRequests.find(item => item.id === 'REQ-0011')!)], events: [] },
+  { id: 'KB-0018', version: 1, status: 'rejected', title: '年末調整の書類提出先', audience: '年末調整を行う社員', department: '人事', body: '電子申請と原本の提出先を確認します。詳細は人事へ連絡してください。',
+    updatedAt: '2026-10-28T10:00:00+09:00', sources: [snapshotResolution(mockRequests.find(item => item.id === 'REQ-0006')!)], events: [{ at: '2026-10-28T10:00:00+09:00', description: '鈴木 健太が差し戻しました。理由：原本が必要な書類と提出窓口の説明が不足しています。' }] },
+]
+
+export function getPublishedKnowledge(knowledge: KnowledgeVersion[]) {
+  const latest = new Map<string, KnowledgeVersion>()
+  for (const item of knowledge) {
+    if (item.status === 'approved' && item.version > (latest.get(item.id)?.version ?? 0)) latest.set(item.id, item)
+  }
+  return [...latest.values()].map(({ id, version, title, audience, department, body, updatedAt }) => ({ id, version, title, audience, department, body, updatedAt }))
+}
+
+export function getKnowledgeFilters(params: URLSearchParams) {
+  const department = params.get('department') ?? ''
+  return { query: (params.get('q') ?? '').normalize('NFKC').trim().toLocaleLowerCase('ja'), department: departments.includes(department) ? department : '' }
+}
+
+export function getKnowledgeList(knowledge: KnowledgeVersion[], params: URLSearchParams) {
+  const published = getPublishedKnowledge(knowledge)
+  const { query, department } = getKnowledgeFilters(params)
+  const rows = published.filter(item => {
+    const text = `${item.id} ${item.title} ${item.audience} ${item.body}`.normalize('NFKC').toLocaleLowerCase('ja')
+    return query.split(/\s+/).every(word => text.includes(word)) && (!department || item.department === department)
+  }).sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+  return { total: published.length, count: rows.length, rows }
+}
+
+export function getKnowledgeReviews(knowledge: KnowledgeVersion[], role: DemoRole, status = '') {
+  if (role !== 'operator') return []
+  return knowledge.filter(item => item.status !== 'approved' && (!['draft', 'rejected'].includes(status) || item.status === status))
+    .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+}
+
+export function validateKnowledge(input: KnowledgeInput) {
+  return {
+    title: !input.title.trim() || input.title.trim().length > 120 ? '件名を1〜120文字で入力してください。' : '',
+    audience: !input.audience.trim() || input.audience.trim().length > 300 ? '適用対象を1〜300文字で入力してください。' : '',
+    department: !departments.includes(input.department) ? '担当部署を選択してください。' : '',
+    body: !input.body.trim() || input.body.trim().length > 20000 ? '本文を1〜20000文字で入力してください。症状・手順・注意事項を記載します。' : '',
+  }
+}
+
+export function getKnowledgeSourceIssue(sources: KnowledgeSource[], requests: MockRequest[]) {
+  return sources.some(source => {
+    const current = requests.find(request => request.id === source.requestId)
+    return !current || current.status !== 'resolved' || current.updatedAt !== source.updatedAt || current.body !== source.body || current.resolution !== source.resolution || current.resolvedAt !== source.resolvedAt
+  }) ? '元の解決記録が変更されたか、参照できません。根拠の再確認が必要なため承認できません。' : ''
+}
+
+export function prepareKnowledgeDraft(knowledge: KnowledgeVersion[], requests: MockRequest[], role: DemoRole, sourceId: string | null, documentId: string | null) {
+  requireOperator(role)
+  if (sourceId && documentId) throw new Error('問い合わせからの作成と改訂版の作成は同時に指定できません。')
+  if (documentId) {
+    const published = getPublishedKnowledge(knowledge).find(item => item.id === documentId)
+    if (!published) throw new Error('改訂元の承認済み文書が見つかりません。')
+    if (knowledge.some(item => item.id === documentId && item.status !== 'approved')) throw new Error('この文書には未承認の版があります。レビュー一覧で確認してください。')
+    const original = knowledge.find(item => item.id === documentId && item.version === published.version)!
+    return { input: { title: published.title, audience: published.audience, department: published.department, body: published.body }, sources: original.sources }
+  }
+  if (sourceId) {
+    const request = requests.find(item => item.id === sourceId)
+    if (!request) throw new Error('元の問い合わせが見つかりません。')
+    return { input: { ...emptyKnowledgeInput, title: request.title, department: request.department }, sources: [snapshotResolution(request)] }
+  }
+  return { input: { ...emptyKnowledgeInput }, sources: [] }
+}
+
+function requireOperator(role: DemoRole) {
+  if (role !== 'operator') throw new Error('この操作は担当者のみ利用できます。')
+}
+
+export function saveKnowledgeDraft(knowledge: KnowledgeVersion[], role: DemoRole, input: KnowledgeInput, sources: KnowledgeSource[], at: string, target?: { id: string; version: number }, documentId?: string) {
+  requireOperator(role)
+  if (Object.values(validateKnowledge(input)).some(Boolean)) throw new Error('入力内容を確認してください。')
+  const existing = target && knowledge.find(item => item.id === target.id && item.version === target.version)
+  if (target && (!existing || existing.status !== 'draft')) throw new Error('編集できる下書きが見つかりません。')
+  if (documentId) {
+    if (!getPublishedKnowledge(knowledge).some(item => item.id === documentId)) throw new Error('改訂元の承認済み文書が見つかりません。')
+    if (knowledge.some(item => item.id === documentId && item.status !== 'approved')) throw new Error('この文書には未承認の版があります。')
+  }
+  const id = existing ? existing.id : documentId ?? `KB-${String(Math.max(0, ...knowledge.map(item => Number(item.id.slice(3)))) + 1).padStart(4, '0')}`
+  const version = existing ? existing.version : Math.max(0, ...knowledge.filter(item => item.id === id).map(item => item.version)) + 1
+  const saved: KnowledgeVersion = {
+    title: input.title.trim(), audience: input.audience.trim(), department: input.department, body: input.body.trim(),
+    id, version, status: 'draft', updatedAt: at, sources: structuredClone(existing ? existing.sources : sources),
+    events: [...(existing ? existing.events : []), { at, description: '山田 花子が下書きを保存しました。まだ公開されていません。' }],
+  }
+  return { knowledge: existing ? knowledge.map(item => item === existing ? saved : item) : [...knowledge, saved], saved }
+}
+
+export function reviewKnowledge(knowledge: KnowledgeVersion[], requests: MockRequest[], role: DemoRole, target: { id: string; version: number }, action: 'approve' | 'reject', reason: string, at: string) {
+  requireOperator(role)
+  const draft = knowledge.find(item => item.id === target.id && item.version === target.version)
+  if (!draft || draft.status !== 'draft') throw new Error('確認待ちの下書きが見つかりません。')
+  if (action === 'reject' && (!reason.trim() || reason.trim().length > 1000)) throw new Error('差し戻しの理由を1〜1000文字で入力してください。')
+  if (action === 'approve') {
+    if (Object.values(validateKnowledge(draft)).some(Boolean)) throw new Error('保存済みの入力内容を確認してください。')
+    const issue = getKnowledgeSourceIssue(draft.sources, requests)
+    if (issue) throw new Error(issue)
+  }
+  return knowledge.map(item => item === draft ? {
+    ...item, status: action === 'approve' ? 'approved' as const : 'rejected' as const, updatedAt: at,
+    events: [...item.events, { at, description: action === 'approve' ? '山田 花子が承認し、社員全員の検索に公開しました。' : `山田 花子が差し戻しました。理由：${reason.trim()}` }],
   } : item)
 }

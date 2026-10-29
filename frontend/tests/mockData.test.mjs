@@ -12,7 +12,147 @@ import {
   updateRequest,
   validateRequest,
   nextMockTimestamp,
+  mockKnowledge,
+  getPublishedKnowledge,
+  getKnowledgeList,
+  getKnowledgeReviews,
+  prepareKnowledgeDraft,
+  saveKnowledgeDraft,
+  reviewKnowledge,
+  validateKnowledge,
+  getKnowledgeSourceIssue,
 } from '../src/lib/mockData.ts'
+
+const knowledgeInput = { title: '新端末の認証手順', audience: '端末を交換した社員', department: 'IT', body: '本人確認を受け、担当者と登録を更新します。接続結果を確認します。' }
+const draftTarget = { id: 'KB-0016', version: 1 }
+
+test('一般検索は最新の承認版のみ返し、根拠・履歴を公開しない', () => {
+  const published = getPublishedKnowledge(mockKnowledge)
+  assert.equal(published.length, 3)
+  assert.ok(published.every(item => !('sources' in item) && !('events' in item) && !('status' in item)))
+  assert.equal(getKnowledgeList(mockKnowledge, new URLSearchParams('q=MFA端末変更')).count, 0)
+  assert.equal(getKnowledgeList(mockKnowledge, new URLSearchParams('q=年末調整')).count, 0)
+  assert.deepEqual(getKnowledgeReviews(mockKnowledge, 'employee'), [])
+  assert.equal(getKnowledgeReviews(mockKnowledge, 'operator', 'draft').length, 2)
+  assert.equal(getKnowledgeReviews(mockKnowledge, 'operator', 'rejected').length, 1)
+})
+
+test('知識検索は全角・本文・複数語と部署条件を使い、初期0件と不一致を区別する', () => {
+  assert.equal(getKnowledgeList(mockKnowledge, new URLSearchParams('q=ＶＰＮ 接続&department=IT')).count, 1)
+  assert.equal(getKnowledgeList(mockKnowledge, new URLSearchParams('q=ＶＰＮ&department=経理')).count, 0)
+  assert.equal(getKnowledgeList(mockKnowledge, new URLSearchParams('q=存在しない')).total, 3)
+  assert.equal(getKnowledgeList([], new URLSearchParams()).total, 0)
+  assert.equal(getKnowledgeList(mockKnowledge, new URLSearchParams('department=不明')).count, 3)
+})
+
+test('知識の必須項目・空白・上限・部署を資料境界で検証する', () => {
+  assert.ok(Object.values(validateKnowledge({ title: ' ', audience: '', department: '不明', body: '\n' })).every(Boolean))
+  assert.ok(validateKnowledge({ ...knowledgeInput, title: 'あ'.repeat(121) }).title)
+  assert.ok(validateKnowledge({ ...knowledgeInput, audience: 'あ'.repeat(301) }).audience)
+  assert.ok(validateKnowledge({ ...knowledgeInput, body: 'あ'.repeat(20001) }).body)
+  assert.ok(Object.values(validateKnowledge(knowledgeInput)).every(value => value === ''))
+  assert.throws(() => saveKnowledgeDraft(mockKnowledge, 'operator', { ...knowledgeInput, body: '' }, [], nextMockTimestamp(mockRequests)), /入力内容/)
+})
+
+test('解決した問い合わせのみを根拠にし、手動本文を自動生成しない', () => {
+  assert.throws(() => prepareKnowledgeDraft(mockKnowledge, mockRequests, 'operator', 'REQ-0001', null), /解決内容/)
+  assert.throws(() => prepareKnowledgeDraft(mockKnowledge, mockRequests, 'operator', 'REQ-9999', null), /見つかりません/)
+  const prepared = prepareKnowledgeDraft(mockKnowledge, mockRequests, 'operator', 'REQ-0003', null)
+  assert.equal(prepared.input.body, '')
+  assert.equal(prepared.sources[0].requestId, 'REQ-0003')
+  assert.equal(prepared.sources[0].resolution, mockRequests.find(item => item.id === 'REQ-0003').resolution)
+  assert.throws(() => prepareKnowledgeDraft(mockKnowledge, mockRequests, 'operator', 'REQ-0003', 'KB-0001'), /同時/)
+})
+
+test('下書き保存は公開せず、元資料を変更せずにDashboardの確認待ちへ加える', () => {
+  const before = structuredClone(mockKnowledge)
+  const prepared = prepareKnowledgeDraft(mockKnowledge, mockRequests, 'operator', 'REQ-0003', null)
+  const result = saveKnowledgeDraft(mockKnowledge, 'operator', knowledgeInput, prepared.sources, nextMockTimestamp(mockRequests, mockKnowledge))
+  assert.equal(result.saved.status, 'draft')
+  assert.equal(getPublishedKnowledge(result.knowledge).length, 3)
+  assert.equal(getKnowledgeList(result.knowledge, new URLSearchParams('q=新端末の認証手順')).count, 0)
+  assert.equal(getDashboardData('operator', 'normal', mockRequests, result.knowledge).reviews.length, 3)
+  assert.deepEqual(mockKnowledge, before)
+  assert.notEqual(result.saved.sources, prepared.sources)
+})
+
+test('承認した保存版のみ検索に反映し、Dashboardの確認待ちを減らしてRadarの固定結果を保つ', () => {
+  const before = getDashboardData('operator')
+  const approved = reviewKnowledge(mockKnowledge, mockRequests, 'operator', draftTarget, 'approve', '', nextMockTimestamp(mockRequests, mockKnowledge))
+  assert.equal(getKnowledgeList(approved, new URLSearchParams('q=MFA端末変更')).count, 1)
+  assert.equal(getDashboardData('operator', 'normal', mockRequests, approved).reviews.length, 1)
+  assert.deepEqual(getDashboardData('operator', 'normal', mockRequests, approved).radar, before.radar)
+  assert.throws(() => reviewKnowledge(approved, mockRequests, 'operator', draftTarget, 'approve', '', nextMockTimestamp(mockRequests, approved)), /下書き/)
+})
+
+test('編集バッファは保存版を変更せず、再保存後に承認した内容だけが公開される', () => {
+  const original = mockKnowledge.find(item => item.id === draftTarget.id)
+  const buffer = { ...original, body: '更新した公開手順' }
+  const firstApproved = reviewKnowledge(mockKnowledge, mockRequests, 'operator', draftTarget, 'approve', '', nextMockTimestamp(mockRequests))
+  assert.equal(getPublishedKnowledge(firstApproved).find(item => item.id === draftTarget.id).body, original.body)
+  const saved = saveKnowledgeDraft(mockKnowledge, 'operator', buffer, original.sources, nextMockTimestamp(mockRequests), draftTarget)
+  const secondApproved = reviewKnowledge(saved.knowledge, mockRequests, 'operator', draftTarget, 'approve', '', nextMockTimestamp(mockRequests, saved.knowledge))
+  assert.equal(getPublishedKnowledge(secondApproved).find(item => item.id === draftTarget.id).body, buffer.body)
+})
+
+test('改訂版の保存中・差し戻し後は既存承認版を維持し、再編集・重複版を作らない', () => {
+  const prepared = prepareKnowledgeDraft(mockKnowledge, mockRequests, 'operator', null, 'KB-0001')
+  const saved = saveKnowledgeDraft(mockKnowledge, 'operator', { ...prepared.input, title: '改訂したVPN手順' }, prepared.sources, nextMockTimestamp(mockRequests), undefined, 'KB-0001')
+  assert.equal(saved.saved.version, 2)
+  assert.equal(getPublishedKnowledge(saved.knowledge).find(item => item.id === 'KB-0001').version, 1)
+  assert.throws(() => prepareKnowledgeDraft(saved.knowledge, mockRequests, 'operator', null, 'KB-0001'), /未承認/)
+  const rejected = reviewKnowledge(saved.knowledge, mockRequests, 'operator', saved.saved, 'reject', '手順の対象を確認してください。', nextMockTimestamp(mockRequests, saved.knowledge))
+  assert.equal(getPublishedKnowledge(rejected).find(item => item.id === 'KB-0001').version, 1)
+  assert.throws(() => saveKnowledgeDraft(rejected, 'operator', knowledgeInput, [], nextMockTimestamp(mockRequests), saved.saved), /下書き/)
+  assert.throws(() => saveKnowledgeDraft(rejected, 'operator', knowledgeInput, [], nextMockTimestamp(mockRequests), undefined, 'KB-0001'), /未承認/)
+})
+
+test('新しい改訂版の承認で最新公開版を1件に切り替え、旧版は変更しない', () => {
+  const prepared = prepareKnowledgeDraft(mockKnowledge, mockRequests, 'operator', null, 'KB-0001')
+  const result = saveKnowledgeDraft(mockKnowledge, 'operator', { ...prepared.input, body: '改訂された手順' }, prepared.sources, nextMockTimestamp(mockRequests), undefined, 'KB-0001')
+  const approved = reviewKnowledge(result.knowledge, mockRequests, 'operator', result.saved, 'approve', '', nextMockTimestamp(mockRequests, result.knowledge))
+  assert.equal(getPublishedKnowledge(approved).filter(item => item.id === 'KB-0001').length, 1)
+  assert.equal(getPublishedKnowledge(approved).find(item => item.id === 'KB-0001').version, 2)
+  assert.deepEqual(approved.find(item => item.id === 'KB-0001' && item.version === 1), mockKnowledge.find(item => item.id === 'KB-0001'))
+  assert.throws(() => saveKnowledgeDraft(approved, 'operator', knowledgeInput, [], nextMockTimestamp(mockRequests), { id: 'KB-0001', version: 2 }), /下書き/)
+})
+
+test('差し戻しには空白以外の理由が必須で、理由と時刻を履歴に残す', () => {
+  assert.throws(() => reviewKnowledge(mockKnowledge, mockRequests, 'operator', draftTarget, 'reject', ' \n', nextMockTimestamp(mockRequests)), /理由/)
+  assert.throws(() => reviewKnowledge(mockKnowledge, mockRequests, 'operator', draftTarget, 'reject', 'あ'.repeat(1001), nextMockTimestamp(mockRequests)), /理由/)
+  const rejected = reviewKnowledge(mockKnowledge, mockRequests, 'operator', draftTarget, 'reject', '本人確認の担当窓口を記載してください。', nextMockTimestamp(mockRequests))
+  const item = rejected.find(item => item.id === draftTarget.id)
+  assert.equal(item.status, 'rejected')
+  assert.match(item.events.at(-1).description, /本人確認の担当窓口/)
+  assert.equal(getKnowledgeList(rejected, new URLSearchParams('q=MFA端末変更')).count, 0)
+  assert.equal(getDashboardData('operator', 'normal', mockRequests, rejected).reviews.length, 1)
+})
+
+test('元の解決記録が変わった・未解決・消失した場合は承認を拒否する', () => {
+  const original = mockKnowledge.find(item => item.id === draftTarget.id)
+  for (const changed of [
+    mockRequests.filter(item => item.id !== 'REQ-0003'),
+    mockRequests.map(item => item.id === 'REQ-0003' ? { ...item, status: 'in_progress' } : item),
+    mockRequests.map(item => item.id === 'REQ-0003' ? { ...item, resolution: '別の解決内容' } : item),
+  ]) {
+    assert.ok(getKnowledgeSourceIssue(original.sources, changed))
+    assert.throws(() => reviewKnowledge(mockKnowledge, changed, 'operator', draftTarget, 'approve', '', nextMockTimestamp(mockRequests)), /再確認/)
+  }
+})
+
+test('社員は下書きの準備・保存・承認・差し戻しを利用できない', () => {
+  assert.throws(() => prepareKnowledgeDraft(mockKnowledge, mockRequests, 'employee', null, null), /担当者/)
+  assert.throws(() => saveKnowledgeDraft(mockKnowledge, 'employee', knowledgeInput, [], nextMockTimestamp(mockRequests)), /担当者/)
+  for (const action of ['approve', 'reject']) assert.throws(() => reviewKnowledge(mockKnowledge, mockRequests, 'employee', draftTarget, action, '理由', nextMockTimestamp(mockRequests)), /担当者/)
+})
+
+test('問い合わせと知識の操作は同じ合成時刻を共有し、端末時刻に依存しない', () => {
+  const saved = saveKnowledgeDraft(mockKnowledge, 'operator', knowledgeInput, [], nextMockTimestamp(mockRequests, mockKnowledge))
+  const next = nextMockTimestamp(mockRequests, saved.knowledge)
+  assert.equal(Date.parse(next) - Date.parse(saved.saved.updatedAt), 60000)
+  const result = registerRequest(mockRequests, 'operator', { title: '確認', body: '入力', department: 'IT' }, next)
+  assert.equal(Date.parse(nextMockTimestamp(result.requests, saved.knowledge)) - Date.parse(next), 60000)
+})
 
 test('社員には自分の問い合わせだけを返し、下書き・Radarを含めない', () => {
   const data = getDashboardData('employee')

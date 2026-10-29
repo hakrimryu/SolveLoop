@@ -2,19 +2,19 @@ import { useRef, useState } from 'react'
 import type { ChangeEvent, FocusEvent } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import { formatDemoDate, getDashboardData, statusLabels } from '../../lib/mockData'
-import type { DemoRole, MockRequest, RequestStatus } from '../../lib/mockData'
+import type { DemoRole, KnowledgeVersion, MockRequest, RequestStatus } from '../../lib/mockData'
 import RadarPanel from './RadarPanel'
 import styles from './Dashboard.module.css'
 
 type DisplayMode = 'normal' | 'empty' | 'loading' | 'error'
 const statuses: RequestStatus[] = ['open', 'in_progress', 'resolved']
 
-export default function Dashboard({ role, requests }: { role: DemoRole; requests: MockRequest[] }) {
+export default function Dashboard({ role, requests, knowledge }: { role: DemoRole; requests: MockRequest[]; knowledge: KnowledgeVersion[] }) {
   const [mode, setMode] = useState<DisplayMode>('normal')
   const [searchParams, setSearchParams] = useSearchParams()
   const titleRef = useRef<HTMLHeadingElement>(null)
   const radarLinkRef = useRef<HTMLAnchorElement>(null)
-  const data = getDashboardData(role, mode === 'empty' ? 'empty' : 'normal', requests)
+  const data = getDashboardData(role, mode === 'empty' ? 'empty' : 'normal', requests, knowledge)
   const isOperator = role === 'operator'
   const selectedCandidate = searchParams.get('radar')
   const showRadar = isOperator && mode === 'normal' && selectedCandidate !== null
@@ -178,7 +178,7 @@ export default function Dashboard({ role, requests }: { role: DemoRole; requests
                               {review.title}
                             </Link>
                             <p className="muted">
-                              {review.id} · 下書き v{review.version} · 元の問い合わせ {review.sourceId}
+                              {review.id} · 下書き v{review.version} · {review.sources.length ? `元の問い合わせ ${review.sources.map(source => source.requestId).join('・')}` : '手動作成'}
                             </p>
                           </div>
                           <span className="status open">未承認</span>
