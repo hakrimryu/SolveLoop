@@ -6,7 +6,35 @@
 
 ## 開発状況
 
-現在は設計・準備段階です。このリポジトリにはディレクトリ構成と基本設定のみを用意しています。アプリケーションはまだ起動できません。
+フロントエンドの最小開発環境を用意しました。日本語の動作確認画面を起動できます。業務画面・データ保存・認証・AI・Radar は未実装です。
+
+## フロントエンドの起動
+
+検証環境: Windows / PowerShell、Node.js 22.19.0、npm 10.9.3。Node.js は 22 系を使用し、検証したバージョンを `frontend/.node-version` に記録しています。このファイルだけで Node.js がインストール・切り替えされるわけではありません。
+
+リポジトリのルートから実行します。
+
+```powershell
+cd frontend
+npm.cmd ci
+npm.cmd run dev
+```
+
+[http://127.0.0.1:5173/](http://127.0.0.1:5173/) に「SolveLoop」「開発環境の動作確認」が表示されます。終了は `Ctrl+C` です。ポートが使用中の場合はエラーで終了します。
+
+Windows では PowerShell のスクリプト実行ポリシーに依存しない `npm.cmd` を使用しています。ほかの環境では `npm` に読み替えてください。
+
+同じ `frontend/` で検証します。
+
+```powershell
+npm.cmd run typecheck
+npm.cmd run build
+npm.cmd run preview
+```
+
+`typecheck` は型エラーがなければ終了コード 0 で完了します。`build` は型検査の後に `dist/` を生成し、`preview` は [http://127.0.0.1:4173/](http://127.0.0.1:4173/) でビルド結果を表示します。preview はローカル確認用です。
+
+依存関係は `frontend/package-lock.json` で固定しています。バックエンド・DB・Docker・Ollama の準備は、この画面の起動には不要です。
 
 ## 実装予定
 
@@ -19,9 +47,9 @@
 
 ## 技術構成
 
-| 領域 | 採用予定 |
+| 領域 | 採用済み・採用予定 |
 | --- | --- |
-| フロントエンド | React / TypeScript / Vite |
+| フロントエンド（導入済み） | React 19.3.1 / TypeScript 7.0.2 / Vite 8.3.5 |
 | バックエンド | Python / FastAPI / SQLAlchemy / Alembic |
 | データベース・検索 | PostgreSQL / pgvector |
 | ローカル推論 | Ollama |
@@ -39,4 +67,17 @@ demo/              架空企業のデータと再現シナリオ
 evaluations/       検索・分類・Radarの評価
 ```
 
-実装に合わせて、起動手順・画面・デモ動画・検証結果を追加します。
+業務画面・デモ動画・評価結果は実装と検証に合わせて追加します。
+
+## 参考・利用した OSS
+
+[Vite 公式ガイド](https://vite.dev/guide/)、[React の構築手順](https://react.dev/learn/build-a-react-app-from-scratch)、[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) を環境構成の参考にしました。生成テンプレートや他製品の画面・ソースはコピーしていません。
+
+| パッケージ | 利用範囲 | ライセンス |
+| --- | --- | --- |
+| [React / React DOM](https://github.com/facebook/react) 19.3.1 | 画面の構成・描画 | MIT |
+| [Vite](https://github.com/vitejs/vite) 8.3.5 / [React plugin](https://github.com/vitejs/vite-plugin-react) 6.1.2 | 開発サーバー・ビルド・開発時の更新 | MIT |
+| [TypeScript](https://github.com/microsoft/TypeScript) 7.0.2 | アプリと Vite 設定の型検査 | Apache-2.0 |
+| [DefinitelyTyped](https://github.com/DefinitelyTyped/DefinitelyTyped) | React / React DOM / Node.js の型定義 | MIT |
+
+アプリ固有の起動処理・確認画面・設定を作成し、依存パッケージ本体は改変していません。型検査・ビルド・ブラウザー表示を確認しました。ブラウザーに配布する React / React DOM / scheduler の著作権・ライセンスは [THIRD_PARTY_NOTICES.txt](frontend/public/THIRD_PARTY_NOTICES.txt) に保存し、ビルド時に `dist/` にもコピーします。各開発用依存のライセンスはインストールしたパッケージ内に保持されます。
