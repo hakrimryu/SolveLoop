@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useParams, useSearchParams } from 'react-router'
 import { departments, formatDemoDate, getKnowledgeFilters, getKnowledgeList, getKnowledgeReviews, getPublishedKnowledge, knowledgeStatusLabels } from '../../lib/mockData'
@@ -9,6 +9,8 @@ import common from '../requests/Requests.module.css'
 import styles from './Knowledge.module.css'
 
 export type KnowledgeProps = { role: DemoRole; knowledge: KnowledgeVersion[] }
+
+let listPosition: { url: string; role: DemoRole; y: number; id: string } | undefined
 
 export function KnowledgeUnavailable({ restricted = false }: { restricted?: boolean }) {
   return <><h1 tabIndex={-1}>{restricted ? 'ナレッジレビューを表示できません' : '文書を表示できません'}</h1>
@@ -25,17 +27,32 @@ export function KnowledgeBody({ input }: { input: KnowledgeInput }) {
 
 export default function KnowledgeList({ role, knowledge, review = false }: KnowledgeProps & { review?: boolean }) {
   const [params, setParams] = useSearchParams()
+  const location = useLocation()
   const [query, setQuery] = useState(params.get('q') ?? '')
   const [mode, setMode] = useState<DisplayMode>('normal')
   const filters = getKnowledgeFilters(params)
   const searchQuery = params.get('q') ?? ''
   useEffect(() => setQuery(searchQuery), [searchQuery])
+  useLayoutEffect(() => {
+    if (listPosition?.url !== location.pathname + location.search || listPosition.role !== role) return
+    const position = listPosition
+    const frame = requestAnimationFrame(() => {
+      document.getElementById(position.id)?.focus({ preventScroll: true })
+      window.scrollTo({ top: position.y })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [location.pathname, location.search, role])
   if (review && role !== 'operator') return <KnowledgeUnavailable restricted />
 
   const data = getKnowledgeList(mode === 'empty' ? [] : knowledge, params)
   const reviews = getKnowledgeReviews(mode === 'empty' ? [] : knowledge, role, params.get('status') ?? '')
   const title = review ? 'ナレッジレビュー' : 'ナレッジ'
   const count = review ? reviews.length : data.count
+  const total = review ? getKnowledgeReviews(mode === 'empty' ? [] : knowledge, role).length : data.total
+
+  function rememberPosition(id: string) {
+    listPosition = { url: location.pathname + location.search, role, y: window.scrollY, id }
+  }
 
   function search(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -67,11 +84,11 @@ export default function KnowledgeList({ role, knowledge, review = false }: Knowl
           <label>担当部署<select value={filters.department} onChange={e => filter('department', e.target.value)}><option value="">すべて</option>{departments.map(d => <option key={d}>{d}</option>)}</select></label>
           <button className="button buttonPrimary">検索</button><button type="button" className="button" onClick={() => { setQuery(''); setParams({}) }}>条件をクリア</button>
         </form>}
-      <div className={common.results}><p role="status"><strong>{count}件</strong>{!review && ` / 承認済み ${data.total}件`}<span className={common.sort}>更新日時の新しい順 · 日本時間</span></p><DisplayControl mode={mode} onChange={setMode} /></div>
+      <div className={common.results}><p role="status">{mode === 'normal' || mode === 'empty' ? <><strong>{count}件</strong>{!review && ` / 承認済み ${data.total}件`}</> : '件数を取得していません'}<span className={common.sort}>更新日時の新しい順 · 日本時間</span></p><DisplayControl mode={mode} onChange={setMode} /></div>
       {mode === 'loading' ? <div className="notice" aria-busy="true"><p role="status">読み込み中… 表示確認用のシミュレーションです。</p></div> : mode === 'error' ?
         <div className="notice"><p role="alert">一覧を読み込めませんでした（デモ用）。条件は保持されています。</p><button className="button" onClick={() => setMode('normal')}>再試行</button></div> : count === 0 ?
-          <div className={common.empty}><h2>{review ? '確認する文書はありません' : data.total === 0 ? '公開されたナレッジはまだありません' : '条件に一致するナレッジはありません'}</h2>
-            <p>{review ? '条件を解除するか、手動で下書きを作成できます。' : data.total === 0 ? '文書は担当者が承認した後に表示されます。不明点は問い合わせを登録してください。' : '別のキーワードや担当部署で検索してください。'}</p>
+          <div className={common.empty}><h2>{review ? total === 0 ? '確認する文書はまだありません' : '条件に一致するレビューはありません' : data.total === 0 ? '公開されたナレッジはまだありません' : '条件に一致するナレッジはありません'}</h2>
+            <p>{review ? total === 0 ? '必要に応じて手動で下書きを作成できます。' : '状態の条件を解除して確認してください。' : data.total === 0 ? '文書は担当者が承認した後に表示されます。不明点は問い合わせを登録してください。' : '別のキーワードや担当部署で検索してください。'}</p>
             <button className="button" onClick={() => { setQuery(''); setParams({}); setMode('normal') }}>条件をクリア</button>{!review && <Link className={styles.inlineLink} to="/requests?new=1">問い合わせを登録</Link>}
           </div> : <>
             <p className={common.tableHint}>表は横にスクロールできます。</p>
@@ -79,7 +96,7 @@ export default function KnowledgeList({ role, knowledge, review = false }: Knowl
               <table><caption className="srOnly">{title}一覧。更新日時の新しい順。</caption><thead><tr><th scope="col">文書番号</th><th scope="col">件名・適用対象</th><th scope="col">{review ? '状態・版' : '承認版'}</th><th scope="col">担当部署</th><th scope="col">更新日時</th></tr></thead>
                 <tbody>{(review ? reviews : data.rows).map(item => <tr key={`${item.id}-${item.version}`}>
                   <td className={common.number}>{item.id}</td><th scope="row" className={common.subject}>
-                    <Link to={review ? `/knowledge/reviews/${item.id}/versions/${item.version}${params.size ? `?${params}` : ''}` : `/knowledge/${item.id}${params.size ? `?${params}` : ''}`}>{item.title}</Link>
+                    <Link id={`knowledge-${item.id}-${item.version}`} onClick={() => rememberPosition(`knowledge-${item.id}-${item.version}`)} to={review ? `/knowledge/reviews/${item.id}/versions/${item.version}${params.size ? `?${params}` : ''}` : `/knowledge/${item.id}${params.size ? `?${params}` : ''}`}>{item.title}</Link>
                     <p className={common.help}>{item.audience}</p></th><td className={styles.version}>{review ? knowledgeStatusLabels[(item as KnowledgeVersion).status] : '承認済み'} v{item.version}</td>
                   <td>{item.department}</td><td className={common.date}>{formatDemoDate(item.updatedAt)} JST</td>
                 </tr>)}</tbody></table>
