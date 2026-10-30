@@ -114,6 +114,9 @@ class ReviewQuery(PageQuery):
     status: Literal["draft", "rejected"] | None = None
 
 
+# 根拠は保存時の本文・解決内容・版を写し、後の変更と比較できる形にする。
+# [ko] 근거의 본문·해결 내용·버전을 저장 시점의 사본으로 남겨 이후 변경과 비교한다.
+# [en] Capture source text, resolution, and version so later changes can be compared.
 def source_snapshot(session: Session, ticket: Ticket) -> dict:
     return jsonable_encoder(
         dict(
@@ -146,6 +149,9 @@ def sources_for(session: Session, version_id: UUID) -> list[KnowledgeSource]:
     )
 
 
+# 版番号だけでなく内容ハッシュも比較し、未解決へ戻った根拠も検出する。
+# [ko] 버전 번호뿐 아니라 내용 해시도 비교하고 미해결로 돌아간 근거도 탐지한다.
+# [en] Check source hashes as well as versions, and flag sources that are no longer resolved.
 def source_issues(session: Session, sources: list[KnowledgeSource]) -> list[dict]:
     tickets = {
         ticket.id: ticket
@@ -364,7 +370,9 @@ def locked_version(
     tickets = lock_tickets(session, all_ids)
     doc = get_document(session, document_id, True)
     version = get_version(session, document_id, version_no, True)
-    # 他の保存で根拠集合が変わった場合は、逆順でロックを追加せず再確認を求める。
+    # 根拠集合が変わったら、逆順でロックを追加せず再確認を求める。
+    # [ko] 근거 집합이 바뀌면 잠금을 역순으로 추가하지 않고 재확인을 요구한다.
+    # [en] If the source set changed, request a fresh review rather than add locks out of order.
     if {source.ticket_id for source in sources_for(session, version.id)} != ids:
         raise ApiError(
             409, "VERSION_CONFLICT", "根拠が更新されました。最新の保存内容を確認してください。"
@@ -523,6 +531,9 @@ def create_draft(
     status_code=201,
     dependencies=[Depends(require_json), Depends(no_query)],
 )
+# 元の根拠をそのまま継承し、古い写しを新しい原本へ自動で置き換えない。
+# [ko] 원래 근거를 그대로 계승하며 오래된 사본을 최신 원본으로 자동 교체하지 않는다.
+# [en] Copy the original evidence unchanged; never silently refresh an outdated snapshot.
 def copy_draft(
     document_id: UUID,
     data: CopyInput,
@@ -679,6 +690,9 @@ def review_version(document_id, version_no, data, request, auth, session, reject
     )
     if not reject:
         department(session, version.department_id, True)
+        # 公開前に根拠を再確認し、不整合があれば既存の承認版を維持する。
+        # [ko] 공개 전에 근거를 재확인하고 불일치하면 기존 승인본을 유지한다.
+        # [en] Recheck evidence before publication; keep the current approved version on failure.
         issues = source_issues(session, sources_for(session, version.id))
         if issues:
             raise ApiError(

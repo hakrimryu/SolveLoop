@@ -46,6 +46,9 @@ function Detail({ role, departments, operators, onDirtyChange, initial }: Reques
     setBusy(true)
     try {
       const result = await call<Ticket>(`/tickets/${saved.id}`)
+      // 最新の保存内容は別に表示し、比較・確認前に編集中の値を置き換えない。
+      // [ko] 최신 저장 내용은 별도로 표시하고 비교·확인 전에 편집 중인 값을 교체하지 않는다.
+      // [en] Show the latest saved record separately; do not replace edits before explicit review.
       if (dirty || blocked) { setLatest(result); setBlocked(true); setMessage('最新の保存内容を取得しました。入力は自動で置き換えていません。') }
       else { setSaved(result); setBody(result.body); setAssignee(result.assignee?.id ?? ''); setDept(result.department?.id ?? ''); setError('') }
     } catch (cause) { if (!isStale(cause)) showError(errorMessage(cause)) }
@@ -58,6 +61,9 @@ function Detail({ role, departments, operators, onDirtyChange, initial }: Reques
     if (['start', 'resolve'].includes(operation) && (editing || assignmentDirty)) { showError('先に本文・担当の変更を保存するか取り消してください。'); return }
     setBusy(true); setError(''); setMessage('')
     const generation = api.snapshot().generation
+    // 保存した領域だけを確定し、応答後の再取得でも他の未保存入力を保つ。
+    // [ko] 저장한 영역만 확정하고 응답 후 재조회에서도 다른 영역의 미저장 입력을 유지한다.
+    // [en] Accept only the saved section and preserve other unsaved inputs through the follow-up GET.
     function accept(value: Ticket) {
       setSaved(value)
       if (operation === 'edit' || !bodyDirty) setBody(value.body)

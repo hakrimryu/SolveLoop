@@ -43,6 +43,9 @@ export default function AuthScreen({ changePassword = false, requiredChange = fa
     setPending(true)
     try {
       const nextErrors = await onSubmit(values)
+      // 認証要求の完了後は入力原文を消し、失敗時にもパスワードを残さない。
+      // [ko] 인증 요청이 완료되면 입력 원문을 지워 실패한 경우에도 비밀번호를 남기지 않는다.
+      // [en] Clear raw credentials after authentication requests, including failed authentication.
       setValues({})
       setShowPasswords(false)
       onDirtyChange(false)

@@ -21,6 +21,8 @@ from app.models import AuditEvent, AuthSession, Department, User
 COOKIE_NAME = "solveloop_session"
 SESSION_SECONDS = 8 * 60 * 60
 # 公開済みの合成資格情報を、新しい本人用パスワードとして再利用させない。
+# [ko] 공개된 합성 계정의 비밀번호를 새 개인 비밀번호로 재사용하지 못하게 한다.
+# [en] Reject public demo credentials as new personal passwords.
 PUBLIC_DEMO_PASSWORDS = frozenset(
     {
         "SolveLoop-Demo-2026!",
@@ -31,6 +33,8 @@ PUBLIC_DEMO_PASSWORDS = frozenset(
 )
 password_hasher = PasswordHasher()
 # 存在しないIDにも同じハッシュ検証を行い、認証失敗の差を減らす。
+# [ko] 존재하지 않는 ID에도 해시 검증을 수행해 인증 실패의 차이를 줄인다.
+# [en] Verify a dummy hash for unknown IDs to reduce differences between login failures.
 dummy_password_hash = password_hasher.hash(secrets.token_urlsafe(32))
 session_cookie = APIKeyCookie(name=COOKIE_NAME, auto_error=False)
 DbSession = Annotated[Session, Depends(get_session)]
@@ -109,6 +113,8 @@ def token_hash(token: str) -> str:
 
 def csrf_token(token: str) -> str:
     # 再読み込みや別タブでも同じ値を復元し、DBには検証用ハッシュだけを保存する。
+    # [ko] 새로고침이나 다른 탭에서도 같은 값을 복원하고 DB에는 검증용 해시만 저장한다.
+    # [en] Restore the same CSRF value across reloads and tabs; store only its hash in the DB.
     return hmac.new(token.encode(), b"solveloop:csrf:v1", hashlib.sha256).hexdigest()
 
 
@@ -146,6 +152,8 @@ def validate_new_password(encoded: str, supplied: str) -> None:
 
 def lock_users(session: Session, user_ids: set[UUID]) -> dict[UUID, User]:
     # 資格変更・ログイン・旧セッションの削除は、所有者を同じ順序で先にロックする。
+    # [ko] 자격 변경·로그인·기존 세션 삭제는 소유자를 같은 순서로 먼저 잠근다.
+    # [en] Lock session owners in a consistent order before credential or session changes.
     return {
         user.id: user
         for user in session.scalars(
@@ -224,7 +232,9 @@ def get_write_auth(
     csrf: Annotated[None, Depends(require_csrf)],
 ) -> tuple[AuthSession, User]:
     lock_users(session, {auth[1].id})
-    # ロック待ちの間に削除・失効したセッションを、依存性の取得済みオブジェクトで許可しない。
+    # ロック待ち中に失効したセッションを、取得済みオブジェクトだけで許可しない。
+    # [ko] 잠금 대기 중 무효화된 세션을 미리 읽은 객체만으로 허용하지 않는다.
+    # [en] Recheck the session after locking so an earlier read cannot authorize a revoked session.
     current = get_auth(session, request.cookies.get(COOKIE_NAME))
     require_csrf(request, current, request.headers.get("X-CSRF-Token"))
     return current
@@ -296,6 +306,9 @@ def login(
     )
     if password_hasher.check_needs_rehash(user.password_hash):
         user.password_hash = password_hasher.hash(data.password.get_secret_value())
+    # Cookieには原文を渡し、DBにはハッシュだけを残して漏えい時の再利用を防ぐ。
+    # [ko] 쿠키에는 원문을 전달하고 DB에는 해시만 남겨 DB 유출 시 재사용을 막는다.
+    # [en] Send the raw token only as a cookie; keep its hash in the DB to prevent DB token replay.
     token = secrets.token_urlsafe(32)
     csrf = csrf_token(token)
     expires_at = datetime.now(UTC) + timedelta(seconds=SESSION_SECONDS)
@@ -362,6 +375,9 @@ def change_password(
     new_password = data.new_password.get_secret_value()
     validate_new_password(user.password_hash, new_password)
     user.password_hash = password_hasher.hash(new_password)
+    # 資格更新・全セッション失効・監査記録を同じ確定単位にする。
+    # [ko] 자격 갱신·전체 세션 무효화·감사 기록을 같은 트랜잭션으로 확정한다.
+    # [en] Commit credential changes, session revocation, and the audit event together.
     user.must_change_password = False
     user.row_version += 1
     session.execute(delete(AuthSession).where(AuthSession.user_id == user.id))

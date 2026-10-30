@@ -143,13 +143,18 @@ def management_write_auth(
 ) -> tuple[User, dict[UUID, User]]:
     require_csrf(request, auth, request.headers.get("X-CSRF-Token"))
     require_account_manager(require_full_auth(auth))
-    # 本人用依存性で先にactorだけをロックせず、対象を含む全UUIDを最初から並べる。
+    # actorだけを先にロックせず、対象を含む全UUIDを最初から同じ順序で並べる。
+    # [ko] 행위자만 먼저 잠그지 않고 대상까지 포함한 모든 UUID를 처음부터 같은 순서로 정렬한다.
+    # [en] Order all actor and target UUIDs before locking to avoid opposing lock orders.
     users = lock_users(session, {auth[1].id} | ({target_id} if target_id is not None else set()))
     current = get_auth(session, request.cookies.get(COOKIE_NAME))
     require_csrf(request, current, request.headers.get("X-CSRF-Token"))
     return require_account_manager(require_full_auth(current)), users
 
 
+# 仮値は発行時だけ返し、照会可能な原文として保存しない。
+# [ko] 임시 비밀번호는 발급 시에만 반환하고 재조회할 수 있는 원문으로 저장하지 않는다.
+# [en] Return temporary passwords only when issued; never store retrievable plaintext.
 def temporary_password(encoded: str | None = None) -> str:
     while True:
         value = secrets.token_urlsafe(32)
@@ -273,6 +278,9 @@ def change_account(
         user.password_hash = password_hasher.hash(password)
         user.must_change_password = True
     user.row_version += 1
+    # 再有効化は古い接続を復活させず、無効化・再発行は全接続を失効させる。
+    # [ko] 재활성화는 옛 세션을 복구하지 않고 비활성화·재발급은 모든 세션을 무효화한다.
+    # [en] Reactivation never restores old sessions; deactivation and reissue revoke all sessions.
     if action != "reactivate":
         session.execute(delete(AuthSession).where(AuthSession.user_id == user.id))
     record_event(session, request, actor, user, action)
@@ -371,6 +379,8 @@ def account_events(
     entry = aliased(AuditEvent, ranked)
     actor = aliased(User)
     # 0件・最終ページ補正も含め、件数と資料を同じSQLの読み取り時点で取得する。
+    # [ko] 빈 결과와 마지막 페이지 보정까지 건수와 자료를 같은 SQL 읽기 시점에 맞춘다.
+    # [en] Read counts and rows in one SQL snapshot, including empty and clamped pages.
     rows = session.execute(
         select(entry, actor, meta.c.total, meta.c.page_count, meta.c.page)
         .select_from(meta)
@@ -405,6 +415,9 @@ def account_events(
     )
 
 
+# 初期管理権限は指定された既存アカウントにだけ付与し、自動選択しない。
+# [ko] 최초 관리 권한은 지정한 기존 계정에만 부여하며 대상을 자동 선택하지 않는다.
+# [en] Grant initial management rights only to the explicitly selected existing account.
 def bootstrap_manager(session: Session, login_id: str) -> bool:
     user_id = session.scalar(select(User.id).where(User.login_id == login_id))
     user = lock_users(session, {user_id}).get(user_id) if user_id is not None else None

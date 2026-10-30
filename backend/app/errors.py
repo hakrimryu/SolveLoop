@@ -35,7 +35,9 @@ def register_error_handlers(app: FastAPI) -> None:
 
     @app.exception_handler(RequestValidationError)
     async def invalid_input(request: Request, error: RequestValidationError) -> JSONResponse:
-        # 標準の検証エラーに含まれる入力値から、パスワードが漏れるのを防ぐ。
+        # 検証エラーの入力原文を返さず、パスワードや内部値の漏えいを防ぐ。
+        # [ko] 검증 오류의 입력 원문을 반환하지 않아 비밀번호와 내부 값의 유출을 막는다.
+        # [en] Hide raw validation inputs so passwords and internal values cannot leak.
         details = None
         if request.url.path.startswith(("/api/v1/tickets", "/api/v1/knowledge")):
             allowed = {

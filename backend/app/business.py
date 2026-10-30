@@ -55,7 +55,9 @@ def normalized(value: str) -> str:
 def page_result(
     visible: list[dict], filtered: list[dict], query: PageQuery, as_of: datetime
 ) -> dict:
-    # shortcut: 小規模デモでは権限内を一括読取。大量運用時は正規化検索列とSQLページングへ移す。
+    # shortcut: 小規模では権限内を一括読取。大量運用時は正規化検索列とSQLページングへ移す。
+    # [ko] 소규모는 일괄 조회하고, 대량 운영 시 정규화 검색 열·SQL 페이지로 전환한다.
+    # [en] Read authorized rows together; use normalized SQL search and paging at larger scale.
     filtered.sort(
         key=lambda item: (
             item["updated_at"],
@@ -113,6 +115,9 @@ def write_actor(
     if operator:
         require_operator(auth)
     require_csrf(request, auth, request.headers.get("X-CSRF-Token"))
+    # 関連利用者のロック後に資格を再検査し、失効と業務更新の競合を防ぐ。
+    # [ko] 관련 사용자를 잠근 뒤 자격을 재검사해 세션 무효화와 업무 갱신의 경합을 막는다.
+    # [en] Recheck credentials after user locks to serialize revocation with business writes.
     users = lock_users(session, {auth[1].id} | (related or set()))
     current = require_full_auth(get_auth(session, request.cookies.get(COOKIE_NAME)))
     require_csrf(request, current, request.headers.get("X-CSRF-Token"))
@@ -142,6 +147,9 @@ def department_ref(session: Session, department_id: UUID | None) -> dict | None:
     return {"id": str(row.id), "code": row.code, "name": row.name} if row else None
 
 
+# 利用者・method・path・keyと内容ハッシュで、同じ登録だけを再生する。
+# [ko] 사용자·method·path·key와 내용 해시를 비교해 같은 등록 요청만 재생한다.
+# [en] Replay only matching user, method, path, key, and payload hash combinations.
 def idempotent_result(
     request: Request, session: Session, actor: User, data: BaseModel
 ) -> tuple[str, str, dict | None]:
@@ -187,6 +195,9 @@ def finish_create(
 ) -> dict:
     result = jsonable_encoder(result)
     now = datetime.now(UTC)
+    # 業務資料と再送用の結果を同じトランザクションで保存し、片方だけの確定を防ぐ。
+    # [ko] 업무 자료와 재전송용 결과를 같은 트랜잭션에 저장해 한쪽만 확정되는 것을 막는다.
+    # [en] Commit business data and its replay record together so neither can exist alone.
     session.add(
         IdempotencyRecord(
             user_id=actor.id,

@@ -48,6 +48,9 @@ export function KnowledgeDetail(props: KnowledgeProps) {
   const document = resource.data
   return <><Link className={common.back} to={`/knowledge${location.search}`}>← ナレッジ一覧へ戻る（条件を保持）</Link>{!document ? <><h1 tabIndex={-1}>承認済みナレッジ</h1><LoadState error={resource.error} reload={resource.reload} /></> : <><div className={common.heading}><div><p className="eyebrow">{document.number} · 承認済み v{document.version_no}</p><h1 tabIndex={-1}>{document.title}</h1><p className={common.meta}>担当部署 {document.department?.name} · 承認 {formatDate(document.approved_at)} JST · 社員全員に公開</p></div><button className="button" onClick={resource.reload}>再取得</button></div><div className={styles.readGrid}><section className={common.section}><KnowledgeBody input={document} /></section><aside className={common.section}><h2>承認された版</h2><p>{document.number} / v{document.version_no}</p>{props.role === 'operator' && <RevisionEntry document={document} />}</aside></div></>}</>
 }
+// 非公開の改訂状況は担当者だけが別途取得し、社員向けの公開DTOへ混ぜない。
+// [ko] 비공개 개정 상태는 담당자만 별도로 조회하며 직원용 공개 DTO에 섞지 않는다.
+// [en] Fetch private revision state separately for operators; keep it out of the public DTO.
 function RevisionEntry({ document }: { document: Published }) {
   const resource = useLoad<Review>(`/knowledge/${document.document_id}/versions/${document.version_no}`)
   const data = resource.data

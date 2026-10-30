@@ -33,6 +33,8 @@ export default function App() {
     clearRequestPosition()
     clearKnowledgePosition()
     // 別の認証世代へ、前の画面の復帰メッセージを渡さない。
+    // [ko] 다른 인증 세대로 이전 화면의 복귀 메시지를 넘기지 않는다.
+    // [en] Do not carry previous navigation messages into a different auth generation.
     window.history.replaceState({ ...window.history.state, usr: null }, '', window.location.pathname + window.location.search)
   }, [state.generation])
   if (state.status !== 'ready') return <AppLayout session={null} notice="" onSessionEnd={() => {}} unverified>
@@ -54,6 +56,9 @@ function Workspace({ state }: { state: SessionState }) {
   const [loggingOut, setLoggingOut] = useState(false)
   const dirtyRef = useRef(false)
   const onDirtyChange = useCallback((dirty: boolean) => { dirtyRef.current = dirty }, [])
+  // 未保存確認は同じ有効セッションに限り、失効による資料除去を止めない。
+  // [ko] 미저장 확인은 같은 유효 세션에서만 적용해 세션 만료에 따른 자료 제거를 막지 않는다.
+  // [en] Block navigation only within the active session; never block clearing revoked-session data.
   const blocker = useBlocker(() => dirtyRef.current && api.snapshot().generation === state.generation && api.snapshot().status === 'ready')
   useBeforeUnload(useCallback((event: BeforeUnloadEvent) => {
     if (dirtyRef.current && api.snapshot().generation === state.generation) { event.preventDefault(); event.returnValue = '' }
@@ -61,6 +66,9 @@ function Workspace({ state }: { state: SessionState }) {
   const sensitive = location.pathname !== '/login'
   const routeCheck = useRef({ sequence: 0, controller: new AbortController() })
 
+  // 経路確認にも要求の識別と中断を使い、前の画面の応答を捨てる。
+  // [ko] 경로 확인에도 요청 식별과 취소를 적용해 이전 화면의 응답을 버린다.
+  // [en] Identify and cancel route checks so responses for earlier screens are discarded.
   const checkRoute = useCallback(async () => {
     routeCheck.current.controller.abort()
     const check = { sequence: routeCheck.current.sequence + 1, controller: new AbortController() }

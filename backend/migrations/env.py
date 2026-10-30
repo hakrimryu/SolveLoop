@@ -11,6 +11,9 @@ def run_migrations() -> None:
     try:
         with engine.connect() as connection:
             context.configure(connection=connection, target_metadata=Base.metadata)
+            # 対象DBへの接続を確認し、マイグレーションをトランザクション内で実行する。
+            # [ko] 대상 DB 연결을 확인하고 마이그레이션을 트랜잭션 안에서 실행한다.
+            # [en] Verify the target connection and run migrations within a transaction.
             with context.begin_transaction():
                 context.run_migrations()
     except SQLAlchemyError:

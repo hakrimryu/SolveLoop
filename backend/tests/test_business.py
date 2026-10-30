@@ -54,6 +54,9 @@ def test_business_input_boundaries():
 
 
 @pytest.fixture(scope="module")
+# 専用DBの一時スキーマを使い、業務検証と既存資料を分離する。
+# [ko] 전용 DB의 임시 스키마를 사용해 업무 검증과 기존 자료를 분리한다.
+# [en] Use a temporary schema in the dedicated test DB to isolate business verification.
 def business_engine():
     if os.getenv("RUN_DB_TESTS") != "1":
         pytest.skip("専用DBでのみ実行します。")

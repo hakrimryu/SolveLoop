@@ -14,6 +14,9 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORDを.envに設定してください}
       AUTH_ALLOWED_ORIGINS: '${AUTH_ALLOWED_ORIGINS:-["http://127.0.0.1:8000","http://localhost:8000","http://127.0.0.1:5173","http://127.0.0.1:5174"]}'
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
+    # APIはローカルホストだけに公開し、DBはCompose内の接続に限定する。
+    # [ko] API는 로컬 호스트에만 공개하고 DB는 Compose 내부 연결로 제한한다.
+    # [en] Expose the API on loopback only and keep the DB within the Compose network.
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
     depends_on:
@@ -34,6 +37,9 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USERを.envに設定してください}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORDを.envに設定してください}
     volumes:
+      # コンテナの再作成とDBの保存先を分離し、永続データを維持する。
+      # [ko] 컨테이너 재생성과 DB 저장 위치를 분리해 영속 데이터를 유지한다.
+      # [en] Keep database storage in a named volume so container recreation preserves data.
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]

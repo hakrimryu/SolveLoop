@@ -9,6 +9,9 @@ import RequestDialog from './RequestDialog'
 import styles from './Requests.module.css'
 
 export type RequestProps = BusinessProps & { operators: UserRef[] }
+// 詳細から戻る位置だけを保持し、認証世代が変わったら呼び出し側で破棄する。
+// [ko] 상세에서 돌아올 위치만 유지하고 인증 세대가 바뀌면 호출 측에서 폐기한다.
+// [en] Retain list return position only within an auth generation; callers clear it on auth changes.
 let listPosition: { url: string; y: number; id: string } | undefined
 export function clearRequestPosition() { listPosition = undefined }
 

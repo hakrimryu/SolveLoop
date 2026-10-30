@@ -28,6 +28,9 @@ from app.models import (
 )
 from app.seed import DEMO_PASSWORD
 
+# 起動済みの検証APIと専用DBを明示した場合だけ、実HTTPで業務を変更する。
+# [ko] 실행 중인 검증 API와 전용 DB를 명시한 경우에만 실제 HTTP로 업무 자료를 변경한다.
+# [en] Allow real HTTP business writes only when a running test API and dedicated DB are specified.
 pytestmark = [
     pytest.mark.integration,
     pytest.mark.skipif(

@@ -47,6 +47,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(knowledge_router)
     app.include_router(dashboard_router)
 
+    # 利用者別のAPI応答を保存させず、要求番号で内容を漏らさずに追跡する。
+    # [ko] 사용자별 API 응답의 캐시를 막고 원문을 노출하지 않는 요청 번호로 추적한다.
+    # [en] Disable API caching and trace failures by request ID without exposing payloads.
     @app.middleware("http")
     async def private_api_cache(request: Request, call_next):
         request.state.request_id = uuid4()
@@ -66,6 +69,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def live() -> dict[str, str]:
         return {"status": "alive"}
 
+    # 生存確認とは別にDB・適用版・vector拡張を検査し、基盤の準備状態を返す。
+    # [ko] 프로세스 생존 여부와 별도로 DB·마이그레이션 버전·vector 확장의 준비 상태를 검사한다.
+    # [en] Check DB, migrations, and vector readiness separately from process liveness.
     @app.get("/health/ready", summary="現在の基盤スキーマとDB接続の確認")
     def ready(session: Annotated[Session, Depends(get_session)]) -> JSONResponse:
         checks = {"database": "unavailable", "schema": "unchecked", "vector": "unchecked"}

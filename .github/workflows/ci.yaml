@@ -15,6 +15,9 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      # 専用DBとvolumeで検証し、既存のローカル業務データを対象にしない。
+      # [ko] 전용 DB와 volume으로 검증하며 기존 로컬 업무 데이터를 대상으로 삼지 않는다.
+      # [en] Run checks against a dedicated DB and volume, never the existing local business data.
       - name: 検証専用の設定を作成
         run: |
           test ! -e infrastructure/.env

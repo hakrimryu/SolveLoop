@@ -10,6 +10,9 @@ ENV UV_PYTHON_DOWNLOADS=never \
 WORKDIR /app
 COPY pyproject.toml uv.lock ./
 COPY THIRD_PARTY_NOTICES.txt ./
+# 実行用には固定した本番依存だけを入れ、開発依存はtest段階に分ける。
+# [ko] 실행 이미지에는 고정한 운영 의존성만 넣고 개발 의존성은 test 단계로 분리한다.
+# [en] Install locked runtime dependencies here; keep development dependencies in the test stage.
 RUN uv sync --locked --no-dev --no-cache --python /usr/local/bin/python
 COPY app ./app
 COPY alembic.ini ./

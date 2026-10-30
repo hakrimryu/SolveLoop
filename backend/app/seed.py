@@ -10,6 +10,8 @@ from app.database import build_engine
 from app.models import Department, User
 
 # 架空企業「株式会社 柳」の公開デモ専用資料。実在の人物・認証情報ではない。
+# [ko] 가상 회사 株式会社 柳의 공개 데모 전용 자료이며 실제 인물이나 인증 정보가 아니다.
+# [en] These are public demo records for a fictional company, not real people or credentials.
 DEMO_PASSWORD = "SolveLoop-Demo-2026!"
 DEPARTMENTS = (("IT", "IT"), ("HR", "人事"), ("GENERAL", "総務"), ("ACCOUNTING", "経理"))
 USERS = (
@@ -20,6 +22,8 @@ USERS = (
 
 def seed_auth(session: Session) -> None:
     # 同時実行でも既存資料を上書きせず、最小シード全体を一括して追加する。
+    # [ko] 동시 실행 시에도 기존 자료를 덮어쓰지 않고 최소 시드 전체를 한 번에 추가한다.
+    # [en] Serialize seed runs and add missing records atomically without overwriting existing data.
     session.execute(text("SELECT pg_advisory_xact_lock(7309001)"))
     for index, (code, name) in enumerate(DEPARTMENTS, 1):
         if session.scalar(select(Department).where(Department.code == code)) is None:

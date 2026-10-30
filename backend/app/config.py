@@ -24,6 +24,9 @@ class Settings(BaseSettings):
     ]
     auth_cookie_secure: bool = False
 
+    # Originは明示した接続元だけを許可し、wildcardやURLの余分な要素を拒否する。
+    # [ko] Origin은 명시한 출처만 허용하고 wildcard와 URL의 불필요한 구성 요소를 거부한다.
+    # [en] Accept explicit origins only; reject wildcards and extra URL components.
     @field_validator("auth_allowed_origins")
     @classmethod
     def validate_origins(cls, origins: list[str]) -> list[str]:
@@ -48,6 +51,9 @@ class Settings(BaseSettings):
 
     @property
     def database_url(self) -> URL:
+        # 認証情報をURL文字列へ直接連結せず、特殊文字を正しく扱う。
+        # [ko] 인증 정보를 URL 문자열에 직접 이어 붙이지 않아 특수문자를 올바르게 처리한다.
+        # [en] Build the URL from components so special characters in credentials remain valid.
         return URL.create(
             "postgresql+psycopg",
             username=self.postgres_user,

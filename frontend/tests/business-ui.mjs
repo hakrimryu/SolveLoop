@@ -10,6 +10,9 @@ import '../src/index.css'
 globalThis.IS_REACT_ACT_ENVIRONMENT = true
 const fixture = document.querySelector('#fixture'), results = document.querySelector('#results')
 const originalRequest = api.request, originalFetch = globalThis.fetch
+// 実コンポーネントを使っても業務APIには送信せず、隔離した応答で入力保護を検証する。
+// [ko] 실제 컴포넌트를 사용해도 업무 API로 전송하지 않고 격리 응답으로 입력 보호를 검증한다.
+// [en] Test real components with isolated responses while blocking requests to the business API.
 globalThis.fetch = async () => { throw new Error('検証中の実通信は禁止です。') }
 const dept = { id: '00000000-0000-0000-0000-000000000101', code: 'IT', name: 'IT' }
 const user = { id: '00000000-0000-0000-0000-000000000201', display_name: '担当者' }

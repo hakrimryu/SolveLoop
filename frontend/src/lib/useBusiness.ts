@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { api, errorMessage, isStale, StaleSession } from './api'
 import type { RequestOptions } from './api'
 
+// 画面離脱で業務要求を中断し、中断を無視した応答も反映しない。
+// [ko] 화면 이탈 시 업무 요청을 취소하고 취소를 무시한 응답도 반영하지 않는다.
+// [en] Cancel business calls on unmount and reject responses even if cancellation is ignored.
 export function useBusinessCall() {
   const scope = useRef(new AbortController())
   useEffect(() => { scope.current = new AbortController(); return () => scope.current.abort() }, [])
@@ -15,6 +18,9 @@ export function useBusinessCall() {
   }, [])
 }
 
+// 経路と再取得番号が一致する結果だけを表示し、古い一覧との混在を防ぐ。
+// [ko] 경로와 재조회 번호가 일치하는 결과만 표시해 오래된 목록과 섞이지 않게 한다.
+// [en] Display only matching paths and reload revisions to avoid mixing old and new results.
 export function useLoad<T>(path: string | null) {
   const call = useBusinessCall()
   const [revision, refresh] = useState(0)

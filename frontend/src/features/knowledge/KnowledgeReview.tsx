@@ -62,6 +62,9 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
   const dialogRef = useRef<HTMLDialogElement>(null)
   const cancelRef = useRef<HTMLButtonElement>(null)
   const editable = !saved || saved.status === 'draft'
+  // 送信中・結果不明中は根拠も固定し、送った内容と画面の選択のずれを防ぐ。
+  // [ko] 전송 중·결과 미확인 중에는 근거도 고정해 전송 내용과 화면 선택이 어긋나지 않게 한다.
+  // [en] Freeze evidence during submission and unknown outcomes so selections match the sent payload.
   const sourcesLocked = busy || uncertainCreate
   const refsDirty = JSON.stringify(refs) !== JSON.stringify(refsOf(saved?.sources ?? []))
   const inputDirty = editable && (JSON.stringify(input) !== JSON.stringify(inputOf(saved)) || refsDirty)
@@ -82,6 +85,9 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
     catch (cause) { if (!isStale(cause)) showError(errorMessage(cause)) }
     finally { setBusy(false) }
   }
+  // 下書き保存と公開を分け、根拠を明示変更した場合だけ置換集合を送る。
+  // [ko] 초안 저장과 공개를 구분하고 근거를 명시적으로 바꾼 경우에만 교체 집합을 전송한다.
+  // [en] Keep draft saving separate from publication; send source replacements only when edited.
   async function save(event?: FormEvent, retry = false) {
     event?.preventDefault()
     if (busy || blocked || uncertainCreate && !retry) return
@@ -99,6 +105,9 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
     } catch (cause) { if (!isStale(cause)) { showError(errorMessage(cause, true)); const unknown = !(cause instanceof ApiError) || cause.status >= 500; setBlocked(!!saved && (unknown || cause instanceof ApiError && cause.status === 409)); if (!saved) setUncertainCreate(unknown) } }
     finally { setBusy(false) }
   }
+  // 未保存の編集は承認せず、保存版と文書版の両方を指定して判断を送る。
+  // [ko] 미저장 편집은 승인하지 않고 저장 버전과 문서 버전을 모두 지정해 검토 결과를 전송한다.
+  // [en] Review saved content only, supplying both draft and document versions to detect conflicts.
   async function submitReview(event: FormEvent) {
     event.preventDefault()
     if (!saved || !confirm || busy || blocked || inputDirty) return
@@ -130,6 +139,9 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
     catch (cause) { if (!isStale(cause)) showError(errorMessage(cause)) }
     finally { setBusy(false) }
   }
+  // 原本を確認した版を選ぶだけにし、下書き保存まで根拠の置換を確定しない。
+  // [ko] 확인한 원본 버전을 선택만 하고 초안을 저장할 때까지 근거 교체를 확정하지 않는다.
+  // [en] Select the reviewed source version locally; commit evidence replacement only on draft save.
   function confirmSource(ticket: Ticket) {
     if (sourcesLocked || ticket.status !== 'resolved') return
     if (!sources.some(s => s.ticket_id === ticket.id)) setSources([...sources, sourceOf(ticket)])

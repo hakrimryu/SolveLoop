@@ -80,6 +80,9 @@ class TicketQuery(PageQuery):
     assignee: str | None = None
 
 
+# 所有者条件をサーバーの検索に含め、他人の問い合わせと未存在を区別させない。
+# [ko] 서버 조회에 소유자 조건을 포함해 타인의 문의와 없는 문의를 구분할 수 없게 한다.
+# [en] Apply ownership in the server query so foreign tickets and missing tickets look alike.
 def visible_ticket(session: Session, actor: User, ticket_id: UUID, lock: bool = False) -> Ticket:
     stmt = select(Ticket).where(Ticket.id == ticket_id)
     if actor.role != "operator":
@@ -125,6 +128,9 @@ def ticket_detail(session: Session, actor: User, ticket: Ticket) -> dict:
         .order_by(TicketEvent.ticket_version)
     ):
         payload = event.payload
+        # 社員の履歴は許可した項目だけ返し、過去本文などの内部情報を除く。
+        # [ko] 직원용 이력은 허용한 항목만 반환하고 과거 본문 등 내부 정보를 제외한다.
+        # [en] Return allowlisted employee history, excluding old bodies and internal data.
         if actor.role != "operator":
             allowed = {
                 "created": (),
@@ -322,6 +328,9 @@ def locked_ticket(
 
     if operator:
         require_operator(auth)
+    # 利用者を先にロックし、問い合わせの再取得と版確認を終えてから更新する。
+    # [ko] 사용자를 먼저 잠그고 문의 재조회와 버전 확인을 마친 뒤 갱신한다.
+    # [en] Lock users first, then reread and version-check the ticket before changing it.
     discovered = visible_ticket(session, auth[1], ticket_id)
     related = {
         value for value in (discovered.requester_id, discovered.assignee_id, assignee_id) if value
@@ -437,6 +446,9 @@ def transition_ticket(
     if data.action == "resolve":
         ticket.resolution, ticket.resolved_at = data.resolution, now
         payload.update(resolution=data.resolution, resolved_at=now)
+    # 再開前の解決内容は履歴へ残し、現在の解決欄だけを空にする。
+    # [ko] 재개 전 해결 내용은 이력에 남기고 현재 해결 필드만 비운다.
+    # [en] Preserve the previous resolution in history while clearing the current resolution.
     elif data.action == "reopen":
         payload.update(
             previous_resolution=ticket.resolution, previous_resolved_at=ticket.resolved_at

@@ -182,6 +182,9 @@ class IdempotencyRecord(Base):
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+# 公開版ポインターを分け、改訂中も直前の承認版を公開し続ける。
+# [ko] 공개 버전 포인터를 분리해 개정 중에도 직전 승인본을 계속 공개한다.
+# [en] Keep a separate publication pointer so revisions do not replace the approved version early.
 class KnowledgeDocument(Base):
     __tablename__ = "knowledge_documents"
     __table_args__ = (
@@ -215,6 +218,9 @@ class KnowledgeVersion(Base):
             ondelete="RESTRICT",
         ),
         Index(
+            # 同じ文書への同時作成でも、未承認の下書きはDBで一つに制限する。
+            # [ko] 같은 문서에 동시에 생성해도 미승인 초안은 DB에서 하나로 제한한다.
+            # [en] Enforce one draft per document in the DB, including concurrent creation attempts.
             "uq_document_draft",
             "document_id",
             unique=True,

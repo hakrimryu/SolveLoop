@@ -79,6 +79,9 @@ export class SessionApi {
     this.state = { ...this.state, ...patch }
     this.listeners.forEach(listener => listener())
   }
+  // 認証世代を進めて進行中の要求と前の利用者の資料を無効にする。
+  // [ko] 인증 세대를 올려 진행 중 요청과 이전 사용자의 자료를 무효화한다.
+  // [en] Advance the auth generation to invalidate pending requests and prior user data.
   private reset(status: SessionState['status'], notice = '', user: User | null = null, issued: IssuedPassword | null = null) {
     this.controllers.forEach(controller => controller.abort())
     this.controllers.clear()
@@ -88,6 +91,9 @@ export class SessionApi {
   }
   invalidate(hidden = false) { this.reset(hidden ? 'hidden' : 'checking') }
   closeIssued = () => this.publish({ issued: null })
+  // 応答後も世代を確認し、遅れて届いた別セッションの結果を反映させない。
+  // [ko] 응답 후에도 세대를 확인해 늦게 도착한 다른 세션의 결과가 반영되지 않게 한다.
+  // [en] Check the generation after responses so stale session results cannot update the UI.
   assertCurrent(generation: number) {
     if (generation !== this.state.generation) throw new StaleSession()
   }
@@ -147,6 +153,9 @@ export class SessionApi {
     return pending
   }
 
+  // 書き込み直前に資格を再確認し、失敗したPOSTを自動再送しない。
+  // [ko] 쓰기 직전에 자격을 재확인하며 실패한 POST를 자동으로 재전송하지 않는다.
+  // [en] Reverify credentials before writes; never automatically resend a failed POST.
   async request<T>(path: string, body?: unknown, options: RequestOptions = {}): Promise<T> {
     const generation = this.state.generation
     if (options.signal?.aborted) throw new StaleSession()
@@ -205,6 +214,9 @@ export class SessionApi {
 
 let channel: BroadcastChannel | undefined
 export const api = new SessionApi(fetch, () => channel?.postMessage('invalidate'))
+// 別タブ通知は再確認の合図だけに使い、通知内容を認証根拠にしない。
+// [ko] 다른 탭의 알림은 재확인 신호로만 쓰고 알림 내용을 인증 근거로 삼지 않는다.
+// [en] Use cross-tab messages only to trigger verification, never as authentication evidence.
 export function watchSession() {
   channel = new BroadcastChannel('solveloop-auth')
   const refresh = () => {

@@ -32,6 +32,9 @@ function AccountModal({ title, description, onClose, children }: { title: string
   </dialog>
 }
 
+// 仮パスワードは一回表示だけに留め、閉じた後の再照会や自動コピーを行わない。
+// [ko] 임시 비밀번호는 일회 표시로 제한하고 닫은 뒤 재조회하거나 자동 복사하지 않는다.
+// [en] Show temporary passwords once, without automatic copying or later plaintext retrieval.
 export function TemporaryPasswordDialog({ issued, onClose }: { issued: IssuedPassword; onClose: () => void }) {
   return <AccountModal title="仮パスワードを発行しました" description="成功直後の1回だけ表示します。閉じると原文は再表示できません。" onClose={onClose}>
     <dl className={styles.facts}><dt>ログインID</dt><dd>{issued.account.login_id}</dd><dt>仮パスワード</dt><dd><code className={styles.secret}>{issued.temporary_password}</code></dd></dl>
@@ -61,6 +64,9 @@ function AccountList({ user, departments, onDirtyChange }: Props) {
   const loadSequence = useRef(0)
   const selected = accounts.find(account => account.id === selectedId)
 
+  // 取得順序と認証世代で結果を選び、遅い一覧が現在の選択を上書きしないようにする。
+  // [ko] 조회 순서와 인증 세대로 결과를 골라 늦은 목록이 현재 선택을 덮어쓰지 않게 한다.
+  // [en] Check request order and auth generation so late account lists cannot overwrite current state.
   async function load() {
     const sequence = ++loadSequence.current
     setLoading(true)

@@ -99,6 +99,8 @@ def auth_engine():
     assert settings.postgres_db == "solveloop_test", "専用の空DBを指定してください。"
     engine = build_engine(settings)
     # 基盤テストのpublicを変更せず、認証の各ケースを独立したスキーマで実行する。
+    # [ko] 기반 테스트의 public을 변경하지 않고 인증 사례마다 독립 스키마에서 실행한다.
+    # [en] Isolate authentication cases in separate schemas without changing foundation test tables.
     with engine.begin() as connection:
         connection.execute(text("CREATE SCHEMA solveloop_auth_test"))
     mapped = engine.execution_options(schema_translate_map={None: "solveloop_auth_test"})

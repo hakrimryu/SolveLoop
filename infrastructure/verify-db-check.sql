@@ -1,4 +1,6 @@
 -- 再起動・再作成の前後で同じ保存行とベクトル演算を確認します。
+-- [ko] 재시작·재생성 전후에 같은 저장 행과 벡터 연산을 확인한다.
+-- [en] Check the same stored row and vector calculation before and after container recreation.
 \set ON_ERROR_STOP on
 
 DO $$

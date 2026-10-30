@@ -95,6 +95,8 @@ def dashboard(auth: FullAuthenticated, session: DbSession):
             .where(KnowledgeVersion.status == "draft")
         )
     # 問い合わせとレビューを一つのSQLで読み、件数と明細の観測時点を揃える。
+    # [ko] 문의와 검토 자료를 하나의 SQL로 읽어 건수와 상세 자료의 관측 시점을 맞춘다.
+    # [en] Read tickets and reviews in one SQL statement so totals and rows share a snapshot.
     records = union_all(*queries).subquery()
     rows = session.execute(select(records.c.kind, records.c.item, func.statement_timestamp())).all()
     items = [item for kind, item, _ in rows if kind == "ticket"]

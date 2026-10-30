@@ -24,6 +24,9 @@ export const reviewApi = (item: { document_id: string; version_no: number }) => 
 export const normalizeInput = (value: string) => value.replace(/\r\n/g, '\n').trim()
 export function validateText(value: string, max: number) { const size = [...normalizeInput(value)].length; return size < 1 || size > max ? `1〜${max}文字で入力してください。` : '' }
 export function validateKnowledge(input: KnowledgeInput) { return { title: validateText(input.title, 120), audience: validateText(input.audience, 300), body: validateText(input.body, 20000) } }
+// 画面専用の状態をAPIへ送らず、契約で許可した検索条件だけを組み立てる。
+// [ko] 화면 전용 상태를 API로 보내지 않고 계약에서 허용한 검색 조건만 구성한다.
+// [en] Send only allowed query fields; keep screen-only state out of API requests.
 export function apiQuery(params: URLSearchParams, allowed: string[]) { const result = new URLSearchParams(); for (const key of allowed) if (params.has(key)) result.set(key, params.get(key)!); return result.toString() }
 
 export function eventText(event: BusinessEvent) {

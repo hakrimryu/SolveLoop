@@ -28,6 +28,9 @@ export default function RequestDialog({ departments, onDirtyChange, onClose }: R
   useLayoutEffect(() => { dialog.current!.showModal(); title.current?.focus(); return () => dialog.current?.close() }, [])
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
   function close() { if (!busy) { if (dirty) setConfirm(true); else onClose() } }
+  // 結果不明時も入力と登録キーを固定し、人の確認後だけ同じ登録を再試行する。
+  // [ko] 결과 미확인 중에는 입력과 등록 키를 고정하고 사용자 확인 후에만 같은 등록을 재시도한다.
+  // [en] Keep payload and key fixed while the outcome is unknown; retry only after explicit review.
   async function submit() {
     if (busy) return
     const validation = { title: validateText(input.title, 120), body: validateText(input.body, 5000) }

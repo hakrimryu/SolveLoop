@@ -8,6 +8,9 @@ branch_labels = None
 depends_on = None
 
 
+# 適用済みの版を再生成せず、固定したDDLで既存認証表を保ったまま業務表を追加する。
+# [ko] 적용된 버전을 재생성하지 않고 고정 DDL로 기존 인증 테이블을 유지하며 업무 테이블을 추가한다.
+# [en] Use frozen DDL to add business tables while preserving existing authentication tables.
 def upgrade() -> None:
     op.execute("""
         CREATE SEQUENCE ticket_number_seq

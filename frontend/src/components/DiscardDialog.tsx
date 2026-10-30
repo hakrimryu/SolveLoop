@@ -18,6 +18,9 @@ export function trapDialogFocus(event: KeyboardEvent<HTMLDialogElement>) {
 
 export default function DiscardDialog({ onDiscard, onCancel }: { onDiscard: () => void; onCancel: () => void }) {
   const ref = useRef<HTMLDialogElement>(null)
+  // 初期フォーカスを入力継続へ置き、誤操作で未保存内容を捨てないようにする。
+  // [ko] 초기 초점을 입력 계속 버튼에 두어 실수로 미저장 내용을 버리지 않게 한다.
+  // [en] Focus the keep-editing action first to reduce accidental loss of unsaved input.
   const cancelRef = useRef<HTMLButtonElement>(null)
   useLayoutEffect(() => {
     const previous = document.activeElement as HTMLElement | null
