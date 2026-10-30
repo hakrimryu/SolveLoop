@@ -12,6 +12,7 @@ import common from '../requests/Requests.module.css'
 import styles from './Knowledge.module.css'
 
 type Props = KnowledgeProps & {
+  actorName: string
   requests: MockRequest[]
   onKnowledgeChange: (knowledge: KnowledgeVersion[]) => void
   onDirtyChange: (dirty: boolean) => void
@@ -35,7 +36,7 @@ export default function KnowledgeReview(props: Props) {
   }
 }
 
-function Editor({ role, knowledge, requests, onKnowledgeChange, onDirtyChange, getNextTimestamp, saved, initial, sources, documentId }: Props & { saved?: KnowledgeVersion; initial: KnowledgeInput; sources: KnowledgeSource[]; documentId?: string }) {
+function Editor({ role, actorName, knowledge, requests, onKnowledgeChange, onDirtyChange, getNextTimestamp, saved, initial, sources, documentId }: Props & { saved?: KnowledgeVersion; initial: KnowledgeInput; sources: KnowledgeSource[]; documentId?: string }) {
   const [input, setInput] = useState(initial)
   const [preview, setPreview] = useState(false)
   const [mode, setMode] = useState<DisplayMode>('normal')
@@ -97,7 +98,7 @@ function Editor({ role, knowledge, requests, onKnowledgeChange, onDirtyChange, g
       return
     }
     try {
-      const result = saveKnowledgeDraft(knowledge, role, input, sources, getNextTimestamp(), saved, documentId)
+      const result = saveKnowledgeDraft(knowledge, role, input, sources, getNextTimestamp(), saved, documentId, actorName)
       onDirtyChange(false)
       onKnowledgeChange(result.knowledge)
       setInput({ title: result.saved.title, audience: result.saved.audience, department: result.saved.department, body: result.saved.body })
@@ -133,7 +134,7 @@ function Editor({ role, knowledge, requests, onKnowledgeChange, onDirtyChange, g
       return
     }
     try {
-      const next = reviewKnowledge(knowledge, requests, role, saved, confirm, reason, getNextTimestamp())
+      const next = reviewKnowledge(knowledge, requests, role, saved, confirm, reason, getNextTimestamp(), actorName)
       onDirtyChange(false)
       onKnowledgeChange(next)
       setReason('')

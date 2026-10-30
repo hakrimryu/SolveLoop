@@ -1,7 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
 import type { FocusEvent, ReactNode } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
-import { demoUsers } from '../lib/mockData'
 import type { getMockSession, MockSessionEnd } from '../lib/mockData'
 import styles from './AppLayout.module.css'
 
@@ -12,12 +11,13 @@ type Props = {
   children: ReactNode
 }
 
-function MenuIcon({ kind }: { kind: 'dashboard' | 'requests' | 'knowledge' | 'review' }) {
+function MenuIcon({ kind }: { kind: 'dashboard' | 'requests' | 'knowledge' | 'review' | 'accounts' }) {
   const paths = {
     dashboard: 'M3 3h6v6H3z M13 3h6v6h-6z M3 13h6v6H3z M13 13h6v6h-6z',
     requests: 'M4 4h14v14H4z M4 12h4l2 3h2l2-3h4 M8 8h6',
     knowledge: 'M11 5C8 3 5 3 2 4v14c3-1 6-1 9 1m0-14c3-2 6-2 9-1v14c-3-1-6-1-9 1V5z',
     review: 'M7 4H4v15h14V4h-3 M8 2h6v4H8z M7 12l3 3 5-6',
+    accounts: 'M14 7a3 3 0 1 1-6 0 3 3 0 0 1 6 0 M5 19v-3a6 6 0 0 1 12 0v3z',
   }
   return (
     <svg aria-hidden="true" focusable="false" viewBox="0 0 22 22" className={styles.menuIcon}>
@@ -31,7 +31,7 @@ export default function AppLayout({ session, notice, onSessionEnd, children }: P
   const previousPath = useRef(location.pathname === '/' ? '/dashboard' : location.pathname)
   const [menuOpen, setMenuOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
-  const user = session ? demoUsers[session.role] : null
+  const user = session
   const showNavigation = !!session && !session.mustChangePassword
 
   useLayoutEffect(() => {
@@ -64,7 +64,7 @@ export default function AppLayout({ session, notice, onSessionEnd, children }: P
         </Link>
         <span className={styles.demoLabel}>架空企業・デモデータ</span>
         <div className={styles.account}>
-          {user ? <><span>{user.name}<span className={styles.role}>{user.roleLabel}</span></span>
+          {user ? <><span>{user.name}<span className={styles.role}>{user.role === 'operator' ? '担当者' : '社員'}{user.canManageAccounts ? '・アカウント管理権限あり' : ''}</span></span>
           <details className={styles.demoSettings} onBlur={handleAccountBlur}>
             <summary>アカウント</summary>
             <div className={styles.settingsBody}>
@@ -115,6 +115,7 @@ export default function AppLayout({ session, notice, onSessionEnd, children }: P
                 <MenuIcon kind="review" />ナレッジレビュー
               </NavLink>
             )}
+            {session?.canManageAccounts && <NavLink to="/settings/accounts" onClick={closeMenu}><MenuIcon kind="accounts" />アカウント管理</NavLink>}
             <p className={styles.navNote}><span>ローカルデモ</span>すべて合成データです。</p>
           </nav>
         </div>}

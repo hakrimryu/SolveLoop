@@ -2,12 +2,14 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router'
 import { departments, getRequestFilters, getRequestList, operators, personName, formatDemoDate, statusLabels } from '../../lib/mockData'
-import type { DemoRole, MockRequest } from '../../lib/mockData'
+import type { DemoRole, MockRequest, MockAccountView } from '../../lib/mockData'
 import RequestDialog from './RequestDialog'
 import styles from './Requests.module.css'
 
 export type RequestProps = {
   role: DemoRole
+  userId: string
+  people: Pick<MockAccountView, 'id' | 'name'>[]
   requests: MockRequest[]
   onRequestsChange: (requests: MockRequest[]) => void
   onDirtyChange: (dirty: boolean) => void
@@ -42,7 +44,7 @@ export default function Requests(props: RequestProps) {
   const registerRef = useRef<HTMLButtonElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const showDialog = params.get('new') === '1'
-  const data = getRequestList(mode === 'empty' ? [] : requests, role, params)
+  const data = getRequestList(mode === 'empty' ? [] : requests, role, params, props.userId)
   const filters = getRequestFilters(params)
 
   useEffect(() => { setQuery(searchQuery) }, [searchQuery])
@@ -184,7 +186,7 @@ export default function Requests(props: RequestProps) {
                         </Link>
                       </td>
                       <td><span className={`status ${request.status}`}>{statusLabels[request.status]}</span></td>
-                      {role === 'operator' && <td className={styles.person}>{personName(request.requesterId)}</td>}
+                      {role === 'operator' && <td className={styles.person}>{personName(request.requesterId, props.people)}</td>}
                       <td className={styles.person}>{personName(request.assigneeId)}</td><td>{request.department}</td>
                       <td className={styles.date}><time dateTime={request.updatedAt}>{formatDemoDate(request.updatedAt)}</time></td>
                     </tr>

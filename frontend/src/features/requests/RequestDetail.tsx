@@ -11,7 +11,7 @@ import DiscardDialog from '../../components/DiscardDialog'
 export default function RequestDetail(props: RequestProps) {
   const { requestId } = useParams()
   const location = useLocation()
-  const request = getVisibleRequests(props.requests, props.role).find(item => item.id === requestId)
+  const request = getVisibleRequests(props.requests, props.role, props.userId).find(item => item.id === requestId)
   if (request) return <Detail key={`${props.role}-${request.id}`} {...props} request={request} />
 
   return (
@@ -25,7 +25,7 @@ export default function RequestDetail(props: RequestProps) {
   )
 }
 
-function Detail({ role, requests, request, onRequestsChange, onDirtyChange, getNextTimestamp }: RequestProps & { request: MockRequest }) {
+function Detail({ role, userId, people, requests, request, onRequestsChange, onDirtyChange, getNextTimestamp }: RequestProps & { request: MockRequest }) {
   const location = useLocation()
   const [mode, setMode] = useState<DisplayMode>('normal')
   const [assignee, setAssignee] = useState(request.assigneeId ?? '')
@@ -64,7 +64,7 @@ function Detail({ role, requests, request, onRequestsChange, onDirtyChange, getN
       return
     }
     try {
-      onRequestsChange(updateRequest(requests, role, request.id, action, getNextTimestamp()))
+      onRequestsChange(updateRequest(requests, role, request.id, action, getNextTimestamp(), userId))
       if (action.type === 'resolve') {
         setResolution('')
         headingRef.current?.focus()
@@ -173,7 +173,7 @@ function Detail({ role, requests, request, onRequestsChange, onDirtyChange, getN
                 )}
               </div>
               <p className={styles.meta}>
-                申請者 {personName(request.requesterId)} · 登録 <time dateTime={request.createdAt}>{formatDemoDate(request.createdAt)} JST</time>
+                申請者 {personName(request.requesterId, people)} · 登録 <time dateTime={request.createdAt}>{formatDemoDate(request.createdAt)} JST</time>
               </p>
               {editing ? (
                 <form onSubmit={saveBody} noValidate onKeyDown={event => {
@@ -216,7 +216,7 @@ function Detail({ role, requests, request, onRequestsChange, onDirtyChange, getN
                 {request.events.map((event, index) => (
                   <li key={index}>
                     <div>
-                      <strong>{personName(event.actorId)}</strong>
+                      <strong>{personName(event.actorId, people)}</strong>
                       <time dateTime={event.at}>{formatDemoDate(event.at)} JST</time>
                     </div>
                     <p>{event.description}</p>
@@ -229,7 +229,7 @@ function Detail({ role, requests, request, onRequestsChange, onDirtyChange, getN
             <section className={styles.section}>
               <h2>問い合わせ情報</h2>
               <dl className={styles.metadata}>
-                <dt>申請者</dt><dd>{personName(request.requesterId)}</dd>
+                <dt>申請者</dt><dd>{personName(request.requesterId, people)}</dd>
                 <dt>担当部署</dt><dd>{request.department}</dd>
                 <dt>担当者</dt><dd>{personName(request.assigneeId)}</dd>
                 <dt>状態</dt><dd>{statusLabels[request.status]}</dd>

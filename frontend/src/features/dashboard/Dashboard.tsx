@@ -9,12 +9,12 @@ import styles from './Dashboard.module.css'
 type DisplayMode = 'normal' | 'empty' | 'loading' | 'error'
 const statuses: RequestStatus[] = ['open', 'in_progress', 'resolved']
 
-export default function Dashboard({ role, requests, knowledge }: { role: DemoRole; requests: MockRequest[]; knowledge: KnowledgeVersion[] }) {
+export default function Dashboard({ role, userId, requests, knowledge }: { role: DemoRole; userId: string; requests: MockRequest[]; knowledge: KnowledgeVersion[] }) {
   const [mode, setMode] = useState<DisplayMode>('normal')
   const [searchParams, setSearchParams] = useSearchParams()
   const titleRef = useRef<HTMLHeadingElement>(null)
   const radarLinkRef = useRef<HTMLAnchorElement>(null)
-  const data = getDashboardData(role, mode === 'empty' ? 'empty' : 'normal', requests, knowledge)
+  const data = getDashboardData(role, mode === 'empty' ? 'empty' : 'normal', requests, knowledge, userId)
   const isOperator = role === 'operator'
   const selectedCandidate = searchParams.get('radar')
   const showRadar = isOperator && mode === 'normal' && selectedCandidate !== null

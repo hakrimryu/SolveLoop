@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link } from 'react-router'
-import { demoUsers, mockLoginExamples } from '../../lib/mockData'
+import { mockLoginExamples } from '../../lib/mockData'
 import type { MockAuthErrors } from '../../lib/mockData'
 import styles from './AuthScreen.module.css'
 
@@ -81,7 +81,7 @@ export default function AuthScreen({ changePassword = false, requiredChange = fa
       <summary>入力例（合成データ・モック専用）</summary>
       <p className={styles.help}>役割は入力例のアカウントに対応します。実際の認証APIのアカウント・パスワードとは別です。</p>
       <dl>{mockLoginExamples.map(account => <div key={account.loginId}>
-        <dt>{demoUsers[account.role].name}（{demoUsers[account.role].roleLabel}） · {account.mustChangePassword ? '初回・仮パスワード' : '通常ログイン'}</dt>
+        <dt>{account.name}（{account.role === 'operator' ? '担当者' : '社員'}・管理権限{account.canManageAccounts ? 'あり' : 'なし'}） · {account.mustChangePassword ? '初回・仮パスワード' : '通常ログイン'}</dt>
         <dd>ID：<code>{account.loginId}</code><br />パスワード：<code>{account.password}</code></dd>
       </div>)}</dl>
       <p className={styles.help}>変更後はこのタブで入力した新しい値を使います。再読み込みすると初期値に戻ります。</p>

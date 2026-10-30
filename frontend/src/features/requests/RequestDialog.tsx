@@ -6,7 +6,7 @@ import type { RequestProps } from './Requests'
 import styles from './Requests.module.css'
 import DiscardDialog, { trapDialogFocus } from '../../components/DiscardDialog'
 
-export default function RequestDialog({ role, requests, onRequestsChange, onDirtyChange, onClose, getNextTimestamp }: RequestProps & { onClose: () => void }) {
+export default function RequestDialog({ role, userId, requests, onRequestsChange, onDirtyChange, onClose, getNextTimestamp }: RequestProps & { onClose: () => void }) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const titleRef = useRef<HTMLInputElement>(null)
   const formRef = useRef<HTMLFormElement>(null)
@@ -55,7 +55,7 @@ export default function RequestDialog({ role, requests, onRequestsChange, onDirt
       setError('登録に失敗しました（デモ用）。入力は保持されています。もう一度「登録」を押してください。')
       return
     }
-    const result = registerRequest(requests, role, input, getNextTimestamp())
+    const result = registerRequest(requests, role, input, getNextTimestamp(), userId)
     onRequestsChange(result.requests)
     onDirtyChange(false)
     const params = new URLSearchParams(location.search)
