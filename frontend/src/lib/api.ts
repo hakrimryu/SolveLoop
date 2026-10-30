@@ -24,6 +24,7 @@ export class ApiError extends Error {
 }
 
 export class StaleSession extends Error {}
+export type RequestOptions = { method?: 'POST' | 'PATCH'; idempotencyKey?: string; signal?: AbortSignal; business?: boolean }
 export const isStale = (error: unknown) => error instanceof StaleSession
 
 export function errorMessage(error: unknown, write = false) {
@@ -91,25 +92,28 @@ export class SessionApi {
     if (generation !== this.state.generation) throw new StaleSession()
   }
 
-  private async raw<T>(path: string, body?: unknown, login = false): Promise<T> {
+  private async raw<T>(path: string, body?: unknown, login = false, options: RequestOptions = {}): Promise<T> {
     const generation = this.state.generation
     const controller = new AbortController()
     this.controllers.add(controller)
+    const abort = () => controller.abort()
+    options.signal?.addEventListener('abort', abort, { once: true })
+    if (options.signal?.aborted) controller.abort()
     try {
       const response = await this.fetcher(`/api/v1${path}`, {
-        method: body === undefined ? 'GET' : 'POST', credentials: 'include', cache: 'no-store', signal: controller.signal,
-        headers: body === undefined ? {} : { 'Content-Type': 'application/json', ...(!login ? { 'X-CSRF-Token': this.csrf } : {}) },
+        method: body === undefined ? 'GET' : options.method ?? 'POST', credentials: 'include', cache: 'no-store', signal: controller.signal,
+        headers: body === undefined ? {} : { 'Content-Type': 'application/json', ...(!login ? { 'X-CSRF-Token': this.csrf } : {}), ...(options.idempotencyKey ? { 'Idempotency-Key': options.idempotencyKey } : {}) },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       })
-      if (generation !== this.state.generation) throw new StaleSession()
+      if (generation !== this.state.generation || controller.signal.aborted) throw new StaleSession()
       const data = response.status === 204 ? undefined : await response.json()
-      if (generation !== this.state.generation) throw new StaleSession()
+      if (generation !== this.state.generation || controller.signal.aborted) throw new StaleSession()
       if (!response.ok) throw new ApiError(response.status, data.code ?? 'HTTP_ERROR', data.message ?? '処理に失敗しました。', data.request_id ?? '')
       return data as T
     } catch (error) {
       if (generation !== this.state.generation || controller.signal.aborted) throw new StaleSession()
       throw error
-    } finally { this.controllers.delete(controller) }
+    } finally { this.controllers.delete(controller); options.signal?.removeEventListener('abort', abort) }
   }
 
   async verify(): Promise<User | null> {
@@ -143,15 +147,17 @@ export class SessionApi {
     return pending
   }
 
-  async request<T>(path: string, body?: unknown): Promise<T> {
+  async request<T>(path: string, body?: unknown, options: RequestOptions = {}): Promise<T> {
     const generation = this.state.generation
+    if (options.signal?.aborted) throw new StaleSession()
     if (body !== undefined) {
       const user = await this.verify()
-      if (!user || generation !== this.state.generation) throw new StaleSession()
+      if (!user || generation !== this.state.generation || options.signal?.aborted) throw new StaleSession()
     }
     try {
-      const result = await this.raw<T>(path, body)
+      const result = await this.raw<T>(path, body, false, options)
       this.assertCurrent(generation)
+      if (options.signal?.aborted) throw new StaleSession()
       return result
     }
     catch (error) {
@@ -163,7 +169,7 @@ export class SessionApi {
       } else if (error instanceof ApiError && error.status === 403) {
         this.reset('checking', errorMessage(error))
         try { await this.verify() } catch { /* 再確認画面で接続エラーを表示する。 */ }
-      } else if (!(error instanceof ApiError) || error.status >= 500) {
+      } else if (!options.business && (!(error instanceof ApiError) || error.status >= 500)) {
         this.reset('error', errorMessage(error, body !== undefined))
       }
       throw error

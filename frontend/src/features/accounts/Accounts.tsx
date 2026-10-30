@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
-import { formatDemoDate } from '../../lib/mockData'
+import { formatDate as formatDemoDate } from '../../lib/business'
 import { api, ApiError, errorMessage, isStale, validateAccount } from '../../lib/api'
 import type { Account, AccountAction, AccountInput, Department, EventList, FormErrors, IssuedPassword, User } from '../../lib/api'
 import DiscardDialog, { trapDialogFocus } from '../../components/DiscardDialog'

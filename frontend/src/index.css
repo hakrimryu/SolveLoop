@@ -25,6 +25,7 @@ h2 { font-size: 1rem; line-height: 1.5; font-weight: 700; }
 h3 { font-size: .9375rem; line-height: 1.55; font-weight: 600; }
 p + p { margin-top: 8px; }
 code { overflow-wrap: anywhere; }
+fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
 table { width: 100%; border-collapse: collapse; text-align: left; }
 th, td { height: 48px; padding: 12px; border-bottom: 1px solid #edf0f4; vertical-align: middle; }
 thead { background: #f8f9fb; color: #637084; font-size: .75rem; }

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExter
 import { Link, Navigate, Outlet, Route, Routes, useBeforeUnload, useBlocker, useLocation } from 'react-router'
 import AppLayout from './components/AppLayout'
 import Dashboard from './features/dashboard/Dashboard'
-import { createBusinessSnapshot, nextMockTimestamp } from './lib/mockData'
 import { api, errorMessage, isStale, watchSession } from './lib/api'
 import type { ReferenceData, SessionState } from './lib/api'
 import Requests, { clearRequestPosition } from './features/requests/Requests'
@@ -47,10 +46,6 @@ function Workspace({ state }: { state: SessionState }) {
   const location = useLocation()
   const session = state.user
   const role = session?.role ?? 'employee'
-  const userId = session?.id ?? ''
-  const [snapshot] = useState(createBusinessSnapshot)
-  const [requests, setRequests] = useState(snapshot.requests)
-  const [knowledge, setKnowledge] = useState(snapshot.knowledge)
   const [references, setReferences] = useState<ReferenceData>({ departments: [] })
   const [checkedPath, setCheckedPath] = useState('')
   const [checkError, setCheckError] = useState('')
@@ -63,24 +58,30 @@ function Workspace({ state }: { state: SessionState }) {
   useBeforeUnload(useCallback((event: BeforeUnloadEvent) => {
     if (dirtyRef.current && api.snapshot().generation === state.generation) { event.preventDefault(); event.returnValue = '' }
   }, [state.generation]))
-  const sensitive = location.pathname === '/settings/accounts' || location.pathname === '/password/change'
+  const sensitive = location.pathname !== '/login'
+  const routeCheck = useRef({ sequence: 0, controller: new AbortController() })
 
   const checkRoute = useCallback(async () => {
+    routeCheck.current.controller.abort()
+    const check = { sequence: routeCheck.current.sequence + 1, controller: new AbortController() }
+    routeCheck.current = check
     setChecking(true)
     setCheckError('')
     try {
       const user = await api.verify()
-      if (!user || api.snapshot().generation !== state.generation) return
+      if (!user || api.snapshot().generation !== state.generation || routeCheck.current !== check || check.controller.signal.aborted) return
       if (!user.must_change_password) {
-        const data = await api.request<ReferenceData>('/reference-data')
+        const data = await api.request<ReferenceData>('/reference-data', undefined, { signal: check.controller.signal })
+        api.assertCurrent(state.generation)
+        if (routeCheck.current !== check || check.controller.signal.aborted) return
         setReferences(data)
       }
-      setCheckedPath(location.key)
-    } catch (error) { if (!isStale(error)) setCheckError(errorMessage(error)) }
-    finally { setChecking(false) }
-  }, [location.pathname, location.key, state.generation])
+      setCheckedPath(location.pathname)
+    } catch (error) { if (routeCheck.current === check && !check.controller.signal.aborted && !isStale(error)) setCheckError(errorMessage(error)) }
+    finally { if (routeCheck.current === check) setChecking(false) }
+  }, [location.pathname, state.generation])
 
-  useEffect(() => { if (session) void checkRoute() }, [!!session, checkRoute])
+  useEffect(() => { if (session) void checkRoute(); return () => routeCheck.current.controller.abort() }, [!!session, checkRoute])
   const previousPath = useRef(location.pathname)
   useEffect(() => {
     if (previousPath.current !== location.pathname && !(!session && state.issued && location.pathname === '/login')) api.closeIssued()
@@ -95,12 +96,8 @@ function Workspace({ state }: { state: SessionState }) {
     finally { setLoggingOut(false) }
   }
 
-  const getNextTimestamp = () => nextMockTimestamp(requests, knowledge)
-  const people = [...(references.operators ?? []).map(user => ({ id: user.id, name: user.display_name })), ...(session ? [{ id: session.id, name: session.display_name }] : [])]
-  const operatorOptions = (references.operators ?? []).map(user => ({ id: user.id, name: user.display_name }))
-  const requestProps = { role, userId, people, operatorOptions, requests, onRequestsChange: setRequests, onDirtyChange, getNextTimestamp }
-  const knowledgeProps = { role, knowledge }
-  const reviewProps = { ...knowledgeProps, actorName: session?.display_name ?? '', requests, onKnowledgeChange: setKnowledge, onDirtyChange, getNextTimestamp }
+  const businessProps = { role, departments: references.departments, onDirtyChange }
+  const requestProps = { ...businessProps, operators: references.operators ?? [] }
 
   return <AppLayout session={session} notice={state.notice} onSessionEnd={() => { void logout() }} busy={loggingOut}>
     {logoutError && <p role="alert">{logoutError}</p>}
@@ -109,22 +106,22 @@ function Workspace({ state }: { state: SessionState }) {
         try { await api.login(values.loginId, values.password); return {} }
         catch (error) { return { form: errorMessage(error, true) } }
       }} />} />
-      <Route element={!session ? <Navigate to="/login" replace state={null} /> : session.must_change_password && location.pathname !== '/password/change' ? <Navigate to="/password/change" replace state={null} /> : sensitive && checkedPath !== location.key ? <><h1 tabIndex={-1}>接続状態の確認</h1>{checkError ? <><p role="alert">{checkError}</p><button className="button" disabled={checking} onClick={() => { void checkRoute() }}>再確認</button></> : <p role="status">確認中…</p>}</> : <Outlet />}>
+      <Route element={!session ? <Navigate to="/login" replace state={null} /> : session.must_change_password && location.pathname !== '/password/change' ? <Navigate to="/password/change" replace state={null} /> : sensitive && checkedPath !== location.pathname ? <><h1 tabIndex={-1}>接続状態の確認</h1>{checkError ? <><p role="alert">{checkError}</p><button className="button" disabled={checking} onClick={() => { void checkRoute() }}>再確認</button></> : <p role="status">確認中…</p>}</> : <Outlet />}>
         <Route path="/password/change" element={<AuthScreen changePassword requiredChange={session?.must_change_password} loginId={session?.display_name} onDirtyChange={onDirtyChange} onSubmit={async values => {
           try { await api.end('/auth/password/change', { current_password: values.currentPassword, new_password: values.newPassword }); return {} }
           catch (error) { return { form: errorMessage(error, true) } }
         }} />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard role={role} userId={userId} requests={requests} knowledge={knowledge} />} />
+        <Route path="/dashboard" element={<Dashboard role={role} />} />
         <Route path="/requests" element={<Requests {...requestProps} />} />
         <Route path="/requests/:requestId" element={<RequestDetail {...requestProps} />} />
         <Route path="/settings/accounts" element={<Accounts user={session!} departments={references.departments} onDirtyChange={onDirtyChange} />} />
-        <Route path="/knowledge/reviews" element={<KnowledgeList {...knowledgeProps} review />} />
-        <Route path="/knowledge/reviews/new" element={<KnowledgeReview {...reviewProps} />} />
-        <Route path="/knowledge/reviews/:documentId/versions/:version" element={<KnowledgeReview {...reviewProps} />} />
-        <Route path="/knowledge/reviews/*" element={<KnowledgeList {...knowledgeProps} review />} />
-        <Route path="/knowledge" element={<KnowledgeList {...knowledgeProps} />} />
-        <Route path="/knowledge/:documentId" element={<KnowledgeDetail key={location.pathname} {...knowledgeProps} />} />
+        <Route path="/knowledge/reviews" element={<KnowledgeList {...businessProps} review />} />
+        <Route path="/knowledge/reviews/new" element={<KnowledgeReview {...businessProps} />} />
+        <Route path="/knowledge/reviews/:documentId/versions/:version" element={<KnowledgeReview {...businessProps} />} />
+        <Route path="/knowledge/reviews/*" element={<KnowledgeList {...businessProps} review />} />
+        <Route path="/knowledge" element={<KnowledgeList {...businessProps} />} />
+        <Route path="/knowledge/:documentId" element={<KnowledgeDetail key={location.pathname} {...businessProps} />} />
         <Route path="*" element={<><h1 tabIndex={-1}>ページが見つかりません</h1><Link to="/dashboard">ダッシュボードに戻る</Link></>} />
       </Route>
     </Routes>

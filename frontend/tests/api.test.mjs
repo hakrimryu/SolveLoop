@@ -17,6 +17,35 @@ function fixture() {
   return { api, calls, setUser: value => { current = value }, setCsrf: value => { csrf = value }, setResponse: value => { response = value } }
 }
 
+test('業務PATCH・登録キーにも実CSRFを送り、失敗で自動再送しない', async () => {
+  const f = fixture()
+  await f.api.verify()
+  await f.api.request('/tickets/ticket', { body: '本文', expected_version: 2 }, { method: 'PATCH', business: true })
+  assert.equal(f.calls.at(-1).options.method, 'PATCH')
+  assert.equal(f.calls.at(-1).options.headers['X-CSRF-Token'], 'test-csrf')
+  await f.api.request('/knowledge/drafts', { title: '題' }, { idempotencyKey: 'fixed-request-key', business: true })
+  assert.equal(f.calls.at(-1).options.headers['Idempotency-Key'], 'fixed-request-key')
+  const generation = f.api.snapshot().generation
+  f.setResponse(() => json({ code: 'SERVICE_UNAVAILABLE', message: '保存結果を確認してください。' }, 503))
+  await assert.rejects(f.api.request('/tickets/ticket', { body: '保持する入力', expected_version: 2 }, { method: 'PATCH', business: true }), ApiError)
+  assert.equal(f.api.snapshot().generation, generation)
+  assert.equal(f.api.snapshot().status, 'ready')
+  assert.equal(f.calls.filter(c => c.options.method === 'PATCH').length, 2)
+})
+
+test('業務画面の離脱で中断し、abortを無視した同世代応答も破棄する', async () => {
+  const f = fixture()
+  await f.api.verify()
+  let complete
+  f.setResponse(() => new Promise(resolve => { complete = resolve }))
+  const scope = new AbortController()
+  const pending = f.api.request('/tickets', undefined, { signal: scope.signal, business: true })
+  scope.abort()
+  complete(json({ items: [{ title: '離脱後の古い内容' }] }))
+  await assert.rejects(pending, StaleSession)
+  assert.equal(f.api.snapshot().status, 'ready')
+})
+
 test('認証入力はUnicodeの文字数・空白保持・制御文字・公開値・確認欄を検証する', () => {
   const values = { currentPassword: '現在の値', newPassword: '界'.repeat(15), confirmation: '界'.repeat(15) }
   assert.deepEqual(validateAuth(values, true), {})

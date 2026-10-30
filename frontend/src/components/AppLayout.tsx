@@ -79,7 +79,7 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
         </div>
       </header>
       <div className={styles.mockBar}>
-        <p><strong>認証・アカウント管理は実APIに接続</strong> 問い合わせ・ナレッジ・Dashboard・Radarは合成データの画面モックです。業務操作は保存されず、接続状態の切り替わりで初期化されます。AI処理は行いません。</p>
+        <p><strong>問い合わせ・ナレッジは実API・DBに保存</strong> 架空企業のローカルデモです。公開されるのは人が承認した版だけです。AI・Radar・意味検索は未実装です。</p>
       </div>
       <div className={showNavigation ? styles.workspace : styles.authWorkspace}>
         {showNavigation && <div className={styles.navigation}>
@@ -117,7 +117,7 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
               </NavLink>
             )}
             {session?.can_manage_accounts && <NavLink to="/settings/accounts" onClick={closeMenu}><MenuIcon kind="accounts" />アカウント管理</NavLink>}
-            <p className={styles.navNote}><span>ローカルデモ</span>業務画面は合成データです。</p>
+            <p className={styles.navNote}><span>ローカルデモ</span>業務操作はDBに保存されます。</p>
           </nav>
         </div>}
         <main id="main-content" tabIndex={-1} ref={mainRef} className={styles.main}>
@@ -125,7 +125,7 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
           {children}
         </main>
       </div>
-      <footer className={styles.footer}>SolveLoop · ローカル操作デモ · 業務モックの操作日時は合成時刻です。認証・管理履歴はサーバー時刻です。</footer>
+      <footer className={styles.footer}>SolveLoop · ローカル操作デモ · 業務・認証・管理履歴はサーバー時刻です。AI・Radarは未実装です。</footer>
     </>
   )
 }
