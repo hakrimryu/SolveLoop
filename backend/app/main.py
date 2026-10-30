@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from app.auth import router as auth_router
 from app.config import BACKEND_DIR, Settings, load_settings
 from app.database import build_engine, get_session
-from app.errors import register_error_handlers
+from app.errors import error_response, register_error_handlers
 
 logger = logging.getLogger(__name__)
 
@@ -41,9 +41,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.middleware("http")
     async def private_api_cache(request: Request, call_next):
-        response = await call_next(request)
+        request.state.request_id = uuid4()
+        try:
+            response = await call_next(request)
+        except Exception:
+            logger.error("要求の処理に失敗しました。要求番号: %s", request.state.request_id)
+            response = error_response(
+                request, 500, "INTERNAL_ERROR", "処理を完了できませんでした。"
+            )
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
+            response.headers["X-Request-ID"] = str(request.state.request_id)
         return response
 
     @app.get("/health/live", summary="APIプロセスの生存確認")

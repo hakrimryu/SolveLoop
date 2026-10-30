@@ -24,7 +24,7 @@ from app.auth import (
 from app.config import load_settings
 from app.database import build_engine
 from app.main import create_app
-from app.models import AuthSession, Base, Department, User
+from app.models import AuditEvent, AuthSession, Base, Department, User
 from app.seed import DEMO_PASSWORD, seed_auth
 
 ORIGIN = "http://127.0.0.1:8000"
@@ -114,6 +114,7 @@ def auth_engine():
 @pytest.fixture
 def api(auth_engine):
     with Session(auth_engine) as session, session.begin():
+        session.execute(delete(AuditEvent))
         session.execute(delete(AuthSession))
         session.execute(delete(User))
         session.execute(delete(Department))
@@ -151,7 +152,16 @@ def test_login_me_reference_data_and_logout(api, auth_engine, role):
     assert result.status_code == 200
     body = result.json()
     assert body["user"]["role"] == role
-    assert set(body["user"]) == {"id", "display_name", "role", "department"}
+    assert set(body["user"]) == {
+        "id",
+        "display_name",
+        "role",
+        "department",
+        "can_manage_accounts",
+        "must_change_password",
+    }
+    assert body["user"]["can_manage_accounts"] is False
+    assert body["user"]["must_change_password"] is False
     assert datetime.fromisoformat(body["expires_at"].replace("Z", "+00:00")) > datetime.now(
         UTC
     ) + timedelta(hours=7)
@@ -334,6 +344,7 @@ def test_db_constraints_and_model_schema(api, auth_engine):
         "departments",
         "users",
         "sessions",
+        "audit_events",
     }
 
 

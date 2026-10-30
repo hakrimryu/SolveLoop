@@ -37,6 +37,9 @@ def seed_auth(session: Session) -> None:
                     role=role,
                     password_hash=password_hasher.hash(DEMO_PASSWORD),
                     active=True,
+                    can_manage_accounts=False,
+                    must_change_password=False,
+                    row_version=1,
                 )
             )
     session.flush()

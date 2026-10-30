@@ -10,6 +10,7 @@ from pydantic import SecretStr, ValidationError
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from app.auth import password_hasher
 from app.config import BACKEND_DIR, Settings, load_settings
 from app.database import build_engine
 from app.main import create_app
@@ -104,7 +105,79 @@ def test_postgresql_foundation_and_migrations() -> None:
             with engine.begin() as connection:
                 connection.execute(text("DELETE FROM alembic_version"))
 
+            command.upgrade(config, "0002_auth")
+            # 旧revisionの列だけで作った資料が、追加migrationで変わらないことを確認する。
+            with engine.begin() as connection:
+                connection.execute(
+                    text("INSERT INTO departments VALUES (:id, 'LEGACY', '既存部署', true)"),
+                    {"id": UUID(int=900)},
+                )
+                for user_id, active in [(901, True), (902, False)]:
+                    connection.execute(
+                        text(
+                            "INSERT INTO users "
+                            "(id,department_id,display_name,login_id,password_hash,role,active) "
+                            "VALUES (:id,:department,'既存利用者',:login,:hash,'employee',:active)"
+                        ),
+                        {
+                            "id": UUID(int=user_id),
+                            "department": UUID(int=900) if active else None,
+                            "login": f"legacy{user_id}",
+                            "hash": password_hasher.hash("old"),
+                            "active": active,
+                        },
+                    )
+                connection.execute(
+                    text(
+                        "INSERT INTO sessions VALUES "
+                        "(:id,:token,:user_id,now()+interval '1 hour',:csrf)"
+                    ),
+                    {
+                        "id": UUID(int=903),
+                        "token": "a" * 64,
+                        "user_id": UUID(int=901),
+                        "csrf": "b" * 64,
+                    },
+                )
+                before_users = connection.execute(
+                    text(
+                        "SELECT id,department_id,display_name,login_id,password_hash,role,active "
+                        "FROM users ORDER BY id"
+                    )
+                ).all()
+                before_sessions = connection.execute(
+                    text("SELECT * FROM sessions ORDER BY id")
+                ).all()
             command.upgrade(config, "head")
+            with engine.connect() as connection:
+                assert (
+                    connection.execute(
+                        text(
+                            "SELECT id,department_id,display_name,login_id,password_hash,"
+                            "role,active "
+                            "FROM users ORDER BY id"
+                        )
+                    ).all()
+                    == before_users
+                )
+                assert (
+                    connection.execute(text("SELECT * FROM sessions ORDER BY id")).all()
+                    == before_sessions
+                )
+                assert connection.execute(
+                    text("SELECT can_manage_accounts,must_change_password,row_version FROM users")
+                ).all() == [(False, False, 1), (False, False, 1)]
+                assert connection.scalar(text("SELECT count(*) FROM audit_events")) == 0
+            command.check(config)
+            with engine.begin() as connection:
+                connection.execute(text("DELETE FROM sessions WHERE id=:id"), {"id": UUID(int=903)})
+                connection.execute(
+                    text("DELETE FROM users WHERE id IN (:a,:b)"),
+                    {"a": UUID(int=901), "b": UUID(int=902)},
+                )
+                connection.execute(
+                    text("DELETE FROM departments WHERE id=:id"), {"id": UUID(int=900)}
+                )
             command.upgrade(config, "head")
             response = client.get("/health/ready")
             assert response.status_code == 200
@@ -115,7 +188,7 @@ def test_postgresql_foundation_and_migrations() -> None:
                     connection.scalars(
                         text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
                     )
-                ) == {"alembic_version", "departments", "users", "sessions"}
+                ) == {"alembic_version", "departments", "users", "sessions", "audit_events"}
                 assert (
                     connection.scalar(text("SELECT '[1,2,3]'::vector <-> '[4,6,3]'::vector")) == 5
                 )
@@ -123,7 +196,9 @@ def test_postgresql_foundation_and_migrations() -> None:
                 connection.execute(text("UPDATE alembic_version SET version_num = 'unknown_test'"))
             assert client.get("/health/ready").status_code == 503
             with engine.begin() as connection:
-                connection.execute(text("UPDATE alembic_version SET version_num = '0002_auth'"))
+                connection.execute(
+                    text("UPDATE alembic_version SET version_num = '0003_account_auth'")
+                )
             assert client.get("/health/ready").status_code == 200
             assert app.state.engine.pool.checkedout() == 0
 

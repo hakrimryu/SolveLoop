@@ -10,7 +10,7 @@
 
 画面の操作結果は同じタブ内で共有され、再読み込み・タブを閉じると初期化されます。画面は認証APIに未接続で、ログイン・パスワード変更・役割別表示もモックです。入力した合成パスワードはタブのメモリだけに置き、Cookie・ブラウザーのストレージ・サーバーには保存しません。普段お使いのパスワードを入力しないでください。問い合わせ・知識のDB保存、AI推論・Radar分析は未実装です。画面の検索はキーワードの部分一致です。
 
-バックエンドにはDB接続・状態確認・マイグレーションに加え、デモ用のログイン・ログアウト・セッション・役割検査と最小シードを実装しました。PostgreSQL 17.11 / pgvector 0.8.7を使用し、現在のテーブルは部門・利用者・セッションと適用履歴です。問い合わせ・知識のAPIと画面接続は後続段階です。
+バックエンドにはDB接続・状態確認・マイグレーション、ログイン・ログアウト・セッション・役割検査・本人のパスワード変更を実装しました。業務の役割とは独立したアカウント管理権限、初回変更前の利用制限、全セッションの破棄と最小監査記録も備えます。PostgreSQL 17.11 / pgvector 0.8.7を使用し、部門・利用者・セッション・監査記録と適用履歴を保存します。アカウント一覧・追加・有効状態変更・再発行API、問い合わせ・知識API、画面の実接続は未実装です。
 
 ## フロントエンドの起動
 
@@ -252,7 +252,7 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 
 各命令が成功してから次へ進みます。マイグレーションはアプリ開始時に自動実行しません。DB起動のhealthcheckは接続受付だけ、APIのhealthcheckは現在のマイグレーションと拡張も確認します。初回にマイグレーションを省略するとAPI自体は起動しますが `ready` が503となり、Compose の `--wait` は失敗します。状態を確認して上の `alembic upgrade head` を実行してください。
 
-初期revision `0001_vector` は空DBに `public.vector` を作成し、既存の拡張を保持します。現在のhead `0002_auth` は `departments`・`users`・`sessions` を追加します。`alembic_version` は適用履歴です。起動や状態確認からテーブル・シードを自動作成しません。ORM metadataを登録しており、`alembic check` でモデルと実DBの差分を確認できます。revisionはレビューしたものを明示的に適用します。
+初期revision `0001_vector` は空DBに `public.vector` を作成し、既存の拡張を保持します。`0002_auth` は部門・利用者・セッション、現在のhead `0003_account_auth` は管理権限・変更必要状態・行バージョンと `audit_events` を追加します。既存の利用者ID・パスワード・有効状態・セッションをマイグレーションで変更しません。既存利用者の新しい値は権限なし・変更要求なし・バージョン1です。`alembic_version` は適用履歴です。起動や状態確認からテーブル・シードを自動作成しません。`alembic check` でモデルと実DBの差分を確認できます。
 
 初期revisionのdowngradeは拡張を削除せず、認証revisionのdowngradeはデータ削除を避けるため拒否します。通常の運用手順としてdowngrade・`stamp`・volumeの削除を使って不一致を隠さず、適用履歴と接続先を確認してください。別のスキーマに既存vectorがある環境は自動移動せず、readyが失敗します。
 
@@ -294,10 +294,11 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 | API | 動作 |
 | --- | --- |
 | `POST /api/v1/auth/login` | JSONの `{login_id,password}` と許可Originを検査。`{user,csrf_token,expires_at}` とセッションcookieを返す |
-| `GET /api/v1/auth/me` | `{id,display_name,role,department}`。未認証・期限切れ・無効アカウントは401 |
+| `GET /api/v1/auth/me` | `{id,display_name,role,department,can_manage_accounts,must_change_password}`。未認証・期限切れ・無効アカウントは401 |
 | `GET /api/v1/auth/csrf` | ログイン済みセッションの `{csrf_token}` を再取得 |
 | `POST /api/v1/auth/logout` | セッション・許可Origin・`X-CSRF-Token` を検査してDBの現在セッションを削除。204とcookie削除 |
-| `GET /api/v1/reference-data` | 有効なdepartments。担当者のみ有効なoperatorsの `{id,display_name}` を追加 |
+| `POST /api/v1/auth/password/change` | JSON `{current_password,new_password}` とOrigin・CSRFを検査。本人のhash更新・変更要求解除・全セッション削除・監査記録を一括確定し、204とcookie削除 |
+| `GET /api/v1/reference-data` | 有効なdepartments。担当者のみ有効なoperatorsの `{id,display_name}` を追加。変更要求中は403 |
 
 セッションcookie `solveloop_session` はhost-only・Path=/・HttpOnly・SameSite=Lax、固定8時間で延長しません。Secureは設定で切り替えます。DBにはセッション原文とCSRF原文を保存せず、SHA-256ハッシュのみを保存します。CSRF値はセッション原文を鍵とするHMACで再取得可能にし、別セッションでは無効です。認証・参照資料APIはエラーも含め `Cache-Control: no-store` です。
 
@@ -317,7 +318,23 @@ Invoke-WebRequest http://127.0.0.1:8000/api/v1/auth/logout -Method Post -Headers
 
 社員の自分情報・部門4件・ログアウト204が期待結果です。最後にもう一度meを呼ぶと401です。`login_id` を `operator` に変えてログインすると、参照資料にoperatorsが追加されます。Origin省略・不許可、ログアウトのCSRF省略・不一致は403、誤った資格情報は401、未知の入力フィールド・長さ違反は422です。エラーは日本語の `{code,message,request_id}` で、入力値を返しません。
 
-フロント4173の役割切替はこのAPIとは未接続です。担当者専用の共通権限依存 `require_operator` は専用テスト経路で社員403/担当者200を検証し、検証専用経路は通常APIに追加していません。問い合わせの所有者検査は問い合わせAPIとともに実装します。現在はlocalhost限定のデモで、SSO・パスワード変更/復旧・総当たり対策・本番配備は対象外です。
+フロントのログイン・本人変更・アカウント管理はまだこのAPIとは未接続です。`require_full_auth`・`require_operator`・`require_account_manager` は制限状態・業務の役割・管理権限を分けて検査します。検証専用経路は通常APIに追加しません。問い合わせの所有者検査は問い合わせAPIとともに実装します。現在はlocalhost限定のデモで、SSO・メール復旧・総当たり対策・本番配備は対象外です。
+
+### 本人変更と初期管理権限
+
+本人変更には現在または仮パスワードが必要です。新しい値は15〜256 Unicode文字で、現在の値・公開デモ用の値・制御文字・空白のみの値を拒否します。空白やUnicodeを正規化・切り詰めせず、英大文字・数字・記号の混在は要求しません。画面の確認欄はAPIへ送信しません。成功後は他のブラウザーも含めた全セッションが終了し、新しい値で再ログインします。応答を失った場合も自動で変更を再送せず、再ログインで確認します。
+
+`must_change_password=true` のセッションはme・CSRF再取得・本人変更・logoutだけを利用できます。参照資料と今後の業務・管理APIは `403 PASSWORD_CHANGE_REQUIRED` です。既存の公開シードを一括で仮パスワード扱いにはしません。
+
+最初の管理権限は指定した有効な既存IDに、ローカルコマンドで付与します。次は `employee` を指定する例であり、マイグレーションや通常のシードから自動実行しません。
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec backend python -m app.accounts bootstrap-manager --login-id employee
+```
+
+権限付与・対象の全セッション削除・`management_granted` 監査記録を一括確定します。既に付与済みなら変更しません。社員に管理権限を付けても担当者の業務権限は増えません。HTTPや画面での管理権限編集、アカウント削除はありません。既存の名前・所属・役割・hash・有効状態は保持し、シード再実行で権限や変更必要状態を上書きしません。
+
+ログイン・本人変更・logout・初期権限付与は利用者行を同じUUID順でロックします。待機後に資格情報と実際のセッションを読み直し、古い資格による遅延セッションの生成を防ぎます。変更と監査の保存に失敗すれば一括rollbackします。APIの成功・エラーは `no-store` とサーバー生成の `X-Request-ID` を返し、エラー・監査の番号に同じ値を使います。パスワード・hash・セッション・CSRFをログや監査に記録しません。
 
 ### ローカル検査とCI
 
@@ -331,7 +348,7 @@ uv run --locked ruff format --check .
 uv run --locked pytest -q
 ```
 
-既定では単体テスト16件を実行し、DB・実HTTPの統合テスト12件はskipします。DBテストは `RUN_DB_TESTS=1` とDB名 `solveloop_test` の両方を要求し、基盤テストは空DBからのみ開始します。認証の各ケースは同DBの専用スキーマに分離し、終了時にそのスキーマを削除します。DB名だけで安全を保証するものではないので、必ず別のComposeプロジェクト・新しいvolumeを使ってください。SQLiteは使いません。
+DBを使わない単体検査と、DB・実HTTPの統合検査を分けています。DBテストは `RUN_DB_TESTS=1` とDB名 `solveloop_test` の両方を要求し、基盤テストは空DBからのみ開始します。旧revisionの資料保持・本人変更・制限/権限・監査失敗rollback・行ロック競合も検証します。認証の各ケースは同DBの専用スキーマに分離し、終了時にそのスキーマを削除します。実HTTPの本人変更も専用DBの一時アカウントだけを使います。必ず別のComposeプロジェクト・新しいvolumeを使ってください。SQLiteは使いません。
 
 リポジトリのルートでは以下でCIと同じ検証用イメージを構築できます。
 

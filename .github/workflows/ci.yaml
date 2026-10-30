@@ -38,7 +38,7 @@ jobs:
           docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --no-deps --wait --wait-timeout 90 backend
           curl --fail --silent http://127.0.0.1:8000/health/live
           curl --fail --silent http://127.0.0.1:8000/health/ready
-          docker run --rm --network solveloop-ci_default -e AUTH_TEST_BASE_URL=http://backend:8000 solveloop-backend-test:ci pytest -q -p no:cacheprovider tests/test_http_auth.py
+          docker run --rm --network solveloop-ci_default --env-file infrastructure/.env -e RUN_DB_TESTS=1 -e AUTH_TEST_BASE_URL=http://backend:8000 solveloop-backend-test:ci pytest -q -p no:cacheprovider tests/test_http_auth.py
       - name: DB停止時の応答と復旧を検証
         run: |
           docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml stop db
