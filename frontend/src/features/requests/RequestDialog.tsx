@@ -62,7 +62,6 @@ export default function RequestDialog({ role, userId, requests, onRequestsChange
     params.delete('new')
     navigate(`/requests/${result.request.id}${params.size ? `?${params}` : ''}`, {
       replace: true,
-      state: { message: '問い合わせを登録しました（このタブ内のシミュレーション）。' },
     })
   }
 

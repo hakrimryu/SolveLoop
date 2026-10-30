@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vite",
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types --test tests/mockData.test.mjs",
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
     "build": "npm run typecheck && vite build",
     "preview": "vite preview"
   },

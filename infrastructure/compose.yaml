@@ -12,7 +12,7 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DBを.envに設定してください}
       POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USERを.envに設定してください}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORDを.envに設定してください}
-      AUTH_ALLOWED_ORIGINS: '${AUTH_ALLOWED_ORIGINS:-["http://127.0.0.1:8000","http://localhost:8000"]}'
+      AUTH_ALLOWED_ORIGINS: '${AUTH_ALLOWED_ORIGINS:-["http://127.0.0.1:8000","http://localhost:8000","http://127.0.0.1:5173","http://127.0.0.1:5174"]}'
       AUTH_COOKIE_SECURE: ${AUTH_COOKIE_SECURE:-false}
     ports:
       - "127.0.0.1:${BACKEND_PORT:-8000}:8000"

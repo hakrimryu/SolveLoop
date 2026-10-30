@@ -14,7 +14,7 @@ let listPosition: { url: string; role: DemoRole; y: number; id: string } | undef
 
 export function KnowledgeUnavailable({ restricted = false }: { restricted?: boolean }) {
   return <><h1 tabIndex={-1}>{restricted ? 'ナレッジレビューを表示できません' : '文書を表示できません'}</h1>
-    <div className="notice"><p>{restricted ? 'この画面は担当者用です。担当者のモックアカウントでログインしてください。' : '公開された文書が見つかりません。'}</p>
+    <div className="notice"><p>{restricted ? 'この画面は担当者用です。担当者アカウントでログインしてください。' : '公開された文書が見つかりません。'}</p>
       <Link to="/knowledge">承認済みナレッジへ</Link></div></>
 }
 
@@ -24,6 +24,8 @@ export function KnowledgeBody({ input }: { input: KnowledgeInput }) {
     <h2>本文</h2><p className={common.body}>{input.body || '（本文はまだ入力されていません）'}</p>
   </article>
 }
+
+export function clearKnowledgePosition() { listPosition = undefined }
 
 export default function KnowledgeList({ role, knowledge, review = false }: KnowledgeProps & { review?: boolean }) {
   const [params, setParams] = useSearchParams()

@@ -22,264 +22,6 @@ import {
   validateKnowledge,
   getKnowledgeSourceIssue,
 } from '../src/lib/mockData.ts'
-import { changeMockPassword, createMockAuth, endMockSession, getMockSession, loginMock, mockLoginExamples } from '../src/lib/mockData.ts'
-import { canManageMockAccounts, captureMockConnection, createMockAccount, getMockAccountEvents, getMockAccounts, getMockConnectionStatus, getMockPeople, manageMockAccount, personName } from '../src/lib/mockData.ts'
-
-function managerAuth() { return loginMock(createMockAuth(), 'manager', 'Mock-Manager-2026!').auth }
-const accountInput = { name: '森 結衣', loginId: 'mori', department: '人事', role: 'employee' }
-
-test('管理権限は業務の役割と独立し、未ログイン・一般担当者・変更必要状態には名簿と操作を提供しない', () => {
-  const manager = managerAuth()
-  assert.equal(getMockSession(manager).role, 'employee')
-  assert.ok(canManageMockAccounts(manager))
-  assert.equal(getKnowledgeReviews(mockKnowledge, getMockSession(manager).role).length, 0)
-  const restricted = [createMockAuth(), loginMock(createMockAuth(), 'operator', 'Mock-Operator-2026!').auth,
-    { ...manager, accounts: manager.accounts.map(account => ({ ...account, mustChangePassword: true })) }]
-  for (const auth of restricted) {
-    assert.equal(canManageMockAccounts(auth), false)
-    assert.deepEqual(getMockAccounts(auth), [])
-    assert.deepEqual(getMockAccountEvents(auth, 'operator-01'), [])
-    assert.equal(createMockAccount(auth, accountInput).auth, auth)
-    assert.ok(createMockAccount(auth, accountInput).errors.form)
-    assert.equal(manageMockAccount(auth, 'operator-01', 'reissue').auth, auth)
-    assert.equal(captureMockConnection(auth, 'operator-01'), null)
-  }
-})
-
-test('追加は必須・重複・既存部署・役割と余計な権限項目を検証し、失敗では状態を変えない', () => {
-  const auth = managerAuth()
-  const before = structuredClone(auth)
-  assert.deepEqual(Object.keys(createMockAccount(auth, { name: '', loginId: '', department: '', role: '' }).errors), ['name', 'loginId', 'department', 'role'])
-  for (const changes of [{ loginId: 'operator' }, { loginId: ' mori ' }, { department: '新部署' }, { role: 'admin' }, { canManageAccounts: true }]) {
-    const result = createMockAccount(auth, { ...accountInput, ...changes })
-    assert.ok(Object.keys(result.errors).length)
-    assert.equal(result.auth, auth)
-    assert.equal(result.temporaryPassword, undefined)
-  }
-  assert.deepEqual(auth, before)
-})
-
-test('追加直後だけ仮値を返し、一覧・セッション・履歴にはパスワードや検証用の版を含めない', () => {
-  const auth = managerAuth()
-  const result = createMockAccount(auth, { ...accountInput, role: 'operator' })
-  assert.deepEqual(result.errors, {})
-  assert.equal(auth.accounts.length, 3)
-  const account = getMockAccounts(result.auth).find(item => item.id === result.accountId)
-  assert.equal(account.active, true)
-  assert.equal(account.mustChangePassword, true)
-  assert.equal(account.canManageAccounts, false)
-  assert.ok(result.temporaryPassword)
-  assert.equal(getMockAccountEvents(result.auth, result.accountId)[0].actorId, 'account-manager-01')
-  const publicData = JSON.stringify([account, getMockSession(result.auth), getMockAccountEvents(result.auth, result.accountId), getMockPeople(result.auth)])
-  assert.ok(!publicData.includes(result.temporaryPassword))
-  assert.ok(!publicData.includes('credentialVersion'))
-  assert.ok(!publicData.includes('password'))
-  const logged = loginMock(endMockSession(result.auth, 'logout'), accountInput.loginId, result.temporaryPassword).auth
-  assert.equal(getMockSession(logged).mustChangePassword, true)
-  assert.equal(canManageMockAccounts(logged), false)
-})
-
-test('追加から本人変更・再ログインをつなぎ、新社員へ既存社員の問い合わせを渡さない', () => {
-  const created = createMockAccount(managerAuth(), accountInput)
-  const signedIn = loginMock(endMockSession(created.auth, 'logout'), accountInput.loginId, created.temporaryPassword).auth
-  const changed = changeMockPassword(signedIn, created.temporaryPassword, 'Mock-New-Mori!', 'Mock-New-Mori!').auth
-  assert.equal(getMockSession(changed), null)
-  assert.ok(loginMock(changed, accountInput.loginId, created.temporaryPassword).errors.form)
-  const auth = loginMock(changed, accountInput.loginId, 'Mock-New-Mori!').auth
-  const user = getMockSession(auth)
-  assert.equal(user.name, accountInput.name)
-  assert.equal(user.mustChangePassword, false)
-  assert.deepEqual(getVisibleRequests(mockRequests, user.role, user.id), [])
-  assert.equal(getRequestList(mockRequests, user.role, new URLSearchParams('assignee=me'), user.id).count, 0)
-  assert.equal(getDashboardData(user.role, 'normal', mockRequests, mockKnowledge, user.id).total, 0)
-  assert.throws(() => updateRequest(mockRequests, user.role, 'REQ-0001', { type: 'edit', body: '変更' }, nextMockTimestamp(mockRequests), user.id))
-  const registered = registerRequest(mockRequests, user.role, { title: '合成の問い合わせ', body: '合成の本文', department: 'IT' }, nextMockTimestamp(mockRequests), user.id)
-  assert.equal(registered.request.requesterId, user.id)
-  assert.equal(registered.request.events[0].actorId, user.id)
-  assert.equal(personName(user.id, getMockPeople(auth)), accountInput.name)
-  assert.deepEqual(getVisibleRequests(registered.requests, user.role, user.id), [registered.request])
-  assert.ok(!getVisibleRequests(registered.requests, 'employee', 'employee-01').includes(registered.request))
-  const updated = updateRequest(registered.requests, user.role, registered.request.id, { type: 'edit', body: '本人の変更' }, nextMockTimestamp(registered.requests), user.id)
-  assert.equal(updated[0].events.at(-1).actorId, user.id)
-  const manager = loginMock(endMockSession(auth, 'logout'), 'manager', 'Mock-Manager-2026!').auth
-  assert.deepEqual(getMockAccountEvents(manager, user.id).map(event => event.action), ['password_change', 'create'])
-})
-
-test('無効化はログインと控えた接続を止め、再有効化しても旧接続は復活しない', () => {
-  for (const mustChange of [true, false]) {
-    let auth = managerAuth()
-    if (!mustChange) auth = { ...auth, accounts: auth.accounts.map(account => ({ ...account, mustChangePassword: false })) }
-    const before = auth.accounts.find(account => account.loginId === 'employee')
-    const connection = captureMockConnection(auth, before.id)
-    const oldSession = loginMock(auth, 'employee', before.password).auth
-    assert.match(getMockConnectionStatus(auth, connection), /接続可能/)
-    auth = manageMockAccount(auth, before.id, 'deactivate').auth
-    assert.match(getMockConnectionStatus(auth, connection), /無効アカウント/)
-    assert.equal(getMockSession({ ...auth, sessionLoginId: oldSession.sessionLoginId, sessionVersion: oldSession.sessionVersion }), null)
-    assert.ok(loginMock(endMockSession(auth, 'logout'), 'employee', before.password).errors.form)
-    const refused = manageMockAccount(auth, before.id, 'reissue')
-    assert.equal(refused.auth, auth)
-    assert.ok(refused.errors.form)
-    assert.ok(createMockAccount(auth, { ...accountInput, loginId: 'employee' }).errors.loginId)
-    auth = manageMockAccount(auth, before.id, 'reactivate').auth
-    const after = auth.accounts.find(account => account.id === before.id)
-    assert.equal(after.password, before.password)
-    assert.equal(after.mustChangePassword, mustChange)
-    assert.match(getMockConnectionStatus(auth, connection), /以前の接続状態は無効/)
-    assert.equal(getMockSession({ ...auth, sessionLoginId: oldSession.sessionLoginId, sessionVersion: oldSession.sessionVersion }), null)
-    assert.deepEqual(loginMock(endMockSession(auth, 'logout'), 'employee', before.password).errors, {})
-    assert.equal(auth.accounts.length, 3)
-  }
-})
-
-test('再発行は以前の値・接続を無効にし、再発行を繰り返しても異なる値で本人変更と再ログインを要求する', () => {
-  const auth = managerAuth()
-  const connection = captureMockConnection(auth, 'operator-01')
-  const first = manageMockAccount(auth, 'operator-01', 'reissue')
-  const second = manageMockAccount(first.auth, 'operator-01', 'reissue')
-  assert.notEqual(first.temporaryPassword, second.temporaryPassword)
-  assert.match(getMockConnectionStatus(second.auth, connection), /以前の接続状態は無効/)
-  const ended = endMockSession(second.auth, 'logout')
-  for (const old of ['Mock-Operator-2026!', first.temporaryPassword]) assert.ok(loginMock(ended, 'operator', old).errors.form)
-  const temporary = loginMock(ended, 'operator', second.temporaryPassword).auth
-  assert.equal(getMockSession(temporary).mustChangePassword, true)
-  const changed = changeMockPassword(temporary, second.temporaryPassword, 'Mock-New-Operator!', 'Mock-New-Operator!').auth
-  assert.equal(getMockSession(changed), null)
-  assert.ok(loginMock(changed, 'operator', second.temporaryPassword).errors.form)
-  assert.deepEqual(loginMock(changed, 'operator', 'Mock-New-Operator!').errors, {})
-})
-
-test('自己無効化を拒否し、自己への再発行は1回表示用の値を返して現在のログインを終了する', () => {
-  const auth = managerAuth()
-  const refused = manageMockAccount(auth, 'account-manager-01', 'deactivate')
-  assert.equal(refused.auth, auth)
-  assert.ok(refused.errors.form)
-  const result = manageMockAccount(auth, 'account-manager-01', 'reissue')
-  assert.equal(getMockSession(result.auth), null)
-  assert.ok(result.temporaryPassword)
-  const signedIn = loginMock(result.auth, 'manager', result.temporaryPassword).auth
-  assert.equal(canManageMockAccounts(signedIn), false)
-  assert.equal(getMockSession(signedIn).mustChangePassword, true)
-})
-
-test('本人が次の合成仮値と同じ値を設定していても、再発行後は以前の値でログインできない', () => {
-  const created = createMockAccount(managerAuth(), accountInput)
-  let auth = loginMock(endMockSession(created.auth, 'logout'), accountInput.loginId, created.temporaryPassword).auth
-  auth = changeMockPassword(auth, created.temporaryPassword, 'Mock-Temporary-0002!', 'Mock-Temporary-0002!').auth
-  auth = loginMock(auth, 'manager', 'Mock-Manager-2026!').auth
-  const reissued = manageMockAccount(auth, created.accountId, 'reissue')
-  assert.notEqual(reissued.temporaryPassword, 'Mock-Temporary-0002!')
-  assert.ok(loginMock(endMockSession(reissued.auth, 'logout'), accountInput.loginId, 'Mock-Temporary-0002!').errors.form)
-  assert.deepEqual(loginMock(endMockSession(reissued.auth, 'logout'), accountInput.loginId, reissued.temporaryPassword).errors, {})
-})
-
-test('5種類の履歴は対象・操作人・合成時刻を保ち、他アカウントや秘密値を含めない', () => {
-  const created = createMockAccount(managerAuth(), accountInput)
-  const connection = captureMockConnection(created.auth, created.accountId)
-  let auth = manageMockAccount(created.auth, created.accountId, 'deactivate').auth
-  auth = manageMockAccount(auth, created.accountId, 'reactivate').auth
-  const reissued = manageMockAccount(auth, created.accountId, 'reissue')
-  auth = loginMock(endMockSession(reissued.auth, 'logout'), accountInput.loginId, reissued.temporaryPassword).auth
-  auth = changeMockPassword(auth, reissued.temporaryPassword, 'Mock-New-Mori!', 'Mock-New-Mori!').auth
-  auth = loginMock(auth, 'manager', 'Mock-Manager-2026!').auth
-  assert.match(getMockConnectionStatus(auth, connection), /以前の接続状態は無効/)
-  const events = getMockAccountEvents(auth, created.accountId).reverse()
-  assert.deepEqual(events.map(event => event.action), ['create', 'deactivate', 'reactivate', 'reissue', 'password_change'])
-  assert.deepEqual(getMockAccountEvents(auth, 'operator-01'), [])
-  for (const [index, event] of events.entries()) {
-    assert.equal(event.accountId, created.accountId)
-    assert.equal(event.actorId, index === 4 ? created.accountId : 'account-manager-01')
-    assert.ok(event.id.startsWith('MOCK-ACCOUNT-'))
-    if (index) assert.equal(Date.parse(event.at) - Date.parse(events[index - 1].at), 60_000)
-  }
-  const serialized = JSON.stringify(events)
-  for (const secret of [created.temporaryPassword, reissued.temporaryPassword, 'Mock-New-Mori!']) assert.ok(!serialized.includes(secret))
-})
-
-test('アカウントと業務の操作時刻を共有し、後の履歴を過去へ戻さない', () => {
-  const created = createMockAccount(managerAuth(), accountInput, nextMockTimestamp(mockRequests, mockKnowledge))
-  const added = registerRequest(mockRequests, 'employee', { title: '合成', body: '合成の問い合わせ', department: 'IT' }, nextMockTimestamp(mockRequests, mockKnowledge, created.auth.events), created.accountId)
-  const deactivated = manageMockAccount(created.auth, created.accountId, 'deactivate', nextMockTimestamp(added.requests, mockKnowledge, created.auth.events))
-  assert.equal(Date.parse(added.request.createdAt) - Date.parse(created.auth.events[0].at), 60_000)
-  assert.equal(Date.parse(deactivated.auth.events.at(-1).at) - Date.parse(added.request.createdAt), 60_000)
-})
-
-test('新担当者の自分の担当と知識の操作人を既存担当者に置き換えない', () => {
-  const created = createMockAccount(managerAuth(), { ...accountInput, role: 'operator' })
-  assert.equal(getDashboardData('operator', 'normal', mockRequests, mockKnowledge, created.accountId).recentRequests.length, 0)
-  assert.equal(getRequestList(mockRequests, 'operator', new URLSearchParams('assignee=me'), created.accountId).count, 0)
-  const prepared = prepareKnowledgeDraft(mockKnowledge, mockRequests, 'operator', null, null)
-  const saved = saveKnowledgeDraft(mockKnowledge, 'operator', { ...prepared.input, title: '合成の手順', body: '合成の本文', department: 'IT', audience: '全社員' }, [], nextMockTimestamp(mockRequests), undefined, undefined, accountInput.name)
-  assert.match(saved.saved.events.at(-1).description, /森 結衣/)
-  const reviewed = reviewKnowledge(saved.knowledge, mockRequests, 'operator', saved.saved, 'approve', '', nextMockTimestamp(mockRequests), accountInput.name)
-  assert.match(reviewed.find(item => item.id === saved.saved.id).events.at(-1).description, /森 結衣/)
-})
-
-test('認証モックの初期値は独立し、ログイン前にセッションを持たない', () => {
-  const auth = createMockAuth()
-  assert.equal(getMockSession(auth), null)
-  auth.accounts[0].password = '変更例'
-  assert.equal(createMockAuth().accounts[0].password, mockLoginExamples[0].password)
-})
-
-test('ログインの必須入力と不一致を確認し、IDとパスワードの誤りは同じ案内にする', () => {
-  const auth = createMockAuth()
-  assert.deepEqual(Object.keys(loginMock(auth, ' ', ' ').errors), ['loginId', 'password'])
-  const wrongId = loginMock(auth, 'unknown', mockLoginExamples[0].password)
-  const wrongPassword = loginMock(auth, 'operator', 'wrong')
-  assert.deepEqual(wrongId.errors, wrongPassword.errors)
-  assert.equal(wrongId.auth, auth)
-  assert.equal(getMockSession(wrongPassword.auth), null)
-  assert.ok(loginMock(auth, ' operator ', mockLoginExamples[0].password).errors.form)
-  assert.ok(loginMock(auth, 'operator', ` ${mockLoginExamples[0].password}`).errors.form)
-})
-
-test('通常と仮パスワードのログイン状態を分け、終了しても変更した資料は保持する', () => {
-  for (const sample of mockLoginExamples) {
-    const result = loginMock(createMockAuth(), sample.loginId, sample.password)
-    assert.deepEqual(result.errors, {})
-    assert.equal(getMockSession(result.auth).role, sample.role)
-    assert.equal(getMockSession(result.auth).mustChangePassword, sample.mustChangePassword)
-    for (const reason of ['logout', 'expired']) {
-      const ended = endMockSession(result.auth, reason)
-      assert.equal(getMockSession(ended), null)
-      assert.equal(ended.accounts, result.auth.accounts)
-      assert.match(ended.notice, reason === 'logout' ? /ログアウト/ : /有効期限/)
-    }
-  }
-})
-
-test('本人変更の未入力・現在値・同じ値・確認の不一致は状態を変更しない', () => {
-  const sample = mockLoginExamples[1]
-  const auth = loginMock(createMockAuth(), sample.loginId, sample.password).auth
-  assert.deepEqual(Object.keys(changeMockPassword(auth, '', '', '').errors), ['currentPassword', 'newPassword', 'confirmation'])
-  for (const values of [['wrong', '新しい例', '新しい例'], [sample.password, sample.password, sample.password], [sample.password, '新しい例', '異なる例']]) {
-    const result = changeMockPassword(auth, ...values)
-    assert.ok(Object.keys(result.errors).length)
-    assert.equal(result.auth, auth)
-  }
-  assert.ok(changeMockPassword(createMockAuth(), sample.password, '新しい例', '新しい例').errors.form)
-})
-
-test('初回変更と自発的な本人変更は旧値を無効にし、ログイン状態を終えて新しい値で再開する', () => {
-  for (const sample of mockLoginExamples) {
-    const initial = createMockAuth()
-    const auth = loginMock(initial, sample.loginId, sample.password).auth
-    const result = changeMockPassword(auth, sample.password, 'Mock-New-2026!', 'Mock-New-2026!')
-    assert.deepEqual(result.errors, {})
-    assert.equal(getMockSession(result.auth), null)
-    assert.match(result.auth.notice, /変更が完了/)
-    assert.ok(loginMock(result.auth, sample.loginId, sample.password).errors.form)
-    const relogin = loginMock(result.auth, sample.loginId, 'Mock-New-2026!')
-    assert.deepEqual(relogin.errors, {})
-    assert.equal(getMockSession(relogin.auth).mustChangePassword, false)
-    assert.equal(initial.accounts.find(item => item.loginId === sample.loginId).password, sample.password)
-    const other = mockLoginExamples.find(item => item.loginId !== sample.loginId)
-    assert.deepEqual(loginMock(result.auth, other.loginId, other.password).errors, {})
-  }
-})
-
-
 const knowledgeInput = { title: '新端末の認証手順', audience: '端末を交換した社員', department: 'IT', body: '本人確認を受け、担当者と登録を更新します。接続結果を確認します。' }
 const draftTarget = { id: 'KB-0016', version: 1 }
 
@@ -584,4 +326,40 @@ test('操作時刻は実時計に依存せず、初期基準・直前の操作�
   const result = registerRequest(mockRequests, 'employee', input, nextMockTimestamp(mockRequests))
   assert.equal(nextMockTimestamp(result.requests), '2026-10-30T00:02:00.000Z')
   assert.equal(getRequestList(result.requests, 'employee', new URLSearchParams()).rows[0].id, result.request.id)
+})
+
+test('新しいUUIDは自己問い合わせ0件から始め、合成登録と履歴のactorもそのUUIDを使う', () => {
+  const id = '7b128ed8-1ceb-4b88-a50c-fc5eb9c6f551'
+  assert.equal(getVisibleRequests(mockRequests, 'employee', id).length, 0)
+  const result = registerRequest(mockRequests, 'employee', { title: '新規', body: '確認', department: 'IT' }, nextMockTimestamp(mockRequests), id)
+  assert.equal(result.request.requesterId, id)
+  assert.equal(result.request.events[0].actorId, id)
+  assert.equal(getVisibleRequests(result.requests, 'employee', 'other-uuid').length, 0)
+})
+
+test('認証世代別の合成snapshotは配列・履歴・知識本文を共有しない', async () => {
+  const { createBusinessSnapshot } = await import('../src/lib/mockData.ts')
+  const first = createBusinessSnapshot()
+  first.requests[0].body = '前の世代の本文'
+  first.requests[0].events[0].description = '前の世代の変更'
+  first.knowledge[0].body = '前の利用者の文書'
+  const second = createBusinessSnapshot()
+  assert.deepEqual(second.requests, mockRequests)
+  assert.deepEqual(second.knowledge, mockKnowledge)
+  assert.notEqual(first.requests, second.requests)
+})
+
+test('実際の参照UUIDによる担当割り当てと一覧条件を合成IDに置き換えない', async () => {
+  const { getRequestFilters } = await import('../src/lib/mockData.ts')
+  const operator = { id: 'e5b01153-380c-4941-90e0-6e1528f28c80', name: '検証担当者' }
+  const choices = [operator]
+  const params = new URLSearchParams({ assignee: operator.id })
+  assert.equal(getRequestFilters(params, choices).assignee, operator.id)
+  assert.equal(getRequestFilters(new URLSearchParams('assignee=operator-01'), choices).assignee, '')
+  const source = updateRequest(mockRequests, 'operator', 'REQ-0001', { type: 'assign', assigneeId: operator.id }, nextMockTimestamp(mockRequests), operator.id, choices)
+  const data = getRequestList(source, 'operator', params, operator.id, choices)
+  assert.equal(data.count, 1)
+  assert.equal(data.rows[0].id, 'REQ-0001')
+  assert.equal(data.rows[0].assigneeId, operator.id)
+  assert.equal(data.rows[0].events.at(-1).actorId, operator.id)
 })

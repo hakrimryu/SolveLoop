@@ -1,15 +1,16 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router'
-import { departments, getRequestFilters, getRequestList, operators, personName, formatDemoDate, statusLabels } from '../../lib/mockData'
-import type { DemoRole, MockRequest, MockAccountView } from '../../lib/mockData'
+import { departments, getRequestFilters, getRequestList, personName, formatDemoDate, statusLabels } from '../../lib/mockData'
+import type { DemoRole, MockRequest, Person } from '../../lib/mockData'
 import RequestDialog from './RequestDialog'
 import styles from './Requests.module.css'
 
 export type RequestProps = {
   role: DemoRole
   userId: string
-  people: Pick<MockAccountView, 'id' | 'name'>[]
+  people: Person[]
+  operatorOptions: Person[]
   requests: MockRequest[]
   onRequestsChange: (requests: MockRequest[]) => void
   onDirtyChange: (dirty: boolean) => void
@@ -34,6 +35,8 @@ export function DisplayControl({ mode, onChange }: { mode: DisplayMode; onChange
 
 let listPosition: { url: string; y: number; id: string } | undefined
 
+export function clearRequestPosition() { listPosition = undefined }
+
 export default function Requests(props: RequestProps) {
   const { role, requests } = props
   const [params, setParams] = useSearchParams()
@@ -44,8 +47,8 @@ export default function Requests(props: RequestProps) {
   const registerRef = useRef<HTMLButtonElement>(null)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const showDialog = params.get('new') === '1'
-  const data = getRequestList(mode === 'empty' ? [] : requests, role, params, props.userId)
-  const filters = getRequestFilters(params)
+  const data = getRequestList(mode === 'empty' ? [] : requests, role, params, props.userId, props.operatorOptions)
+  const filters = getRequestFilters(params, props.operatorOptions)
 
   useEffect(() => { setQuery(searchQuery) }, [searchQuery])
   useLayoutEffect(() => {
@@ -133,7 +136,7 @@ export default function Requests(props: RequestProps) {
             <label>担当者
               <select value={filters.assignee} onChange={event => changeFilter('assignee', event.target.value)}>
                 <option value="">すべて</option><option value="unassigned">未割り当て（未解決）</option><option value="me">自分の担当</option>
-                {operators.map(operator => <option key={operator.id} value={operator.id}>{operator.name}</option>)}
+                {props.operatorOptions.map(operator => <option key={operator.id} value={operator.id}>{operator.name}</option>)}
               </select>
             </label>
           )}

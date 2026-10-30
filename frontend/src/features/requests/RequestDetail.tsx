@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
-import { formatDemoDate, getVisibleRequests, operators, personName, statusLabels, updateRequest } from '../../lib/mockData'
+import { formatDemoDate, getVisibleRequests, personName, statusLabels, updateRequest } from '../../lib/mockData'
 import type { MockRequest, RequestAction } from '../../lib/mockData'
 import { DisplayControl } from './Requests'
 import type { DisplayMode, RequestProps } from './Requests'
@@ -25,7 +25,7 @@ export default function RequestDetail(props: RequestProps) {
   )
 }
 
-function Detail({ role, userId, people, requests, request, onRequestsChange, onDirtyChange, getNextTimestamp }: RequestProps & { request: MockRequest }) {
+function Detail({ role, userId, people, operatorOptions, requests, request, onRequestsChange, onDirtyChange, getNextTimestamp }: RequestProps & { request: MockRequest }) {
   const location = useLocation()
   const [mode, setMode] = useState<DisplayMode>('normal')
   const [assignee, setAssignee] = useState(request.assigneeId ?? '')
@@ -37,7 +37,7 @@ function Detail({ role, userId, people, requests, request, onRequestsChange, onD
   const [error, setError] = useState('')
   const [resolutionError, setResolutionError] = useState('')
   const [bodyError, setBodyError] = useState('')
-  const [message, setMessage] = useState(location.state?.message ?? '')
+  const [message, setMessage] = useState('')
   const headingRef = useRef<HTMLHeadingElement>(null)
   const resolutionRef = useRef<HTMLTextAreaElement>(null)
   const bodyRef = useRef<HTMLTextAreaElement>(null)
@@ -64,7 +64,7 @@ function Detail({ role, userId, people, requests, request, onRequestsChange, onD
       return
     }
     try {
-      onRequestsChange(updateRequest(requests, role, request.id, action, getNextTimestamp(), userId))
+      onRequestsChange(updateRequest(requests, role, request.id, action, getNextTimestamp(), userId, operatorOptions))
       if (action.type === 'resolve') {
         setResolution('')
         headingRef.current?.focus()
@@ -244,7 +244,7 @@ function Detail({ role, userId, people, requests, request, onRequestsChange, onD
                   <label className={styles.field}>担当者を割り当てる
                     <select ref={assigneeRef} value={assignee} onChange={event => setAssignee(event.target.value)}>
                       <option value="">選択してください</option>
-                      {operators.map(operator => <option key={operator.id} value={operator.id}>{operator.name}</option>)}
+                      {operatorOptions.map(operator => <option key={operator.id} value={operator.id}>{operator.name}</option>)}
                     </select>
                   </label>
                   <button className="button" type="submit" disabled={!assignee || assignee === request.assigneeId}>割り当てを反映</button>

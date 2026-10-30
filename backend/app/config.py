@@ -16,7 +16,12 @@ class Settings(BaseSettings):
     postgres_db: str = Field(min_length=1)
     postgres_user: str = Field(min_length=1)
     postgres_password: SecretStr = Field(min_length=1)
-    auth_allowed_origins: list[str] = ["http://127.0.0.1:8000", "http://localhost:8000"]
+    auth_allowed_origins: list[str] = [
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+    ]
     auth_cookie_secure: bool = False
 
     @field_validator("auth_allowed_origins")

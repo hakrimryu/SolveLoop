@@ -7,151 +7,7 @@ export const demoUsers = {
   operator: { id: 'operator-01', name: '山田 花子', roleLabel: '担当者' },
 }
 
-export const mockLoginExamples = [
-  { ...demoUsers.operator, loginId: 'operator', password: 'Mock-Operator-2026!', department: 'IT', role: 'operator', mustChangePassword: false, canManageAccounts: false, active: true, credentialVersion: 0 },
-  { ...demoUsers.employee, loginId: 'employee', password: 'Mock-Temporary-2026!', department: '総務', role: 'employee', mustChangePassword: true, canManageAccounts: false, active: true, credentialVersion: 0 },
-  { id: 'account-manager-01', name: '加藤 凛', loginId: 'manager', password: 'Mock-Manager-2026!', department: '総務', role: 'employee', mustChangePassword: false, canManageAccounts: true, active: true, credentialVersion: 0 },
-] satisfies MockAccount[]
-
-type MockAccount = { id: string; name: string; department: string; loginId: string; password: string; role: DemoRole; mustChangePassword: boolean; canManageAccounts: boolean; active: boolean; credentialVersion: number }
-export type MockAccountView = Omit<MockAccount, 'password' | 'credentialVersion'>
-export type MockAccountAction = 'create' | 'deactivate' | 'reactivate' | 'reissue' | 'password_change'
-type MockAccountEvent = { id: string; accountId: string; actorId: string; actorName: string; action: MockAccountAction; at: string }
-export type MockAuth = { accounts: MockAccount[]; events: MockAccountEvent[]; issuance: number; sessionLoginId: string | null; sessionVersion: number | null; notice: string }
-export type MockAccountInput = { name: string; loginId: string; department: string; role: string }
-export type MockAccountErrors = Partial<Record<keyof MockAccountInput | 'form', string>>
-export const accountActionLabels: Record<MockAccountAction, string> = { create: 'アカウント追加', deactivate: '無効化', reactivate: '再有効化', reissue: '仮パスワード再発行', password_change: '本人のパスワード変更' }
-export type MockAuthErrors = Partial<Record<'loginId' | 'password' | 'currentPassword' | 'newPassword' | 'confirmation' | 'form', string>>
-export type MockSessionEnd = 'logout' | 'expired'
-
-export function createMockAuth(): MockAuth {
-  return { accounts: mockLoginExamples.map(account => ({ ...account })), events: [], issuance: 0, sessionLoginId: null, sessionVersion: null, notice: '' }
-}
-
-function accountView(account: MockAccount): MockAccountView {
-  const { password: _password, credentialVersion: _version, ...view } = account
-  return view
-}
-
-export function getMockSession(auth: MockAuth) {
-  const account = auth.accounts.find(account => account.loginId === auth.sessionLoginId && account.active && account.credentialVersion === auth.sessionVersion)
-  return account ? accountView(account) : null
-}
-
-export function canManageMockAccounts(auth: MockAuth) {
-  const session = getMockSession(auth)
-  return !!session?.canManageAccounts && !session.mustChangePassword
-}
-
-export function getMockAccounts(auth: MockAuth) {
-  return canManageMockAccounts(auth) ? auth.accounts.map(accountView) : []
-}
-
-export function getMockPeople(auth: MockAuth) {
-  const session = getMockSession(auth)
-  return session ? auth.accounts.filter(account => session.role === 'operator' || account.id === session.id).map(({ id, name }) => ({ id, name })) : []
-}
-
-export function getMockAccountEvents(auth: MockAuth, accountId: string) {
-  return canManageMockAccounts(auth) ? auth.events.filter(event => event.accountId === accountId).reverse() : []
-}
-
-function recordAccountEvent(auth: MockAuth, accountId: string, action: MockAccountAction, at = nextMockTimestamp([], [], auth.events)): MockAuth {
-  const actor = getMockSession(auth)!
-  const sequence = auth.events.length + 1
-  return { ...auth, events: [...auth.events, { id: `MOCK-ACCOUNT-${String(sequence).padStart(4, '0')}`, accountId, actorId: actor.id, actorName: actor.name, action, at }] }
-}
-
-function issueMockPassword(auth: MockAuth) {
-  let issuance = auth.issuance
-  let temporaryPassword: string
-  do {
-    issuance += 1
-    temporaryPassword = `Mock-Temporary-${String(issuance).padStart(4, '0')}!`
-  } while (auth.accounts.some(account => account.password === temporaryPassword))
-  return { issuance, temporaryPassword }
-}
-
-export function createMockAccount(auth: MockAuth, input: MockAccountInput, at?: string): { auth: MockAuth; errors: MockAccountErrors; temporaryPassword?: string; accountId?: string } {
-  if (!canManageMockAccounts(auth)) return { auth, errors: { form: 'アカウント管理権限が必要です（モック）。' } }
-  const errors: MockAccountErrors = {}
-  if (!input.name.trim()) errors.name = '氏名を入力してください。'
-  if (!input.loginId.trim()) errors.loginId = 'ログインIDを入力してください。'
-  else if (input.loginId !== input.loginId.trim()) errors.loginId = 'ログインIDの前後に空白を含めないでください。'
-  else if (auth.accounts.some(account => account.loginId === input.loginId)) errors.loginId = 'このログインIDは使用済みです。別のIDを入力してください。'
-  if (!departments.includes(input.department)) errors.department = '既存の所属部署を選択してください。'
-  if (!['employee', 'operator'].includes(input.role)) errors.role = '業務上の役割を選択してください。'
-  if (Object.keys(input).some(key => !['name', 'loginId', 'department', 'role'].includes(key))) errors.form = '指定できない項目が含まれています。'
-  if (Object.keys(errors).length) return { auth, errors }
-  const { issuance, temporaryPassword } = issueMockPassword(auth)
-  const account: MockAccount = { id: `mock-account-${issuance}`, name: input.name.trim(), loginId: input.loginId, department: input.department, role: input.role as DemoRole, password: temporaryPassword, active: true, mustChangePassword: true, canManageAccounts: false, credentialVersion: 0 }
-  const recorded = recordAccountEvent(auth, account.id, 'create', at)
-  return { auth: { ...recorded, issuance, accounts: [...auth.accounts, account] }, errors, temporaryPassword, accountId: account.id }
-}
-
-export function manageMockAccount(auth: MockAuth, accountId: string, action: Exclude<MockAccountAction, 'create' | 'password_change'>, at?: string): { auth: MockAuth; errors: MockAccountErrors; temporaryPassword?: string } {
-  if (!canManageMockAccounts(auth)) return { auth, errors: { form: 'アカウント管理権限が必要です（モック）。' } }
-  const account = auth.accounts.find(item => item.id === accountId)
-  if (!account) return { auth, errors: { form: '対象のアカウントが見つかりません。' } }
-  if (action === 'deactivate' && account.id === getMockSession(auth)!.id) return { auth, errors: { form: '自分のアカウントは無効化できません。' } }
-  if ((action === 'reactivate') === account.active) return { auth, errors: { form: '現在の有効状態ではこの操作を利用できません。' } }
-  const { issuance, temporaryPassword } = action === 'reissue' ? issueMockPassword(auth) : { issuance: auth.issuance, temporaryPassword: undefined }
-  const recorded = recordAccountEvent(auth, accountId, action, at)
-  return { auth: { ...recorded, issuance, accounts: auth.accounts.map(item => item.id !== accountId ? item : {
-    ...item, active: action !== 'deactivate', credentialVersion: item.credentialVersion + (action === 'reactivate' ? 0 : 1),
-    ...(temporaryPassword ? { password: temporaryPassword, mustChangePassword: true } : {}),
-  }), ...(account.loginId === auth.sessionLoginId && action === 'reissue' ? { sessionLoginId: null, sessionVersion: null, notice: '仮パスワードを再発行しました（モック）。このタブのログイン状態を終了しました。' } : {}) }, errors: {}, temporaryPassword }
-}
-
-export type MockConnection = { accountId: string; credentialVersion: number }
-export function captureMockConnection(auth: MockAuth, accountId: string): MockConnection | null {
-  const account = canManageMockAccounts(auth) && auth.accounts.find(item => item.id === accountId && item.active)
-  return account ? { accountId: account.id, credentialVersion: account.credentialVersion } : null
-}
-
-export function getMockConnectionStatus(auth: MockAuth, connection: MockConnection) {
-  const account = canManageMockAccounts(auth) && auth.accounts.find(item => item.id === connection.accountId)
-  if (!account) return '確認できません'
-  if (!account.active) return '接続不可（無効アカウント）'
-  return account.credentialVersion === connection.credentialVersion ? '接続可能（再現用の状態）' : '接続不可（以前の接続状態は無効）'
-}
-
-export function loginMock(auth: MockAuth, loginId: string, password: string): { auth: MockAuth; errors: MockAuthErrors } {
-  const errors: MockAuthErrors = {}
-  if (!loginId.trim()) errors.loginId = 'ログインIDを入力してください。'
-  if (!password.trim()) errors.password = 'パスワードを入力してください。'
-  if (Object.keys(errors).length) return { auth, errors }
-  const account = auth.accounts.find(item => item.loginId === loginId && item.password === password && item.active)
-  if (!account) return { auth, errors: { form: 'ログインIDまたはパスワードが正しくありません。もう一度入力してください。' } }
-  return { auth: { ...auth, sessionLoginId: account.loginId, sessionVersion: account.credentialVersion, notice: 'ログイン成功（モック）。このタブ内のログイン状態を開始しました。' }, errors }
-}
-
-export function endMockSession(auth: MockAuth, reason: MockSessionEnd): MockAuth {
-  return { ...auth, sessionLoginId: null, sessionVersion: null, notice: reason === 'expired'
-    ? 'セッションの有効期限が切れました（モック）。もう一度ログインしてください。入力中の内容は保存されません。'
-    : 'ログアウトしました（モック）。このタブのログイン状態を終了しました。' }
-}
-
-export function changeMockPassword(auth: MockAuth, currentPassword: string, newPassword: string, confirmation: string, at?: string): { auth: MockAuth; errors: MockAuthErrors } {
-  const session = getMockSession(auth)
-  const account = session && auth.accounts.find(item => item.id === session.id)
-  if (!account) return { auth, errors: { form: 'ログイン状態を確認できません。もう一度ログインしてください。' } }
-  const errors: MockAuthErrors = {}
-  if (!currentPassword.trim()) errors.currentPassword = '現在または仮パスワードを入力してください。'
-  else if (currentPassword !== account.password) errors.currentPassword = '現在または仮パスワードが正しくありません。'
-  if (!newPassword.trim()) errors.newPassword = '新しいパスワードを入力してください。'
-  else if (newPassword === account.password) errors.newPassword = '現在のパスワードとは異なる値を入力してください。'
-  if (!confirmation.trim()) errors.confirmation = '確認用のパスワードを入力してください。'
-  else if (newPassword !== confirmation) errors.confirmation = '新しいパスワードと確認用の入力が一致しません。'
-  if (Object.keys(errors).length) return { auth, errors }
-  return { auth: {
-    ...recordAccountEvent(auth, account.id, 'password_change', at),
-    accounts: auth.accounts.map(item => item.id === account.id ? { ...item, password: newPassword, mustChangePassword: false, credentialVersion: item.credentialVersion + 1 } : item),
-    sessionLoginId: null,
-    sessionVersion: null,
-    notice: 'パスワード変更が完了しました（モック）。ログイン状態を終了しました。新しいパスワードでログインしてください。',
-  }, errors }
-}
+export type Person = { id: string; name: string }
 
 export const statusLabels: Record<RequestStatus, string> = {
   open: '未対応', in_progress: '対応中', resolved: '解決済み',
@@ -197,7 +53,7 @@ const people: Record<string, string> = {
   'employee-04': '伊藤 翔太', 'employee-05': '渡辺 真由', 'employee-06': '小林 遥',
   'operator-01': '山田 花子', 'operator-02': '鈴木 健太',
 }
-export function personName(id: string | null, accounts: readonly Pick<MockAccountView, 'id' | 'name'>[] = []) {
+export function personName(id: string | null, accounts: readonly Person[] = []) {
   return id === null ? '未割り当て' : accounts.find(account => account.id === id)?.name ?? people[id] ?? '不明な利用者'
 }
 
@@ -298,7 +154,7 @@ export function getVisibleRequests(requests: MockRequest[], role: DemoRole, user
   return role === 'employee' ? requests.filter(request => request.requesterId === userId) : requests
 }
 
-export function getRequestFilters(params: URLSearchParams) {
+export function getRequestFilters(params: URLSearchParams, operatorOptions: Person[] = operators) {
   const query = (params.get('q') ?? '').normalize('NFKC').trim().toLocaleLowerCase('ja')
   const status = params.get('status') ?? ''
   const assignee = params.get('assignee') ?? ''
@@ -306,14 +162,14 @@ export function getRequestFilters(params: URLSearchParams) {
   return {
     query,
     status: status === 'unresolved' || Object.hasOwn(statusLabels, status) ? status : '',
-    assignee: ['me', 'unassigned', ...operators.map(operator => operator.id)].includes(assignee) ? assignee : '',
+    assignee: ['me', 'unassigned', ...operatorOptions.map(operator => operator.id)].includes(assignee) ? assignee : '',
     department: departments.includes(department) ? department : '',
   }
 }
 
-export function getRequestList(requests: MockRequest[], role: DemoRole, params: URLSearchParams, userId = demoUsers[role].id) {
+export function getRequestList(requests: MockRequest[], role: DemoRole, params: URLSearchParams, userId = demoUsers[role].id, operatorOptions: Person[] = operators) {
   const visible = getVisibleRequests(requests, role, userId)
-  const { query, status, assignee, department } = getRequestFilters(params)
+  const { query, status, assignee, department } = getRequestFilters(params, operatorOptions)
   const filtered = visible.filter(request => {
     const text = `${request.id} ${request.title} ${request.body}`.normalize('NFKC').toLocaleLowerCase('ja')
     const matchesStatus = !status || (status === 'unresolved' ? request.status !== 'resolved' : request.status === status)
@@ -364,7 +220,7 @@ export type RequestAction =
   | { type: 'resolve'; resolution: string }
   | { type: 'edit'; body: string }
 
-export function updateRequest(requests: MockRequest[], role: DemoRole, id: string, action: RequestAction, at: string, userId = demoUsers[role].id) {
+export function updateRequest(requests: MockRequest[], role: DemoRole, id: string, action: RequestAction, at: string, userId = demoUsers[role].id, operatorOptions: Person[] = operators) {
   const request = getVisibleRequests(requests, role, userId).find(item => item.id === id)
   if (!request) throw new Error('この情報を表示する権限がないか、問い合わせが見つかりません。')
   if (request.status === 'resolved') throw new Error('解決済みの問い合わせは変更できません。')
@@ -373,10 +229,10 @@ export function updateRequest(requests: MockRequest[], role: DemoRole, id: strin
   let description: string
   switch (action.type) {
     case 'assign':
-      if (!operators.some(operator => operator.id === action.assigneeId)) throw new Error('担当者を選択してください。')
+      if (!operatorOptions.some(operator => operator.id === action.assigneeId)) throw new Error('担当者を選択してください。')
       if (request.assigneeId === action.assigneeId) throw new Error('同じ担当者がすでに割り当てられています。')
       changes = { assigneeId: action.assigneeId }
-      description = `担当者を${personName(request.assigneeId)}から${personName(action.assigneeId)}に変更しました。`
+      description = `担当者を${personName(request.assigneeId, operatorOptions)}から${personName(action.assigneeId, operatorOptions)}に変更しました。`
       break
     case 'start':
       if (request.status !== 'open' || !request.assigneeId) throw new Error('担当者を割り当ててから対応を開始してください。')
@@ -438,6 +294,10 @@ export const mockKnowledge: KnowledgeVersion[] = [
   { id: 'KB-0018', version: 1, status: 'rejected', title: '年末調整の書類提出先', audience: '年末調整を行う社員', department: '人事', body: '電子申請と原本の提出先を確認します。詳細は人事へ連絡してください。',
     updatedAt: '2026-10-28T10:00:00+09:00', sources: [snapshotResolution(mockRequests.find(item => item.id === 'REQ-0006')!)], events: [{ at: '2026-10-28T10:00:00+09:00', description: '鈴木 健太が差し戻しました。理由：原本が必要な書類と提出窓口の説明が不足しています。' }] },
 ]
+
+export function createBusinessSnapshot() {
+  return { requests: structuredClone(mockRequests), knowledge: structuredClone(mockKnowledge) }
+}
 
 export function getPublishedKnowledge(knowledge: KnowledgeVersion[]) {
   const latest = new Map<string, KnowledgeVersion>()

@@ -104,7 +104,7 @@ function Editor({ role, actorName, knowledge, requests, onKnowledgeChange, onDir
       setInput({ title: result.saved.title, audience: result.saved.audience, department: result.saved.department, body: result.saved.body })
       setError('')
       setMessage('下書きを保存しました（このタブ内のみ）。まだ社員の検索には公開されていません。')
-      if (!saved) navigate(`/knowledge/reviews/${result.saved.id}/versions/${result.saved.version}`, { replace: true, state: { saved: true } })
+      if (!saved) navigate(`/knowledge/reviews/${result.saved.id}/versions/${result.saved.version}`, { replace: true })
     } catch (cause) { showError(cause instanceof Error ? cause.message : '保存できませんでした。') }
   }
 
@@ -159,7 +159,7 @@ function Editor({ role, actorName, knowledge, requests, onKnowledgeChange, onDir
       <h1 tabIndex={-1} ref={headingRef}>{saved ? saved.title : 'ナレッジの下書きを作成'}</h1>
       <p className="muted">{saved ? `保存した版 v${saved.version} · 更新 ${formatDemoDate(saved.updatedAt)} JST` : '解決根拠を確認し、社員向けの文書を手動で記載します。AI生成は行いません。'}</p></div>
       <DisplayControl mode={mode} onChange={setMode} /></div>
-    {(message || location.state?.saved) && <p role="status" className={common.success}>{message || '下書きを保存しました（このタブ内のみ）。まだ社員の検索には公開されていません。'}</p>}
+    {message && <p role="status" className={common.success}>{message}</p>}
     {error && <div className={common.errorBanner} ref={errorRef} tabIndex={-1} role="alert"><p>{error}</p>
       {validated && <ul>{(Object.keys(errors) as (keyof KnowledgeInput)[]).filter(key => errors[key]).map(key => <li key={key}><a href={`#knowledge-${key}`} onClick={e => { e.preventDefault(); setPreview(false); requestAnimationFrame(() => formRef.current?.querySelector<HTMLElement>(`#knowledge-${key}`)?.focus()) }}>{errors[key]}</a></li>)}</ul>}</div>}
     {mode === 'loading' ? <div className="notice" aria-busy="true"><p role="status">読み込み中…（デモ用）。編集中の内容は保持されています。</p></div> : mode !== 'normal' ?
