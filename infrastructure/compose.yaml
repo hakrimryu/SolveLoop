@@ -1,6 +1,30 @@
 name: solveloop
 
 services:
+  backend:
+    image: solveloop-backend:local
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+      target: runtime
+    environment:
+      DB_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DBを.envに設定してください}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USERを.envに設定してください}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORDを.envに設定してください}
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health/ready', timeout=8)"]
+      interval: 10s
+      timeout: 9s
+      retries: 3
+      start_period: 10s
+    labels:
+      local.solveloop.description: "SolveLoop ローカル開発用 API"
   db:
     image: pgvector/pgvector:0.8.7-pg17-bookworm@sha256:ac08538c6f8b9904c33c8224c5e5706dbe760aca29db1d096972b4052c22a75d
     environment:

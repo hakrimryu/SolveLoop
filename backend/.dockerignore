@@ -1,0 +1,17 @@
+**
+!pyproject.toml
+!uv.lock
+!alembic.ini
+!THIRD_PARTY_NOTICES.txt
+!app/**/*.py
+!migrations/**/*.py
+!migrations/script.py.mako
+!tests/**/*.py
+**/__pycache__
+**/*.pyc
+**/.env
+**/.env.*
+**/AGENTS.md
+**/.docs
+**/.git
+**/node_modules

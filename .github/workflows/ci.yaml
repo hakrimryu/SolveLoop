@@ -1,0 +1,48 @@
+name: 基本検証
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: 検証専用の設定を作成
+        run: |
+          test ! -e infrastructure/.env
+          printf 'POSTGRES_DB=solveloop_test\nPOSTGRES_USER=solveloop_test\nPOSTGRES_PASSWORD=%s\n' "$(openssl rand -hex 32)" > infrastructure/.env
+      - name: 固定依存でイメージをビルド
+        run: |
+          docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml config --quiet
+          docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml build backend
+          docker build --target test -t solveloop-backend-test:ci backend
+      - name: 静的検査
+        run: |
+          docker run --rm solveloop-backend-test:ci ruff check .
+          docker run --rm solveloop-backend-test:ci ruff format --check .
+      - name: 空のPostgreSQLでマイグレーションとAPIを検証
+        run: |
+          docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --wait --wait-timeout 90 db
+          docker run --rm --network solveloop-ci_default --env-file infrastructure/.env -e RUN_DB_TESTS=1 solveloop-backend-test:ci
+          docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml run --rm --no-deps backend alembic upgrade head
+          docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --no-deps --wait --wait-timeout 90 backend
+          curl --fail --silent http://127.0.0.1:8000/health/live
+          curl --fail --silent http://127.0.0.1:8000/health/ready
+      - name: DB停止時の応答と復旧を検証
+        run: |
+          docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml stop db
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/health/live)" = 200
+          test "$(curl --silent -o /dev/null -w '%{http_code}' http://127.0.0.1:8000/health/ready)" = 503
+          docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --no-recreate --wait --wait-timeout 90 db
+          curl --fail --silent --retry 10 --retry-all-errors --retry-delay 1 http://127.0.0.1:8000/health/ready
+      - name: 今回の検証リソースを削除
+        if: always()
+        run: docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml down --volumes --remove-orphans

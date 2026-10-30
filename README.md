@@ -10,7 +10,7 @@
 
 操作結果は同じタブの画面間で共有され、再読み込み・タブを閉じると初期化されます。DB保存・認証・セッション・パスワード検証・サーバーの権限検査・AI 推論・Radar の分析処理は未実装です。検索はキーワードの部分一致です。
 
-ローカルDBは PostgreSQL 17.11 / pgvector 0.8.7 の起動・ベクトル演算・永続化まで検証済みです。業務テーブル・API・画面との接続はまだありません。
+ローカルDBは PostgreSQL 17.11 / pgvector 0.8.7 の起動・ベクトル演算・永続化まで検証済みです。バックエンドはDB接続・状態確認API・初期マイグレーションの基盤を用意しました。業務テーブル・業務API・画面との接続はまだありません。
 
 ## フロントエンドの起動
 
@@ -180,6 +180,92 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 
 停止するときは `docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml stop db`、再開は前述の `up -d --wait` を使用します。コンテナ・ネットワークも外す場合は `docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml down` でvolumeを保持できます。`down --volumes` や `volume rm` / `prune` はデータ削除になるため通常手順に含めません。再起動・再作成での保持はバックアップ・復元の検証を意味しません。
 
+## バックエンドの起動と検証
+
+### 実行環境と設定
+
+ホストでは Python 3.13.2 / uv 0.10.4、コンテナでは Python 3.13.18 / uv 0.10.4 を検証しました。ホストのPythonは変更していません。`backend/.python-version` はホストで検証した版を示します。コンテナは別途 Dockerfile のパッチ版と digest を固定し、Python の自動ダウンロードを無効にしています。
+
+`backend/pyproject.toml` は Python 3.13 系を指定し、直接依存は完全な版番号、間接依存と配布物のハッシュは `backend/uv.lock` で固定しています。SQLAlchemy 2.0.55 は保守系列の採用で、最新系列という意味ではありません。
+
+既存の `infrastructure/.env` はそのまま使います。Compose は必要なDB変数だけをバックエンドへ渡し、実際の環境ファイルをイメージへコピーしません。
+
+| 環境変数 | 用途 |
+| --- | --- |
+| `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | 既存DBの接続先・資格情報。すべて必須、空欄不可 |
+| `DB_HOST` / `DB_PORT` | バックエンドの接続先。既定値は `db` / `5432`、Composeでは内部ネットワークを使用 |
+| `BACKEND_PORT` | Compose のホスト側APIポート。未指定時8000、公開先は常に `127.0.0.1` |
+
+アプリは `.env` を自動探索しません。ホスト実行時は必要な値を環境変数で明示してください。現在DBポートはホストへ公開していないため、DBを使う通常の実行はComposeで行います。DB初期化用ユーザーをローカル開発の接続にも使用しています。本番用の最小権限設定やアプリ利用者の認証は未実装です。
+
+SQLAlchemy は同期接続を使います。要求ごとにセッションを開き、終了時に未コミット分を rollback して接続を返却します。コミットは業務処理側で明示する方式です。接続とプール待機・SQL実行には各3秒の制限を設定していますが、DNSなどを含む要求全体の厳密な上限ではありません。
+
+### マイグレーションとAPI起動
+
+以下はリポジトリのルートで実行します。初回の `.env` 作成は前述のDB手順を使い、既存ファイルを上書きしないでください。既存の画面 preview 4173 はそのまま利用できます。
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml config --quiet
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --wait --wait-timeout 90 db
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml build backend
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml run --rm --no-deps backend alembic upgrade head
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --no-deps --wait --wait-timeout 90 backend
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec backend alembic current
+```
+
+各命令が成功してから次へ進みます。マイグレーションはアプリ開始時に自動実行しません。DB起動のhealthcheckは接続受付だけ、APIのhealthcheckは現在のマイグレーションと拡張も確認します。初回にマイグレーションを省略するとAPI自体は起動しますが `ready` が503となり、Compose の `--wait` は失敗します。状態を確認して上の `alembic upgrade head` を実行してください。
+
+初期 revision は `0001_vector` です。空DBでは `public.vector` 拡張を作成し、既存の拡張があれば保持します。`alembic_version` は適用済みrevisionを記録する管理用テーブルで、問い合わせ・知識・利用者の業務テーブルではありません。起動や状態確認からテーブルを自動作成しません。現在は手書きrevisionの基盤であり、業務モデルの自動差分生成はまだ構成していません。
+
+初期revisionのdowngradeは拡張・業務データを削除しません。通常の運用手順としてdowngrade・`stamp`・volumeの削除を使って不一致を隠さず、適用履歴と接続先を確認してください。別のスキーマに既存vectorがある環境は自動移動せず、readyが失敗します。
+
+### 状態確認
+
+```powershell
+Invoke-RestMethod http://127.0.0.1:8000/health/live
+Invoke-RestMethod http://127.0.0.1:8000/health/ready | ConvertTo-Json -Depth 5
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml ps
+```
+
+| URL | 正常時 | DB停止・未適用時 |
+| --- | --- | --- |
+| [/health/live](http://127.0.0.1:8000/health/live) | 200、`status=alive` | APIプロセスが動いていれば200 |
+| [/health/ready](http://127.0.0.1:8000/health/ready) | 200、`status=ready`、`scope=backend_foundation` | 503、`status=not_ready`、秘密値のない案内とrequest_id |
+| [/docs](http://127.0.0.1:8000/docs) | 状態確認APIのOpenAPI画面 | 業務APIは未実装 |
+
+`ready` はDBへのSQL実行、適用revision集合とソースのhead集合の一致、publicのvector拡張を確認します。これは現在の基盤スキーマの確認であり、業務機能・認証・デモ資料の準備完了やスキーマ全体の改変検知を意味しません。Ollama・AIは起動も状態確認も要求しません。AIの状態表示は未実装です。
+
+DB障害は要求を失敗させ、画面モックや固定応答で置き換えません。接続例外の本文・SQL・資格情報はAPI応答とアプリログに出力しません。DB復旧後は接続プールの再接続でreadyが200へ戻ります。元のDBを止めず、専用の検証プロジェクトで停止・復旧を確認しました。
+
+### ローカル検査とCI
+
+ホストでDBを使わない検査は、ルートから `backend/` に移動して実行します。
+
+```powershell
+Set-Location backend
+uv sync --locked
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked pytest -q
+```
+
+既定では単体テスト5件を実行し、専用DBを要求する統合テスト1件はskipします。統合テストは `RUN_DB_TESTS=1` とDB名 `solveloop_test` の両方を要求し、空DBからのみ開始します。DB名だけで安全を保証するものではないので、必ず別のComposeプロジェクト・新しいvolumeを使ってください。SQLiteは使いません。
+
+リポジトリのルートでは以下でCIと同じ検証用イメージを構築できます。
+
+```powershell
+docker build --target test -t solveloop-backend-test:local backend
+docker run --rm solveloop-backend-test:local ruff check .
+docker run --rm solveloop-backend-test:local ruff format --check .
+docker run --rm solveloop-backend-test:local
+```
+
+[基本CI](.github/workflows/ci.yaml) は Ubuntu 24.04 のGitHub Actionsで、lockを変更しないイメージ構築・Ruff・単体テスト・空のPostgreSQLでのマイグレーション・実HTTP・DB停止/復旧を実行する定義です。`solveloop-ci` 専用の環境・DB・volumeを作り、終了時にその検証volumeだけを削除します。既存の `solveloop` DBには実行しません。フロントのCI・業務API・AI評価は対象外です。ローカルで相当の検証を実行しましたが、GitHub Actions上ではまだ実行していません。
+
+Dockerfileは `backend/Dockerfile`、ビルドコンテキストは `backend/`、適用される除外定義は `backend/.dockerignore` です。ルートの `.docs`・AGENTS・`.git`・`infrastructure/.env`・frontendはコンテキスト外です。コンテキスト内も必要なソースとlock等の許可リストだけを渡します。実行用 `runtime` targetは非rootで動作し、開発用依存とtestsは含めません。`test` targetだけがそれらを追加します。
+
+APIだけを停止する場合は `docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml stop backend` を使います。DBや画面previewの停止は別操作です。
+
 ## 実装予定
 
 - 問い合わせの登録・担当者の割り当て・対応履歴の管理
@@ -194,7 +280,7 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 | 領域 | 採用済み・採用予定 |
 | --- | --- |
 | フロントエンド（導入済み） | React 19.3.1 / TypeScript 7.0.2 / Vite 8.3.5 / React Router 7.18.5 |
-| バックエンド | Python / FastAPI / SQLAlchemy / Alembic |
+| バックエンド（実行基盤） | Python 3.13 / FastAPI 0.162.0 / SQLAlchemy 2.0.55 / Alembic 1.20.1 |
 | データベース（ローカル起動・保存を検証済み） | PostgreSQL 17.11 / pgvector 0.8.7、業務連携・意味検索は未実装 |
 | ローカル推論 | Ollama |
 | 実行環境・検証 | Docker Compose / pytest / Vitest / Playwright / GitHub Actions |
@@ -214,6 +300,21 @@ evaluations/       検索・分類・Radarの評価
 残りの業務画面・デモ動画・評価結果は実装と検証に合わせて追加します。
 
 ## 参考・利用した OSS
+
+バックエンドは [FastAPIのコンテナ実行](https://fastapi.tiangolo.com/deployment/docker/)、[Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)、[SQLAlchemyの同期Session](https://docs.sqlalchemy.org/en/20/orm/session_basics.html)・[psycopg dialect](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#module-sqlalchemy.dialects.postgresql.psycopg)、[Alembic](https://alembic.sqlalchemy.org/en/latest/tutorial.html)、[uvのDocker連携](https://docs.astral.sh/uv/guides/integration/docker/)、[Dockerのcontextと除外](https://docs.docker.com/build/concepts/context/#dockerignore-files)を設計参考にしました。Full Stack FastAPI Templateはサービス・health・実行分離の参考で、コードのコピー・改変・テンプレート生成はしていません。JWT・SQLModel・メール・workerは導入していません。
+
+| パッケージ・イメージ | 固定版・利用範囲 | ライセンス |
+| --- | --- | --- |
+| [FastAPI](https://github.com/fastapi/fastapi) / [Pydantic](https://github.com/pydantic/pydantic) / [Pydantic Settings](https://github.com/pydantic/pydantic-settings) | 0.162.0 / 2.14.2 / 2.16.2、API・設定検証 | MIT |
+| [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy) / [Alembic](https://github.com/sqlalchemy/alembic) | 2.0.55 / 1.20.1、同期DB・変更履歴 | MIT |
+| [psycopg / psycopg-binary](https://github.com/psycopg/psycopg) | 3.3.6、PostgreSQLドライバーの公式binary配布物 | LGPL-3.0-only、同梱ライブラリは各配布物の表示を保持 |
+| [Uvicorn](https://github.com/encode/uvicorn) | 0.54.0、ASGIサーバー | BSD-3-Clause |
+| [Ruff](https://github.com/astral-sh/ruff) / [pytest](https://github.com/pytest-dev/pytest) / [httpx2](https://github.com/pydantic/httpx2) | 0.17.3 / 9.2.0 / 2.16.0、開発用検査 | MIT / MIT / BSD-3-Clause |
+| [Python公式イメージ](https://hub.docker.com/_/python) | 3.13.18-slim-bookworm、digest `sha256:281d39ff02e3b389401586134ff9e6572954687822a58055ec07a60ded4e0b7f` | PythonはPSF、同梱OS等は各ライセンス |
+| [uv](https://github.com/astral-sh/uv/tree/0.10.4) | 0.10.4、公式イメージから実行ファイルをコピー、digest `sha256:4cac394b6b72846f8a85a7a0e577c6d61d4e17fe2ccee65d9451a8b3c9efb4ac` | MITを選択、[原文表示](backend/THIRD_PARTY_NOTICES.txt)を同梱 |
+| [actions/checkout](https://github.com/actions/checkout/tree/v7.0.1) | v7.0.1のcommitをCIに固定、ソース取得 | MIT |
+
+依存パッケージ・配布バイナリは未改造です。インストール済みの `.dist-info/licenses` とベースイメージ内のライセンス原文を削除しません。uvの原文表示も実行イメージにコピーします。独自に作成したのは設定・セッション境界・状態確認・revision・テスト・Compose追加・CIです。本プロジェクト自体のライセンスは未決定です。
 
 DB構成は [Docker Compose のサービス定義](https://docs.docker.com/reference/compose-file/services/)・[volume](https://docs.docker.com/engine/storage/volumes/)・[環境変数](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/)、[PostgreSQL 公式イメージの保存先・初期設定](https://hub.docker.com/_/postgres)、[PostgreSQL 17 の pg_isready](https://www.postgresql.org/docs/17/app-pg-isready.html) を設計参考にしました。[Full Stack FastAPI Template の Compose](https://github.com/fastapi/full-stack-fastapi-template/blob/master/compose.yml) はDBの状態確認・保存・必須変数の分け方だけを参考にし、コードはコピーしていません。
 
