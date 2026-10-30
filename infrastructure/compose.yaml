@@ -1,0 +1,24 @@
+name: solveloop
+
+services:
+  db:
+    image: pgvector/pgvector:0.8.7-pg17-bookworm@sha256:ac08538c6f8b9904c33c8224c5e5706dbe760aca29db1d096972b4052c22a75d
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DBを.envに設定してください}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USERを.envに設定してください}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORDを.envに設定してください}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    labels:
+      local.solveloop.description: "SolveLoop ローカル開発用 PostgreSQL・pgvector"
+
+volumes:
+  postgres_data:
+    labels:
+      local.solveloop.description: "SolveLoop ローカルDBの永続データ"

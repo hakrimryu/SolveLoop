@@ -10,6 +10,8 @@
 
 操作結果は同じタブの画面間で共有され、再読み込み・タブを閉じると初期化されます。DB保存・認証・セッション・パスワード検証・サーバーの権限検査・AI 推論・Radar の分析処理は未実装です。検索はキーワードの部分一致です。
 
+ローカルDBは PostgreSQL 17.11 / pgvector 0.8.7 の起動・ベクトル演算・永続化まで検証済みです。業務テーブル・API・画面との接続はまだありません。
+
 ## フロントエンドの起動
 
 検証環境: Windows / PowerShell、Node.js 22.19.0、npm 10.9.3。Node.js は 22 系を使用し、検証したバージョンを `frontend/.node-version` に記録しています。このファイルだけで Node.js がインストール・切り替えされるわけではありません。
@@ -75,6 +77,109 @@ Chromeで問い合わせ→解決→手動下書き→保存→承認→検索�
 
 依存関係は `frontend/package-lock.json` で固定しています。バックエンド・DB・Docker・Ollama の準備は、この画面の起動には不要です。
 
+## ローカルDBの起動と確認
+
+検証環境: Windows / PowerShell 7、Docker Desktop の Linux エンジン、Docker CLI 29.4.1 / Compose v5.1.3、linux/amd64。PostgreSQL 17 は互換性を考慮した採用系列であり、最新のメジャーバージョンという意味ではありません。
+
+### リソースの識別
+
+| 対象 | 名前・用途 |
+| --- | --- |
+| Compose プロジェクト | `solveloop`（`infrastructure/compose.yaml`） |
+| サービス / コンテナ | `db` / `solveloop-db-1` |
+| named volume | `solveloop_postgres_data` → `/var/lib/postgresql/data` |
+| ネットワーク | `solveloop_default` |
+| 配布イメージ | `pgvector/pgvector:0.8.7-pg17-bookworm` |
+| 固定 digest | `sha256:ac08538c6f8b9904c33c8224c5e5706dbe760aca29db1d096972b4052c22a75d` |
+
+イメージは pgvector プロジェクトが PostgreSQL 公式イメージを基に配布するもので、独自ビルド・改変はしていません。タグと digest の両方を `infrastructure/compose.yaml` に固定しています。更新時は実際の PostgreSQL パッチ・pgvector・永続化を再検証します。
+
+コンテナ・volume・ネットワークには `com.docker.compose.project=solveloop` のラベルが付き、コンテナとvolumeには日本語の用途説明も付きます。他プロジェクトのリソースを操作しないよう、以下ではプロジェクト名と設定ファイルを毎回指定します。DB の5432番はコンテナ内部だけで使用し、ホストへ公開しません。ホストの `localhost:5432` からは接続せず、`compose exec` を使います。
+
+### 初回の設定と起動
+
+Docker Desktop の Linux エンジンを起動します。以下のDB操作はすべてリポジトリのルートから実行し、`--env-file infrastructure/.env` と `-f infrastructure/compose.yaml` で対象ファイルを明示します。`-p solveloop` は配置先のフォルダー名による別プロジェクト・別volumeの作成を防ぎます。既に `solveloop` のリソースがある場合は、その用途を確認してから起動してください。
+
+```powershell
+docker info --format '{{.ServerVersion}} {{.OSType}}'
+docker ps -a --filter label=com.docker.compose.project=solveloop
+docker volume ls --filter label=com.docker.compose.project=solveloop
+docker network ls --filter label=com.docker.compose.project=solveloop
+```
+
+`infrastructure/.env.example` は公開するキーと例です。パスワードは空欄なので、そのままでは起動できません。次の処理は既存の `infrastructure/.env` を上書きせず、ローカル専用のランダムな値を作成します。PowerShell 7 で一度だけ実行してください。
+
+```powershell
+if (Test-Path -LiteralPath infrastructure/.env) { throw 'infrastructure/.envは既に存在します。既存の設定を確認してください。' }
+$dbLocalPassword = [Convert]::ToHexString([System.Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+(Get-Content -Raw infrastructure/.env.example).Replace('POSTGRES_PASSWORD=', "POSTGRES_PASSWORD=$dbLocalPassword") |
+  Set-Content -NoNewline -Encoding utf8 infrastructure/.env
+Remove-Variable dbLocalPassword
+git check-ignore -v infrastructure/.env
+```
+
+`infrastructure/.env` は Git 除外対象です。内容や、秘密値を展開する `docker compose config` / `docker inspect` の全出力を公開しないでください。シェルに同名の環境変数があると `infrastructure/.env` より優先されます。`POSTGRES_USER` はこのローカルDBを初期化する管理用ユーザーで、アプリの認証や本番用の最小権限設定ではありません。
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml config --quiet
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml pull db
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --wait --wait-timeout 90 db
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml ps
+```
+
+`config --quiet` の終了コード0と、`solveloop-db-1` の `healthy` を確認します。各コマンドが失敗した場合は、原因を確認してから次へ進んでください。`PORTS` の `5432/tcp` はイメージの内部ポート表示で、`127.0.0.1:...->` のようなホスト公開ではありません。healthcheck はTCPで接続受付を確認し、パスワード・拡張・業務スキーマの検証は行いません。
+
+起動しない場合は Docker エンジンの状態、`infrastructure/.env` の必須値、対象を限定した `docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml logs --tail 50 db` を確認します。ログを共有する前に秘密情報がないか確認してください。既存volumeのデータがある場合、`infrastructure/.env` の変更だけでDB名・ユーザー・パスワードは変更されません。エラー解消のためのvolume削除や全体の `prune` は行わないでください。
+
+### 拡張・再起動・永続化の検証
+
+以下のSQLはインフラ検証用であり、業務テーブル・デモシード・マイグレーションではありません。手動で実行するため、通常のDB起動時には適用されません。`prepare` は `vector` 拡張と専用スキーマ `solveloop_infra_check` に1行を作成します。同名スキーマが既にあれば上書きせず停止します。
+
+```powershell
+Get-Content -Raw infrastructure/verify-db-prepare.sql |
+  docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec -T db sh -c 'exec psql -X -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+Get-Content -Raw infrastructure/verify-db-check.sql |
+  docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec -T db sh -c 'exec psql -X -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+```
+
+両方の終了コードが0で、`17.11`、`0.8.7`、`solveloop-volume-probe`、`[1,2,3]`、距離 `5` が表示されることを確認します。`check` は保存行・拡張版・ベクトル演算が想定と違う場合に例外で失敗します。この3次元ベクトルは検証専用で、将来の埋め込みモデル・次元数を決めるものではありません。
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml ps -q db
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml restart db
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --no-recreate --wait --wait-timeout 90 db
+Get-Content -Raw infrastructure/verify-db-check.sql |
+  docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec -T db sh -c 'exec psql -X -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --force-recreate --wait --wait-timeout 90 db
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml ps -q db
+Get-Content -Raw infrastructure/verify-db-check.sql |
+  docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec -T db sh -c 'exec psql -X -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+```
+
+再起動後とコンテナ再作成後に同じ保存行・距離が表示されます。再作成ではコンテナIDが変わり、`solveloop_postgres_data` は保持されます。検証終了後は、次の処理で専用テーブル・スキーマだけを削除します。`vector` 拡張とvolumeは残ります。
+
+```powershell
+Get-Content -Raw infrastructure/verify-db-cleanup.sql |
+  docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec -T db sh -c 'exec psql -X -U "$POSTGRES_USER" -d "$POSTGRES_DB" -v ON_ERROR_STOP=1'
+```
+
+### 通常の確認・停止
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml ps
+docker volume ls --filter label=com.docker.compose.project=solveloop
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec db sh -c 'exec psql -X -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+psql 内では `SELECT version();`、`SELECT extversion FROM pg_extension WHERE extname = 'vector';` で版を確認し、`\q` で終了します。イメージの初期設定ではUnixソケット・コンテナ内localhostは信頼接続です。パスワード認証の確認は、Dockerネットワークのサービス名 `db` に接続します。次のコマンドは値を表示せず、コンテナ内の環境変数を使います。`db` への正しいパスワードの成功と誤ったパスワードの拒否を確認しました。
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" exec psql -X -h db -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+停止するときは `docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml stop db`、再開は前述の `up -d --wait` を使用します。コンテナ・ネットワークも外す場合は `docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml down` でvolumeを保持できます。`down --volumes` や `volume rm` / `prune` はデータ削除になるため通常手順に含めません。再起動・再作成での保持はバックアップ・復元の検証を意味しません。
+
 ## 実装予定
 
 - 問い合わせの登録・担当者の割り当て・対応履歴の管理
@@ -90,7 +195,7 @@ Chromeで問い合わせ→解決→手動下書き→保存→承認→検索�
 | --- | --- |
 | フロントエンド（導入済み） | React 19.3.1 / TypeScript 7.0.2 / Vite 8.3.5 / React Router 7.18.5 |
 | バックエンド | Python / FastAPI / SQLAlchemy / Alembic |
-| データベース・検索 | PostgreSQL / pgvector |
+| データベース（ローカル起動・保存を検証済み） | PostgreSQL 17.11 / pgvector 0.8.7、業務連携・意味検索は未実装 |
 | ローカル推論 | Ollama |
 | 実行環境・検証 | Docker Compose / pytest / Vitest / Playwright / GitHub Actions |
 
@@ -101,7 +206,7 @@ Chromeで問い合わせ→解決→手動下書き→保存→承認→検索�
 ```text
 frontend/          画面とフロントエンドのテスト
 backend/           API・業務処理・AI連携
-infrastructure/    コンテナと実行環境の設定
+infrastructure/    Compose・環境変数の例・DB検証SQL（実際の.envはGit除外）
 demo/              架空企業のデータと再現シナリオ
 evaluations/       検索・分類・Radarの評価
 ```
@@ -109,6 +214,10 @@ evaluations/       検索・分類・Radarの評価
 残りの業務画面・デモ動画・評価結果は実装と検証に合わせて追加します。
 
 ## 参考・利用した OSS
+
+DB構成は [Docker Compose のサービス定義](https://docs.docker.com/reference/compose-file/services/)・[volume](https://docs.docker.com/engine/storage/volumes/)・[環境変数](https://docs.docker.com/compose/how-tos/environment-variables/variable-interpolation/)、[PostgreSQL 公式イメージの保存先・初期設定](https://hub.docker.com/_/postgres)、[PostgreSQL 17 の pg_isready](https://www.postgresql.org/docs/17/app-pg-isready.html) を設計参考にしました。[Full Stack FastAPI Template の Compose](https://github.com/fastapi/full-stack-fastapi-template/blob/master/compose.yml) はDBの状態確認・保存・必須変数の分け方だけを参考にし、コードはコピーしていません。
+
+[pgvector 0.8.7](https://github.com/pgvector/pgvector/tree/v0.8.7) の[配布イメージ](https://hub.docker.com/r/pgvector/pgvector)をそのまま利用しています。[Dockerfile](https://github.com/pgvector/pgvector/blob/v0.8.7/Dockerfile)と[ライセンス](https://github.com/pgvector/pgvector/blob/v0.8.7/LICENSE)を確認し、タグ・digest・実測版は上の表に記載しました。pgvector と [PostgreSQL](https://www.postgresql.org/about/licence/) は PostgreSQL License で、コンテナ内の原文表示・同梱コンポーネントのライセンスは保持されます。外部ソース・Dockerfile・検証SQLのコピーや改変、独自イメージの配布は行っていません。これらの利用条件は、本プロジェクト自体のライセンス選択とは別です。
 
 [Vite 公式ガイド](https://vite.dev/guide/)、[React の構築手順](https://react.dev/learn/build-a-react-app-from-scratch)、[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html) を環境構成の参考にしました。生成テンプレートや他製品の画面・ソースはコピーしていません。
 
