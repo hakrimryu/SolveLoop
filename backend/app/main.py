@@ -13,6 +13,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.accounts import router as accounts_router
 from app.auth import router as auth_router
 from app.config import BACKEND_DIR, Settings, load_settings
 from app.database import build_engine, get_session
@@ -38,6 +39,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.state.settings = settings
     register_error_handlers(app)
     app.include_router(auth_router)
+    app.include_router(accounts_router)
 
     @app.middleware("http")
     async def private_api_cache(request: Request, call_next):
