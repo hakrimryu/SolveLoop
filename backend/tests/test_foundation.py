@@ -111,9 +111,11 @@ def test_postgresql_foundation_and_migrations() -> None:
             assert response.json()["scope"] == "backend_foundation"
 
             with engine.connect() as connection:
-                assert connection.scalars(
-                    text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
-                ).all() == ["alembic_version"]
+                assert set(
+                    connection.scalars(
+                        text("SELECT tablename FROM pg_tables WHERE schemaname = 'public'")
+                    )
+                ) == {"alembic_version", "departments", "users", "sessions"}
                 assert (
                     connection.scalar(text("SELECT '[1,2,3]'::vector <-> '[4,6,3]'::vector")) == 5
                 )
@@ -121,7 +123,7 @@ def test_postgresql_foundation_and_migrations() -> None:
                 connection.execute(text("UPDATE alembic_version SET version_num = 'unknown_test'"))
             assert client.get("/health/ready").status_code == 503
             with engine.begin() as connection:
-                connection.execute(text("UPDATE alembic_version SET version_num = '0001_vector'"))
+                connection.execute(text("UPDATE alembic_version SET version_num = '0002_auth'"))
             assert client.get("/health/ready").status_code == 200
             assert app.state.engine.pool.checkedout() == 0
 

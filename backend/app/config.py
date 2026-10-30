@@ -1,7 +1,8 @@
 from pathlib import Path
+from urllib.parse import urlsplit
 
-from pydantic import Field, SecretStr, ValidationError
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, SecretStr, ValidationError, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 from sqlalchemy import URL
 
 BACKEND_DIR = Path(__file__).resolve().parents[1]
@@ -15,6 +16,30 @@ class Settings(BaseSettings):
     postgres_db: str = Field(min_length=1)
     postgres_user: str = Field(min_length=1)
     postgres_password: SecretStr = Field(min_length=1)
+    auth_allowed_origins: list[str] = ["http://127.0.0.1:8000", "http://localhost:8000"]
+    auth_cookie_secure: bool = False
+
+    @field_validator("auth_allowed_origins")
+    @classmethod
+    def validate_origins(cls, origins: list[str]) -> list[str]:
+        if not origins:
+            raise ValueError("許可するOriginを指定してください。")
+        for origin in origins:
+            parsed = urlsplit(origin)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.hostname
+                or parsed.username is not None
+                or parsed.password is not None
+                or parsed.path
+                or parsed.query
+                or parsed.fragment
+                or "*" in origin
+                or origin != f"{parsed.scheme}://{parsed.netloc}"
+            ):
+                raise ValueError("Originはスキームとホスト・ポートのみ指定してください。")
+            _ = parsed.port
+        return origins
 
     @property
     def database_url(self) -> URL:
@@ -31,5 +56,7 @@ class Settings(BaseSettings):
 def load_settings() -> Settings:
     try:
         return Settings()
-    except ValidationError:
-        raise RuntimeError("DB環境変数を確認してください。設定値は表示しません。") from None
+    except (ValidationError, SettingsError):
+        raise RuntimeError(
+            "DB環境変数と認証設定を確認してください。設定値は表示しません。"
+        ) from None

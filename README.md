@@ -8,9 +8,9 @@
 
 共通レイアウト・ダッシュボード・問い合わせ管理・ナレッジ検索・レビュー・デモアカウント選択の画面モックを用意しました。問い合わせの登録・対応・解決から、手動の下書き保存、人による承認、公開文書の検索までを合成データで確認できます。
 
-操作結果は同じタブの画面間で共有され、再読み込み・タブを閉じると初期化されます。DB保存・認証・セッション・パスワード検証・サーバーの権限検査・AI 推論・Radar の分析処理は未実装です。検索はキーワードの部分一致です。
+画面の操作結果は同じタブ内で共有され、再読み込み・タブを閉じると初期化されます。画面は認証APIに未接続で、役割切替も引き続きモックです。問い合わせ・知識のDB保存、AI推論・Radar分析は未実装です。画面の検索はキーワードの部分一致です。
 
-ローカルDBは PostgreSQL 17.11 / pgvector 0.8.7 の起動・ベクトル演算・永続化まで検証済みです。バックエンドはDB接続・状態確認API・初期マイグレーションの基盤を用意しました。業務テーブル・業務API・画面との接続はまだありません。
+バックエンドにはDB接続・状態確認・マイグレーションに加え、デモ用のログイン・ログアウト・セッション・役割検査と最小シードを実装しました。PostgreSQL 17.11 / pgvector 0.8.7を使用し、現在のテーブルは部門・利用者・セッションと適用履歴です。問い合わせ・知識のAPIと画面接続は後続段階です。
 
 ## フロントエンドの起動
 
@@ -195,8 +195,10 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 | `POSTGRES_DB` / `POSTGRES_USER` / `POSTGRES_PASSWORD` | 既存DBの接続先・資格情報。すべて必須、空欄不可 |
 | `DB_HOST` / `DB_PORT` | バックエンドの接続先。既定値は `db` / `5432`、Composeでは内部ネットワークを使用 |
 | `BACKEND_PORT` | Compose のホスト側APIポート。未指定時8000、公開先は常に `127.0.0.1` |
+| `AUTH_ALLOWED_ORIGINS` | JSON配列。既定は `http://127.0.0.1:8000` と `http://localhost:8000`。パス・末尾スラッシュ・ワイルドカード不可 |
+| `AUTH_COOKIE_SECURE` | ローカルHTTPでは既定 `false`。HTTPSでは `true` を明示 |
 
-アプリは `.env` を自動探索しません。ホスト実行時は必要な値を環境変数で明示してください。現在DBポートはホストへ公開していないため、DBを使う通常の実行はComposeで行います。DB初期化用ユーザーをローカル開発の接続にも使用しています。本番用の最小権限設定やアプリ利用者の認証は未実装です。
+アプリは `.env` を自動探索しません。ホスト実行時は必要な値を環境変数で明示してください。現在DBポートはホストへ公開していないため、DBを使う通常の実行はComposeで行います。DB初期化用ユーザーをローカル開発の接続にも使用しています。アプリのemployee/operator認証とは別で、本番用DBの最小権限設定は未実装です。APIポートを変える場合は許可Originも合わせて指定してください。CORS・フロントのプロキシはまだ構成していません。
 
 SQLAlchemy は同期接続を使います。要求ごとにセッションを開き、終了時に未コミット分を rollback して接続を返却します。コミットは業務処理側で明示する方式です。接続とプール待機・SQL実行には各3秒の制限を設定していますが、DNSなどを含む要求全体の厳密な上限ではありません。
 
@@ -215,9 +217,9 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 
 各命令が成功してから次へ進みます。マイグレーションはアプリ開始時に自動実行しません。DB起動のhealthcheckは接続受付だけ、APIのhealthcheckは現在のマイグレーションと拡張も確認します。初回にマイグレーションを省略するとAPI自体は起動しますが `ready` が503となり、Compose の `--wait` は失敗します。状態を確認して上の `alembic upgrade head` を実行してください。
 
-初期 revision は `0001_vector` です。空DBでは `public.vector` 拡張を作成し、既存の拡張があれば保持します。`alembic_version` は適用済みrevisionを記録する管理用テーブルで、問い合わせ・知識・利用者の業務テーブルではありません。起動や状態確認からテーブルを自動作成しません。現在は手書きrevisionの基盤であり、業務モデルの自動差分生成はまだ構成していません。
+初期revision `0001_vector` は空DBに `public.vector` を作成し、既存の拡張を保持します。現在のhead `0002_auth` は `departments`・`users`・`sessions` を追加します。`alembic_version` は適用履歴です。起動や状態確認からテーブル・シードを自動作成しません。ORM metadataを登録しており、`alembic check` でモデルと実DBの差分を確認できます。revisionはレビューしたものを明示的に適用します。
 
-初期revisionのdowngradeは拡張・業務データを削除しません。通常の運用手順としてdowngrade・`stamp`・volumeの削除を使って不一致を隠さず、適用履歴と接続先を確認してください。別のスキーマに既存vectorがある環境は自動移動せず、readyが失敗します。
+初期revisionのdowngradeは拡張を削除せず、認証revisionのdowngradeはデータ削除を避けるため拒否します。通常の運用手順としてdowngrade・`stamp`・volumeの削除を使って不一致を隠さず、適用履歴と接続先を確認してください。別のスキーマに既存vectorがある環境は自動移動せず、readyが失敗します。
 
 ### 状態確認
 
@@ -231,11 +233,56 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 | --- | --- | --- |
 | [/health/live](http://127.0.0.1:8000/health/live) | 200、`status=alive` | APIプロセスが動いていれば200 |
 | [/health/ready](http://127.0.0.1:8000/health/ready) | 200、`status=ready`、`scope=backend_foundation` | 503、`status=not_ready`、秘密値のない案内とrequest_id |
-| [/docs](http://127.0.0.1:8000/docs) | 状態確認APIのOpenAPI画面 | 業務APIは未実装 |
+| [/docs](http://127.0.0.1:8000/docs) | 状態確認・認証・参照資料APIのOpenAPI画面 | 問い合わせ・知識APIは未実装 |
 
 `ready` はDBへのSQL実行、適用revision集合とソースのhead集合の一致、publicのvector拡張を確認します。これは現在の基盤スキーマの確認であり、業務機能・認証・デモ資料の準備完了やスキーマ全体の改変検知を意味しません。Ollama・AIは起動も状態確認も要求しません。AIの状態表示は未実装です。
 
 DB障害は要求を失敗させ、画面モックや固定応答で置き換えません。接続例外の本文・SQL・資格情報はAPI応答とアプリログに出力しません。DB復旧後は接続プールの再接続でreadyが200へ戻ります。元のDBを止めず、専用の検証プロジェクトで停止・復旧を確認しました。
+
+### 最小デモシードと認証API
+
+マイグレーション後に、起動とは別の管理コマンドで合成資料を追加します。最小シードは [app/seed.py](backend/app/seed.py) に公開しています。
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec backend python -m app.seed
+```
+
+部門はIT・人事・総務・経理、アカウントは次の2件です。全件を一つのトランザクションで追加し、再実行しても既存の名前・役割・有効状態・パスワードを変更しません。削除・初期化・公開登録APIはありません。
+
+| login_id | 名前 | role | パスワード |
+| --- | --- | --- | --- |
+| `employee` | 佐藤 美咲 | employee（社員） | `SolveLoop-Demo-2026!` |
+| `operator` | 山田 花子 | operator（担当者） | `SolveLoop-Demo-2026!` |
+
+公開のローカルデモ専用パスワードです。実際のサービスでは使わないでください。DBにはArgon2idハッシュだけを保存します。
+
+| API | 動作 |
+| --- | --- |
+| `POST /api/v1/auth/login` | JSONの `{login_id,password}` と許可Originを検査。`{user,csrf_token,expires_at}` とセッションcookieを返す |
+| `GET /api/v1/auth/me` | `{id,display_name,role,department}`。未認証・期限切れ・無効アカウントは401 |
+| `GET /api/v1/auth/csrf` | ログイン済みセッションの `{csrf_token}` を再取得 |
+| `POST /api/v1/auth/logout` | セッション・許可Origin・`X-CSRF-Token` を検査してDBの現在セッションを削除。204とcookie削除 |
+| `GET /api/v1/reference-data` | 有効なdepartments。担当者のみ有効なoperatorsの `{id,display_name}` を追加 |
+
+セッションcookie `solveloop_session` はhost-only・Path=/・HttpOnly・SameSite=Lax、固定8時間で延長しません。Secureは設定で切り替えます。DBにはセッション原文とCSRF原文を保存せず、SHA-256ハッシュのみを保存します。CSRF値はセッション原文を鍵とするHMACで再取得可能にし、別セッションでは無効です。認証・参照資料APIはエラーも含め `Cache-Control: no-store` です。
+
+ログイン成功時に現在のcookieに対応する旧セッションを破棄し、新規発行します。他のブラウザーのセッションは維持します。ログイン失敗で現在のセッションは変更しません。ログアウトは現在のセッションだけを破棄し、無効・期限切れのセッションは401です。期限切れ行はログイン成功時に整理します。ログイン前はCSRF値がないため、許可OriginとJSON形式を必須にしてログインCSRFを防ぎます。認証後の書込みにはOriginとCSRFの両方を要求します。
+
+ルートのPowerShellで、cookieをメモリ内に保持して確認できます。
+
+```powershell
+$authOrigin = @{ Origin = 'http://127.0.0.1:8000' }
+$authBody = @{ login_id = 'employee'; password = 'SolveLoop-Demo-2026!' } | ConvertTo-Json
+$authLogin = Invoke-RestMethod http://127.0.0.1:8000/api/v1/auth/login -Method Post -ContentType 'application/json' -Headers $authOrigin -Body $authBody -SessionVariable authSession
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/auth/me -WebSession $authSession
+Invoke-RestMethod http://127.0.0.1:8000/api/v1/reference-data -WebSession $authSession | ConvertTo-Json -Depth 5
+$authWrite = @{ Origin = 'http://127.0.0.1:8000'; 'X-CSRF-Token' = $authLogin.csrf_token }
+Invoke-WebRequest http://127.0.0.1:8000/api/v1/auth/logout -Method Post -Headers $authWrite -WebSession $authSession | Select-Object StatusCode
+```
+
+社員の自分情報・部門4件・ログアウト204が期待結果です。最後にもう一度meを呼ぶと401です。`login_id` を `operator` に変えてログインすると、参照資料にoperatorsが追加されます。Origin省略・不許可、ログアウトのCSRF省略・不一致は403、誤った資格情報は401、未知の入力フィールド・長さ違反は422です。エラーは日本語の `{code,message,request_id}` で、入力値を返しません。
+
+フロント4173の役割切替はこのAPIとは未接続です。担当者専用の共通権限依存 `require_operator` は専用テスト経路で社員403/担当者200を検証し、検証専用経路は通常APIに追加していません。問い合わせの所有者検査は問い合わせAPIとともに実装します。現在はlocalhost限定のデモで、SSO・パスワード変更/復旧・総当たり対策・本番配備は対象外です。
 
 ### ローカル検査とCI
 
@@ -249,7 +296,7 @@ uv run --locked ruff format --check .
 uv run --locked pytest -q
 ```
 
-既定では単体テスト5件を実行し、専用DBを要求する統合テスト1件はskipします。統合テストは `RUN_DB_TESTS=1` とDB名 `solveloop_test` の両方を要求し、空DBからのみ開始します。DB名だけで安全を保証するものではないので、必ず別のComposeプロジェクト・新しいvolumeを使ってください。SQLiteは使いません。
+既定では単体テスト16件を実行し、DB・実HTTPの統合テスト12件はskipします。DBテストは `RUN_DB_TESTS=1` とDB名 `solveloop_test` の両方を要求し、基盤テストは空DBからのみ開始します。認証の各ケースは同DBの専用スキーマに分離し、終了時にそのスキーマを削除します。DB名だけで安全を保証するものではないので、必ず別のComposeプロジェクト・新しいvolumeを使ってください。SQLiteは使いません。
 
 リポジトリのルートでは以下でCIと同じ検証用イメージを構築できます。
 
@@ -260,7 +307,7 @@ docker run --rm solveloop-backend-test:local ruff format --check .
 docker run --rm solveloop-backend-test:local
 ```
 
-[基本CI](.github/workflows/ci.yaml) は Ubuntu 24.04 のGitHub Actionsで、lockを変更しないイメージ構築・Ruff・単体テスト・空のPostgreSQLでのマイグレーション・実HTTP・DB停止/復旧を実行する定義です。`solveloop-ci` 専用の環境・DB・volumeを作り、終了時にその検証volumeだけを削除します。既存の `solveloop` DBには実行しません。フロントのCI・業務API・AI評価は対象外です。ローカルで相当の検証を実行しましたが、GitHub Actions上ではまだ実行していません。
+[基本CI](.github/workflows/ci.yaml) は Ubuntu 24.04 のGitHub Actionsで、lockを変更しないイメージ構築・Ruff・単体テスト・空のPostgreSQLでのマイグレーション・認証/権限・シード再適用・実HTTPの両役割ログイン/ログアウト・DB停止/復旧を実行する定義です。`solveloop-ci` 専用の環境・DB・volumeを作り、終了時にその検証volumeだけを削除します。既存の `solveloop` DBには実行しません。フロントのCI・問い合わせ/知識API・AI評価は対象外です。ローカルで相当の検証を実行しましたが、GitHub Actions上ではまだ実行していません。
 
 Dockerfileは `backend/Dockerfile`、ビルドコンテキストは `backend/`、適用される除外定義は `backend/.dockerignore` です。ルートの `.docs`・AGENTS・`.git`・`infrastructure/.env`・frontendはコンテキスト外です。コンテキスト内も必要なソースとlock等の許可リストだけを渡します。実行用 `runtime` targetは非rootで動作し、開発用依存とtestsは含めません。`test` targetだけがそれらを追加します。
 
@@ -301,12 +348,16 @@ evaluations/       検索・分類・Radarの評価
 
 ## 参考・利用した OSS
 
+認証は [argon2-cffiのAPI](https://argon2-cffi.readthedocs.io/en/stable/howto.html)、[OWASPのセッション管理](https://cheatsheetseries.owasp.org/cheatsheets/Session_Management_Cheat_Sheet.html)・[CSRF対策](https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html)、[FastAPIの例外処理](https://fastapi.tiangolo.com/tutorial/handling-errors/)を設計参考にしました。外部の認証アプリ・サンプルコードをコピーせず、パッケージの公開APIを利用しています。認証パッケージは未改造で、インストールされた原文ライセンスを保持します。
+
 バックエンドは [FastAPIのコンテナ実行](https://fastapi.tiangolo.com/deployment/docker/)、[Pydantic Settings](https://docs.pydantic.dev/latest/concepts/pydantic_settings/)、[SQLAlchemyの同期Session](https://docs.sqlalchemy.org/en/20/orm/session_basics.html)・[psycopg dialect](https://docs.sqlalchemy.org/en/20/dialects/postgresql.html#module-sqlalchemy.dialects.postgresql.psycopg)、[Alembic](https://alembic.sqlalchemy.org/en/latest/tutorial.html)、[uvのDocker連携](https://docs.astral.sh/uv/guides/integration/docker/)、[Dockerのcontextと除外](https://docs.docker.com/build/concepts/context/#dockerignore-files)を設計参考にしました。Full Stack FastAPI Templateはサービス・health・実行分離の参考で、コードのコピー・改変・テンプレート生成はしていません。JWT・SQLModel・メール・workerは導入していません。
 
 | パッケージ・イメージ | 固定版・利用範囲 | ライセンス |
 | --- | --- | --- |
 | [FastAPI](https://github.com/fastapi/fastapi) / [Pydantic](https://github.com/pydantic/pydantic) / [Pydantic Settings](https://github.com/pydantic/pydantic-settings) | 0.162.0 / 2.14.2 / 2.16.2、API・設定検証 | MIT |
 | [SQLAlchemy](https://github.com/sqlalchemy/sqlalchemy) / [Alembic](https://github.com/sqlalchemy/alembic) | 2.0.55 / 1.20.1、同期DB・変更履歴 | MIT |
+| [argon2-cffi](https://github.com/hynek/argon2-cffi) / [bindings](https://github.com/hynek/argon2-cffi-bindings) | 25.1.0 / 26.1.0、Argon2idパスワードハッシュ | MIT、配布物の原文表示を保持 |
+| [cffi](https://cffi.readthedocs.io/) / [pycparser](https://github.com/eliben/pycparser) | 2.1.1 / 3.12、Argon2 bindingsの間接依存 | MIT-0 / BSD-3-Clause |
 | [psycopg / psycopg-binary](https://github.com/psycopg/psycopg) | 3.3.6、PostgreSQLドライバーの公式binary配布物 | LGPL-3.0-only、同梱ライブラリは各配布物の表示を保持 |
 | [Uvicorn](https://github.com/encode/uvicorn) | 0.54.0、ASGIサーバー | BSD-3-Clause |
 | [Ruff](https://github.com/astral-sh/ruff) / [pytest](https://github.com/pytest-dev/pytest) / [httpx2](https://github.com/pydantic/httpx2) | 0.17.3 / 9.2.0 / 2.16.0、開発用検査 | MIT / MIT / BSD-3-Clause |
