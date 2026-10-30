@@ -7,6 +7,59 @@ export const demoUsers = {
   operator: { id: 'operator-01', name: '山田 花子', roleLabel: '担当者' },
 }
 
+export const mockLoginExamples = [
+  { loginId: 'operator', password: 'Mock-Operator-2026!', role: 'operator', mustChangePassword: false },
+  { loginId: 'employee', password: 'Mock-Temporary-2026!', role: 'employee', mustChangePassword: true },
+] satisfies MockAccount[]
+
+type MockAccount = { loginId: string; password: string; role: DemoRole; mustChangePassword: boolean }
+export type MockAuth = { accounts: MockAccount[]; sessionLoginId: string | null; notice: string }
+export type MockAuthErrors = Partial<Record<'loginId' | 'password' | 'currentPassword' | 'newPassword' | 'confirmation' | 'form', string>>
+export type MockSessionEnd = 'logout' | 'expired'
+
+export function createMockAuth(): MockAuth {
+  return { accounts: mockLoginExamples.map(account => ({ ...account })), sessionLoginId: null, notice: '' }
+}
+
+export function getMockSession(auth: MockAuth) {
+  return auth.accounts.find(account => account.loginId === auth.sessionLoginId) ?? null
+}
+
+export function loginMock(auth: MockAuth, loginId: string, password: string): { auth: MockAuth; errors: MockAuthErrors } {
+  const errors: MockAuthErrors = {}
+  if (!loginId.trim()) errors.loginId = 'ログインIDを入力してください。'
+  if (!password.trim()) errors.password = 'パスワードを入力してください。'
+  if (Object.keys(errors).length) return { auth, errors }
+  const account = auth.accounts.find(item => item.loginId === loginId && item.password === password)
+  if (!account) return { auth, errors: { form: 'ログインIDまたはパスワードが正しくありません。もう一度入力してください。' } }
+  return { auth: { ...auth, sessionLoginId: account.loginId, notice: 'ログイン成功（モック）。このタブ内のログイン状態を開始しました。' }, errors }
+}
+
+export function endMockSession(auth: MockAuth, reason: MockSessionEnd): MockAuth {
+  return { ...auth, sessionLoginId: null, notice: reason === 'expired'
+    ? 'セッションの有効期限が切れました（モック）。もう一度ログインしてください。入力中の内容は保存されません。'
+    : 'ログアウトしました（モック）。このタブのログイン状態を終了しました。' }
+}
+
+export function changeMockPassword(auth: MockAuth, currentPassword: string, newPassword: string, confirmation: string): { auth: MockAuth; errors: MockAuthErrors } {
+  const account = getMockSession(auth)
+  if (!account) return { auth, errors: { form: 'ログイン状態を確認できません。もう一度ログインしてください。' } }
+  const errors: MockAuthErrors = {}
+  if (!currentPassword.trim()) errors.currentPassword = '現在または仮パスワードを入力してください。'
+  else if (currentPassword !== account.password) errors.currentPassword = '現在または仮パスワードが正しくありません。'
+  if (!newPassword.trim()) errors.newPassword = '新しいパスワードを入力してください。'
+  else if (newPassword === account.password) errors.newPassword = '現在のパスワードとは異なる値を入力してください。'
+  if (!confirmation.trim()) errors.confirmation = '確認用のパスワードを入力してください。'
+  else if (newPassword !== confirmation) errors.confirmation = '新しいパスワードと確認用の入力が一致しません。'
+  if (Object.keys(errors).length) return { auth, errors }
+  return { auth: {
+    ...auth,
+    accounts: auth.accounts.map(item => item.loginId === account.loginId ? { ...item, password: newPassword, mustChangePassword: false } : item),
+    sessionLoginId: null,
+    notice: 'パスワード変更が完了しました（モック）。ログイン状態を終了しました。新しいパスワードでログインしてください。',
+  }, errors }
+}
+
 export const statusLabels: Record<RequestStatus, string> = {
   open: '未対応', in_progress: '対応中', resolved: '解決済み',
 }

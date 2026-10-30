@@ -1,0 +1,19 @@
+.screen { max-width: 480px; margin: 12px auto 32px; overflow-wrap: anywhere; }
+.disclosure { margin-top: 16px; color: var(--muted); font-size: .75rem; }
+.form { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: grid; gap: 20px; }
+.field { display: grid; gap: 6px; }
+.field label { font-weight: 600; }
+.field label span { margin-left: 8px; color: var(--muted); font-size: .75rem; font-weight: 400; }
+.field input { width: 100%; }
+.visibility { display: flex; align-items: center; gap: 8px; width: fit-content; min-height: 40px; }
+.actions { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; }
+.guidance { margin-top: 20px; padding: 16px; background: var(--selected); border-left: 3px solid var(--accent); }
+.errorSummary { padding: 16px; border-left: 3px solid #a52d2d; background: #fff3f2; color: #922b2b; }
+.errorSummary a { color: inherit; text-decoration: underline; }
+.error { color: #a52d2d; font-size: .8125rem; }
+.help { color: var(--muted); font-size: .75rem; }
+.examples { margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border); }
+.examples summary { cursor: pointer; font-weight: 600; padding-block: 8px; }
+.examples dl { margin: 16px 0; display: grid; gap: 16px; }
+.examples dt { font-size: .8125rem; font-weight: 600; }
+.examples dd { margin: 4px 0 0; color: var(--muted); font-size: .8125rem; }

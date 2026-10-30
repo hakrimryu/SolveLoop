@@ -1,13 +1,14 @@
 import { useLayoutEffect, useRef, useState } from 'react'
-import type { ChangeEvent, FocusEvent, ReactNode } from 'react'
+import type { FocusEvent, ReactNode } from 'react'
 import { Link, NavLink, useLocation } from 'react-router'
 import { demoUsers } from '../lib/mockData'
-import type { DemoRole } from '../lib/mockData'
+import type { getMockSession, MockSessionEnd } from '../lib/mockData'
 import styles from './AppLayout.module.css'
 
 type Props = {
-  role: DemoRole
-  onRoleChange: (role: DemoRole) => void
+  session: ReturnType<typeof getMockSession>
+  notice: string
+  onSessionEnd: (reason: MockSessionEnd) => void
   children: ReactNode
 }
 
@@ -25,12 +26,13 @@ function MenuIcon({ kind }: { kind: 'dashboard' | 'requests' | 'knowledge' | 're
   )
 }
 
-export default function AppLayout({ role, onRoleChange, children }: Props) {
+export default function AppLayout({ session, notice, onSessionEnd, children }: Props) {
   const location = useLocation()
   const previousPath = useRef(location.pathname === '/' ? '/dashboard' : location.pathname)
   const [menuOpen, setMenuOpen] = useState(false)
   const mainRef = useRef<HTMLElement>(null)
-  const user = demoUsers[role]
+  const user = session ? demoUsers[session.role] : null
+  const showNavigation = !!session && !session.mustChangePassword
 
   useLayoutEffect(() => {
     if (location.pathname === '/') return
@@ -39,19 +41,14 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
     if (previousPath.current !== location.pathname) heading?.focus()
     previousPath.current = location.pathname
     document.title = `${heading?.textContent ?? 'SolveLoop'} | SolveLoop`
-  }, [location.pathname, role, children])
+  }, [location.pathname, session?.loginId, children])
 
   function closeMenu() {
     setMenuOpen(false)
   }
 
-  function handleRoleChange(event: ChangeEvent<HTMLSelectElement>) {
-    onRoleChange(event.target.value as DemoRole)
-    closeMenu()
-    window.scrollTo({ top: 0 })
-  }
-
-  function handleDemoSettingsBlur(event: FocusEvent<HTMLDetailsElement>) {
+  function handleAccountBlur(event: FocusEvent<HTMLDetailsElement>) {
+    if (event.relatedTarget instanceof HTMLElement && event.relatedTarget.closest('dialog')) return
     if (!event.currentTarget.contains(event.relatedTarget)) {
       event.currentTarget.open = false
     }
@@ -61,33 +58,30 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
     <>
       <a className={styles.skipLink} href="#main-content">本文へ移動</a>
       <header className={styles.header}>
-        <Link to="/dashboard" className={styles.brand}>
+        <Link to={showNavigation ? '/dashboard' : session ? '/password/change' : '/login'} className={styles.brand}>
           <span className={styles.brandMark} aria-hidden="true">S</span>
           <span className={styles.brandText}>SolveLoop<small>株式会社 柳</small></span>
         </Link>
         <span className={styles.demoLabel}>架空企業・デモデータ</span>
         <div className={styles.account}>
-          <span>{user.name}<span className={styles.role}>{user.roleLabel}</span></span>
-          <details className={styles.demoSettings} onBlur={handleDemoSettingsBlur}>
-            <summary>デモ設定</summary>
+          {user ? <><span>{user.name}<span className={styles.role}>{user.roleLabel}</span></span>
+          <details className={styles.demoSettings} onBlur={handleAccountBlur}>
+            <summary>アカウント</summary>
             <div className={styles.settingsBody}>
-              <label htmlFor="demo-role">デモ用の役割切替</label>
-              <select id="demo-role" value={role} onChange={handleRoleChange}>
-                <option value="operator">担当者：山田 花子</option>
-                <option value="employee">社員：佐藤 美咲</option>
-              </select>
-              <p>表示する役割を切り替えます。実際のログインではありません。</p>
-              <Link to="/login">デモアカウントを選択</Link>
+              <p>ログインID：{session?.loginId}<br />このタブ内のモック状態です。</p>
+              {showNavigation && <Link to="/password/change">本人のパスワードを変更</Link>}
+              <button type="button" className="button" onClick={() => onSessionEnd('logout')}>ログアウト</button>
+              <button type="button" className="button" onClick={() => onSessionEnd('expired')}>セッション期限切れを再現（デモ用）</button>
             </div>
           </details>
+          </> : <span className={styles.role}>未ログイン（モック）</span>}
         </div>
       </header>
       <div className={styles.mockBar}>
         <p><strong>画面モック</strong> 合成データの操作はこのタブ内のみ。再読み込みで初期化されます。実際の保存・認証・権限検査・AI処理は行いません。</p>
-        <p className="srOnly" role="status">{user.roleLabel}のデモ画面を表示しています。</p>
       </div>
-      <div className={styles.workspace}>
-        <div className={styles.navigation}>
+      <div className={showNavigation ? styles.workspace : styles.authWorkspace}>
+        {showNavigation && <div className={styles.navigation}>
           <button
             className={styles.menuToggle}
             type="button"
@@ -116,15 +110,18 @@ export default function AppLayout({ role, onRoleChange, children }: Props) {
             >
               <MenuIcon kind="knowledge" />ナレッジ
             </NavLink>
-            {role === 'operator' && (
+            {session?.role === 'operator' && (
               <NavLink to="/knowledge/reviews" onClick={closeMenu}>
                 <MenuIcon kind="review" />ナレッジレビュー
               </NavLink>
             )}
             <p className={styles.navNote}><span>ローカルデモ</span>すべて合成データです。</p>
           </nav>
-        </div>
-        <main id="main-content" tabIndex={-1} ref={mainRef} className={styles.main}>{children}</main>
+        </div>}
+        <main id="main-content" tabIndex={-1} ref={mainRef} className={styles.main}>
+          {notice && <p role="status" className={styles.authNotice}>{notice}</p>}
+          {children}
+        </main>
       </div>
       <footer className={styles.footer}>SolveLoop · ローカル操作デモ · 操作日時は初期基準日時から1分ずつ進む合成時刻です。</footer>
     </>

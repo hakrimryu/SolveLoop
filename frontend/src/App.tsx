@@ -1,15 +1,15 @@
 import { useCallback, useRef, useState } from 'react'
-import { Link, Navigate, Route, Routes, useBeforeUnload, useBlocker, useLocation } from 'react-router'
+import { Link, Navigate, Outlet, Route, Routes, useBeforeUnload, useBlocker, useLocation, useNavigate } from 'react-router'
 import AppLayout from './components/AppLayout'
 import Dashboard from './features/dashboard/Dashboard'
-import { mockKnowledge, mockRequests, nextMockTimestamp } from './lib/mockData'
-import type { DemoRole } from './lib/mockData'
+import { changeMockPassword, createMockAuth, endMockSession, getMockSession, loginMock, mockKnowledge, mockRequests, nextMockTimestamp } from './lib/mockData'
+import type { MockSessionEnd } from './lib/mockData'
 import Requests from './features/requests/Requests'
 import RequestDetail from './features/requests/RequestDetail'
 import DiscardDialog from './components/DiscardDialog'
 import KnowledgeList, { KnowledgeDetail } from './features/knowledge/Knowledge'
 import KnowledgeReview from './features/knowledge/KnowledgeReview'
-import DemoLogin from './features/knowledge/DemoLogin'
+import AuthScreen from './features/auth/AuthScreen'
 
 function PendingScreen({ title }: { title: string }) {
   const location = useLocation()
@@ -29,10 +29,13 @@ function PendingScreen({ title }: { title: string }) {
 
 export default function App() {
   const location = useLocation()
-  const [role, setRole] = useState<DemoRole>('operator')
+  const navigate = useNavigate()
+  const [auth, setAuth] = useState(createMockAuth)
+  const session = getMockSession(auth)
+  const role = session?.role ?? 'operator'
   const [requests, setRequests] = useState(mockRequests)
   const [knowledge, setKnowledge] = useState(mockKnowledge)
-  const [pendingRole, setPendingRole] = useState<DemoRole | null>(null)
+  const [pendingExit, setPendingExit] = useState<MockSessionEnd | null>(null)
   const dirtyRef = useRef(false)
   const onDirtyChange = useCallback((dirty: boolean) => { dirtyRef.current = dirty }, [])
   const blocker = useBlocker(() => dirtyRef.current)
@@ -43,10 +46,10 @@ export default function App() {
     }
   }, []))
 
-  function changeRole(nextRole: DemoRole) {
-    if (nextRole === role) return
-    if (dirtyRef.current) setPendingRole(nextRole)
-    else setRole(nextRole)
+  function exitSession(reason: MockSessionEnd) {
+    if (dirtyRef.current) { setPendingExit(reason); return }
+    setAuth(previous => endMockSession(previous, reason))
+    navigate('/login', { replace: true })
   }
 
   function discardAndNavigate() {
@@ -55,11 +58,11 @@ export default function App() {
     blocker.proceed()
   }
 
-  function discardAndChangeRole() {
-    if (!pendingRole) return
+  function discardAndExit() {
+    if (!pendingExit) return
     dirtyRef.current = false
-    setRole(pendingRole)
-    setPendingRole(null)
+    exitSession(pendingExit)
+    setPendingExit(null)
   }
 
   const getNextTimestamp = () => nextMockTimestamp(requests, knowledge)
@@ -68,23 +71,35 @@ export default function App() {
   const reviewProps = { ...knowledgeProps, requests, onKnowledgeChange: setKnowledge, onDirtyChange, getNextTimestamp }
 
   return (
-    <AppLayout role={role} onRoleChange={changeRole}>
+    <AppLayout session={session} notice={auth.notice} onSessionEnd={exitSession}>
       <Routes>
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard key={role} role={role} requests={requests} knowledge={knowledge} />} />
-        <Route path="/requests" element={<Requests key={role} {...requestProps} />} />
-        <Route path="/requests/:requestId" element={<RequestDetail key={role} {...requestProps} />} />
-        <Route path="/knowledge/reviews" element={<KnowledgeList key={role} {...knowledgeProps} review />} />
-        <Route path="/knowledge/reviews/new" element={<KnowledgeReview key={role} {...reviewProps} />} />
-        <Route path="/knowledge/reviews/:documentId/versions/:version" element={<KnowledgeReview key={role} {...reviewProps} />} />
-        <Route path="/knowledge/reviews/*" element={<KnowledgeList key={role} {...knowledgeProps} review />} />
-        <Route path="/knowledge" element={<KnowledgeList key={role} {...knowledgeProps} />} />
-        <Route path="/knowledge/:documentId" element={<KnowledgeDetail key={`${role}-${location.pathname}`} {...knowledgeProps} />} />
-        <Route path="/login" element={<DemoLogin key={role} role={role} onRoleChange={changeRole} />} />
-        <Route path="*" element={<PendingScreen title="ページが見つかりません" />} />
+        <Route path="/login" element={session ? <Navigate to={session.mustChangePassword ? '/password/change' : '/dashboard'} replace /> : <AuthScreen key="login" onDirtyChange={onDirtyChange} onSubmit={values => {
+          const result = loginMock(auth, values.loginId ?? '', values.password ?? '')
+          setAuth(result.auth)
+          return result.errors
+        }} />} />
+        <Route element={!session ? <Navigate to="/login" replace /> : session.mustChangePassword && location.pathname !== '/password/change' ? <Navigate to="/password/change" replace /> : <Outlet />}>
+          <Route path="/password/change" element={<AuthScreen key={`password-${session?.loginId}`} changePassword requiredChange={session?.mustChangePassword} loginId={session?.loginId} onDirtyChange={onDirtyChange} onSubmit={values => {
+            const result = changeMockPassword(auth, values.currentPassword ?? '', values.newPassword ?? '', values.confirmation ?? '')
+            if (!Object.keys(result.errors).length) dirtyRef.current = false
+            setAuth(result.auth)
+            return result.errors
+          }} />} />
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard" element={<Dashboard key={role} role={role} requests={requests} knowledge={knowledge} />} />
+          <Route path="/requests" element={<Requests key={role} {...requestProps} />} />
+          <Route path="/requests/:requestId" element={<RequestDetail key={role} {...requestProps} />} />
+          <Route path="/knowledge/reviews" element={<KnowledgeList key={role} {...knowledgeProps} review />} />
+          <Route path="/knowledge/reviews/new" element={<KnowledgeReview key={role} {...reviewProps} />} />
+          <Route path="/knowledge/reviews/:documentId/versions/:version" element={<KnowledgeReview key={role} {...reviewProps} />} />
+          <Route path="/knowledge/reviews/*" element={<KnowledgeList key={role} {...knowledgeProps} review />} />
+          <Route path="/knowledge" element={<KnowledgeList key={role} {...knowledgeProps} />} />
+          <Route path="/knowledge/:documentId" element={<KnowledgeDetail key={`${role}-${location.pathname}`} {...knowledgeProps} />} />
+          <Route path="*" element={<PendingScreen title="ページが見つかりません" />} />
+        </Route>
       </Routes>
       {blocker.state === 'blocked' && <DiscardDialog onCancel={() => blocker.reset()} onDiscard={discardAndNavigate} />}
-      {pendingRole && <DiscardDialog onCancel={() => setPendingRole(null)} onDiscard={discardAndChangeRole} />}
+      {pendingExit && <DiscardDialog onCancel={() => setPendingExit(null)} onDiscard={discardAndExit} />}
     </AppLayout>
   )
 }

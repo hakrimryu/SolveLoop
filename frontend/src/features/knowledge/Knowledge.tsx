@@ -14,7 +14,7 @@ let listPosition: { url: string; role: DemoRole; y: number; id: string } | undef
 
 export function KnowledgeUnavailable({ restricted = false }: { restricted?: boolean }) {
   return <><h1 tabIndex={-1}>{restricted ? 'ナレッジレビューを表示できません' : '文書を表示できません'}</h1>
-    <div className="notice"><p>{restricted ? 'この画面は担当者用です。デモ設定で役割を確認してください。' : '公開された文書が見つかりません。'}</p>
+    <div className="notice"><p>{restricted ? 'この画面は担当者用です。担当者のモックアカウントでログインしてください。' : '公開された文書が見つかりません。'}</p>
       <Link to="/knowledge">承認済みナレッジへ</Link></div></>
 }
 

@@ -22,6 +22,72 @@ import {
   validateKnowledge,
   getKnowledgeSourceIssue,
 } from '../src/lib/mockData.ts'
+import { changeMockPassword, createMockAuth, endMockSession, getMockSession, loginMock, mockLoginExamples } from '../src/lib/mockData.ts'
+
+test('認証モックの初期値は独立し、ログイン前にセッションを持たない', () => {
+  const auth = createMockAuth()
+  assert.equal(getMockSession(auth), null)
+  auth.accounts[0].password = '変更例'
+  assert.equal(createMockAuth().accounts[0].password, mockLoginExamples[0].password)
+})
+
+test('ログインの必須入力と不一致を確認し、IDとパスワードの誤りは同じ案内にする', () => {
+  const auth = createMockAuth()
+  assert.deepEqual(Object.keys(loginMock(auth, ' ', ' ').errors), ['loginId', 'password'])
+  const wrongId = loginMock(auth, 'unknown', mockLoginExamples[0].password)
+  const wrongPassword = loginMock(auth, 'operator', 'wrong')
+  assert.deepEqual(wrongId.errors, wrongPassword.errors)
+  assert.equal(wrongId.auth, auth)
+  assert.equal(getMockSession(wrongPassword.auth), null)
+  assert.ok(loginMock(auth, ' operator ', mockLoginExamples[0].password).errors.form)
+  assert.ok(loginMock(auth, 'operator', ` ${mockLoginExamples[0].password}`).errors.form)
+})
+
+test('通常と仮パスワードのログイン状態を分け、終了しても変更した資料は保持する', () => {
+  for (const sample of mockLoginExamples) {
+    const result = loginMock(createMockAuth(), sample.loginId, sample.password)
+    assert.deepEqual(result.errors, {})
+    assert.equal(getMockSession(result.auth).role, sample.role)
+    assert.equal(getMockSession(result.auth).mustChangePassword, sample.mustChangePassword)
+    for (const reason of ['logout', 'expired']) {
+      const ended = endMockSession(result.auth, reason)
+      assert.equal(getMockSession(ended), null)
+      assert.equal(ended.accounts, result.auth.accounts)
+      assert.match(ended.notice, reason === 'logout' ? /ログアウト/ : /有効期限/)
+    }
+  }
+})
+
+test('本人変更の未入力・現在値・同じ値・確認の不一致は状態を変更しない', () => {
+  const sample = mockLoginExamples[1]
+  const auth = loginMock(createMockAuth(), sample.loginId, sample.password).auth
+  assert.deepEqual(Object.keys(changeMockPassword(auth, '', '', '').errors), ['currentPassword', 'newPassword', 'confirmation'])
+  for (const values of [['wrong', '新しい例', '新しい例'], [sample.password, sample.password, sample.password], [sample.password, '新しい例', '異なる例']]) {
+    const result = changeMockPassword(auth, ...values)
+    assert.ok(Object.keys(result.errors).length)
+    assert.equal(result.auth, auth)
+  }
+  assert.ok(changeMockPassword(createMockAuth(), sample.password, '新しい例', '新しい例').errors.form)
+})
+
+test('初回変更と自発的な本人変更は旧値を無効にし、ログイン状態を終えて新しい値で再開する', () => {
+  for (const sample of mockLoginExamples) {
+    const initial = createMockAuth()
+    const auth = loginMock(initial, sample.loginId, sample.password).auth
+    const result = changeMockPassword(auth, sample.password, 'Mock-New-2026!', 'Mock-New-2026!')
+    assert.deepEqual(result.errors, {})
+    assert.equal(getMockSession(result.auth), null)
+    assert.match(result.auth.notice, /変更が完了/)
+    assert.ok(loginMock(result.auth, sample.loginId, sample.password).errors.form)
+    const relogin = loginMock(result.auth, sample.loginId, 'Mock-New-2026!')
+    assert.deepEqual(relogin.errors, {})
+    assert.equal(getMockSession(relogin.auth).mustChangePassword, false)
+    assert.equal(initial.accounts.find(item => item.loginId === sample.loginId).password, sample.password)
+    const other = mockLoginExamples.find(item => item.loginId !== sample.loginId)
+    assert.deepEqual(loginMock(result.auth, other.loginId, other.password).errors, {})
+  }
+})
+
 
 const knowledgeInput = { title: '新端末の認証手順', audience: '端末を交換した社員', department: 'IT', body: '本人確認を受け、担当者と登録を更新します。接続結果を確認します。' }
 const draftTarget = { id: 'KB-0016', version: 1 }
