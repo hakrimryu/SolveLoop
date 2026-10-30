@@ -6,15 +6,23 @@ from starlette.exceptions import HTTPException
 
 
 class ApiError(Exception):
-    def __init__(self, status: int, code: str, message: str) -> None:
+    def __init__(self, status: int, code: str, message: str, details: dict | None = None) -> None:
         self.status = status
         self.code = code
         self.message = message
+        self.details = details
 
 
-def error_response(request: Request, status: int, code: str, message: str) -> JSONResponse:
+def error_response(
+    request: Request, status: int, code: str, message: str, details: dict | None = None
+) -> JSONResponse:
     return JSONResponse(
-        {"code": code, "message": message, "request_id": str(request.state.request_id)},
+        {
+            "code": code,
+            "message": message,
+            "request_id": str(request.state.request_id),
+            **({"details": details} if details else {}),
+        },
         status_code=status,
         headers={"Cache-Control": "no-store"},
     )
@@ -23,13 +31,50 @@ def error_response(request: Request, status: int, code: str, message: str) -> JS
 def register_error_handlers(app: FastAPI) -> None:
     @app.exception_handler(ApiError)
     async def api_error(request: Request, error: ApiError) -> JSONResponse:
-        return error_response(request, error.status, error.code, error.message)
+        return error_response(request, error.status, error.code, error.message, error.details)
 
     @app.exception_handler(RequestValidationError)
     async def invalid_input(request: Request, error: RequestValidationError) -> JSONResponse:
         # 標準の検証エラーに含まれる入力値から、パスワードが漏れるのを防ぐ。
+        details = None
+        if request.url.path.startswith(("/api/v1/tickets", "/api/v1/knowledge")):
+            allowed = {
+                "title",
+                "body",
+                "audience",
+                "department_id",
+                "assignee_id",
+                "action",
+                "resolution",
+                "reason",
+                "expected_version",
+                "expected_document_version",
+                "base_version_no",
+                "source_refs",
+                "ticket_id",
+                "expected_ticket_version",
+                "page",
+                "page_size",
+                "sort",
+                "q",
+                "status",
+                "assignee",
+                "document_id",
+                "version_no",
+            }
+            fields = []
+            for item in error.errors():
+                field = next((str(part) for part in item["loc"] if part in allowed), "request")
+                fields.append(
+                    {
+                        "field": field,
+                        "code": "INVALID",
+                        "message": "入力項目と形式を確認してください。",
+                    }
+                )
+            details = {"fields": fields}
         return error_response(
-            request, 422, "VALIDATION_ERROR", "入力項目と形式を確認してください。"
+            request, 422, "VALIDATION_ERROR", "入力項目と形式を確認してください。", details
         )
 
     @app.exception_handler(SQLAlchemyError)

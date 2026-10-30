@@ -16,8 +16,11 @@ from sqlalchemy.orm import Session
 from app.accounts import router as accounts_router
 from app.auth import router as auth_router
 from app.config import BACKEND_DIR, Settings, load_settings
+from app.dashboard import router as dashboard_router
 from app.database import build_engine, get_session
 from app.errors import error_response, register_error_handlers
+from app.knowledge import router as knowledge_router
+from app.tickets import router as tickets_router
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +43,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_error_handlers(app)
     app.include_router(auth_router)
     app.include_router(accounts_router)
+    app.include_router(tickets_router)
+    app.include_router(knowledge_router)
+    app.include_router(dashboard_router)
 
     @app.middleware("http")
     async def private_api_cache(request: Request, call_next):

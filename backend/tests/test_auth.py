@@ -345,6 +345,13 @@ def test_db_constraints_and_model_schema(api, auth_engine):
         "users",
         "sessions",
         "audit_events",
+        "tickets",
+        "ticket_events",
+        "idempotency_records",
+        "knowledge_documents",
+        "knowledge_versions",
+        "knowledge_sources",
+        "knowledge_events",
     }
 
 

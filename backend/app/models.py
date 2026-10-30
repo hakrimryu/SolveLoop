@@ -6,17 +6,25 @@ from sqlalchemy import (
     CheckConstraint,
     DateTime,
     ForeignKey,
+    ForeignKeyConstraint,
     Index,
     Integer,
+    Sequence,
     String,
+    Text,
     UniqueConstraint,
     text,
 )
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
     pass
+
+
+ticket_number_sequence = Sequence("ticket_number_seq", metadata=Base.metadata)
+knowledge_number_sequence = Sequence("knowledge_number_seq", metadata=Base.metadata)
 
 
 class Department(Base):
@@ -93,3 +101,201 @@ class AuditEvent(Base):
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     request_id: Mapped[UUID] = mapped_column()
     target_version: Mapped[int] = mapped_column(Integer)
+
+
+class Ticket(Base):
+    __tablename__ = "tickets"
+    __table_args__ = (
+        CheckConstraint("version >= 1", name="ck_tickets_version"),
+        CheckConstraint("length(btrim(title)) BETWEEN 1 AND 120", name="ck_tickets_title"),
+        CheckConstraint("length(btrim(body)) BETWEEN 1 AND 5000", name="ck_tickets_body"),
+        CheckConstraint(
+            "(status = 'open' AND resolution IS NULL AND resolved_at IS NULL "
+            "AND (department_id IS NOT NULL OR assignee_id IS NULL)) OR "
+            "(status = 'in_progress' AND department_id IS NOT NULL AND assignee_id IS NOT NULL "
+            "AND resolution IS NULL AND resolved_at IS NULL) OR "
+            "(status = 'resolved' AND department_id IS NOT NULL AND assignee_id IS NOT NULL "
+            "AND resolution IS NOT NULL AND length(btrim(resolution)) BETWEEN 1 AND 5000 "
+            "AND resolved_at IS NOT NULL)",
+            name="ck_tickets_state",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    number: Mapped[str] = mapped_column(String(32), unique=True)
+    requester_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), index=True
+    )
+    assignee_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), index=True
+    )
+    department_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("departments.id", ondelete="RESTRICT")
+    )
+    title: Mapped[str] = mapped_column(String(120))
+    body: Mapped[str] = mapped_column(Text)
+    status: Mapped[str] = mapped_column(String(16))
+    resolution: Mapped[str | None] = mapped_column(Text)
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    version: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+
+
+class TicketEvent(Base):
+    __tablename__ = "ticket_events"
+    __table_args__ = (
+        UniqueConstraint("ticket_id", "ticket_version", name="uq_ticket_event_version"),
+        CheckConstraint("ticket_version >= 1", name="ck_ticket_event_version"),
+        CheckConstraint(
+            "event_type IN ('created','body_updated','assignment_changed',"
+            "'started','resolved','reopened')",
+            name="ck_ticket_event_type",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id", ondelete="RESTRICT"))
+    ticket_version: Mapped[int] = mapped_column(Integer)
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    event_type: Mapped[str] = mapped_column(String(32))
+    payload: Mapped[dict] = mapped_column(JSONB)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class IdempotencyRecord(Base):
+    __tablename__ = "idempotency_records"
+    __table_args__ = (
+        UniqueConstraint("user_id", "method", "path", "key", name="uq_idempotency_request"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    method: Mapped[str] = mapped_column(String(8))
+    path: Mapped[str] = mapped_column(String(200))
+    key: Mapped[str] = mapped_column(String(100))
+    request_hash: Mapped[str] = mapped_column(String(64))
+    response_status: Mapped[int] = mapped_column(Integer)
+    response_body: Mapped[dict] = mapped_column(JSONB)
+    entity_id: Mapped[UUID] = mapped_column()
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class KnowledgeDocument(Base):
+    __tablename__ = "knowledge_documents"
+    __table_args__ = (
+        CheckConstraint("row_version >= 1", name="ck_document_row_version"),
+        ForeignKeyConstraint(
+            ["id", "published_version_id"],
+            ["knowledge_versions.document_id", "knowledge_versions.id"],
+            name="fk_document_published",
+            use_alter=True,
+            ondelete="RESTRICT",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    number: Mapped[str] = mapped_column(String(32), unique=True)
+    published_version_id: Mapped[UUID | None] = mapped_column()
+    row_version: Mapped[int] = mapped_column(Integer)
+    created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class KnowledgeVersion(Base):
+    __tablename__ = "knowledge_versions"
+    __table_args__ = (
+        UniqueConstraint("document_id", "version_no", name="uq_knowledge_version_no"),
+        UniqueConstraint("document_id", "id", name="uq_knowledge_version_owner"),
+        ForeignKeyConstraint(
+            ["document_id", "base_version_id"],
+            ["knowledge_versions.document_id", "knowledge_versions.id"],
+            name="fk_knowledge_base",
+            ondelete="RESTRICT",
+        ),
+        Index(
+            "uq_document_draft",
+            "document_id",
+            unique=True,
+            postgresql_where=text("status = 'draft'"),
+        ),
+        CheckConstraint("version_no >= 1 AND row_version >= 1", name="ck_knowledge_versions"),
+        CheckConstraint("length(btrim(title)) BETWEEN 1 AND 120", name="ck_knowledge_title"),
+        CheckConstraint("length(btrim(audience)) BETWEEN 1 AND 300", name="ck_knowledge_audience"),
+        CheckConstraint("length(btrim(body)) BETWEEN 1 AND 20000", name="ck_knowledge_body"),
+        CheckConstraint(
+            "(status = 'draft' AND reviewed_by IS NULL AND reviewed_at IS NULL) OR "
+            "(status = 'approved' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL "
+            "AND department_id IS NOT NULL) OR "
+            "(status = 'rejected' AND reviewed_by IS NOT NULL AND reviewed_at IS NOT NULL)",
+            name="ck_knowledge_state",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    document_id: Mapped[UUID] = mapped_column(
+        ForeignKey("knowledge_documents.id", ondelete="RESTRICT")
+    )
+    version_no: Mapped[int] = mapped_column(Integer)
+    base_version_id: Mapped[UUID | None] = mapped_column()
+    status: Mapped[str] = mapped_column(String(16))
+    title: Mapped[str] = mapped_column(String(120))
+    audience: Mapped[str] = mapped_column(String(300))
+    body: Mapped[str] = mapped_column(Text)
+    department_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("departments.id", ondelete="RESTRICT")
+    )
+    created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), index=True)
+    reviewed_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    row_version: Mapped[int] = mapped_column(Integer)
+
+
+class KnowledgeSource(Base):
+    __tablename__ = "knowledge_sources"
+    __table_args__ = (
+        UniqueConstraint("knowledge_version_id", "ticket_id", name="uq_knowledge_source"),
+        CheckConstraint("ticket_version >= 1", name="ck_source_version"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    knowledge_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT")
+    )
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id", ondelete="RESTRICT"))
+    ticket_version: Mapped[int] = mapped_column(Integer)
+    evidence_snapshot: Mapped[dict] = mapped_column(JSONB)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    captured_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class KnowledgeEvent(Base):
+    __tablename__ = "knowledge_events"
+    __table_args__ = (
+        UniqueConstraint("knowledge_version_id", "row_version", name="uq_knowledge_event_version"),
+        CheckConstraint("row_version >= 1", name="ck_knowledge_event_version"),
+        CheckConstraint(
+            "event_type IN ('draft_created','saved','sources_refreshed','approved','rejected')",
+            name="ck_knowledge_event_type",
+        ),
+        CheckConstraint(
+            "(event_type = 'rejected' AND reason IS NOT NULL "
+            "AND length(btrim(reason)) BETWEEN 1 AND 1000) "
+            "OR (event_type <> 'rejected' AND reason IS NULL)",
+            name="ck_knowledge_event_reason",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    knowledge_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT")
+    )
+    row_version: Mapped[int] = mapped_column(Integer)
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    event_type: Mapped[str] = mapped_column(String(32))
+    reason: Mapped[str | None] = mapped_column(Text)
+    payload: Mapped[dict] = mapped_column(JSONB)
+    occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
