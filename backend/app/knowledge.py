@@ -7,7 +7,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, Query, Request, Response
 from fastapi.encoders import jsonable_encoder
 from pydantic import AfterValidator, BeforeValidator, Field, model_validator
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.orm import Session
 
 from app.accounts import no_body, no_query
@@ -35,8 +35,10 @@ from app.business import (
 from app.errors import ApiError
 from app.models import (
     Department,
+    IdempotencyRecord,
     KnowledgeDocument,
     KnowledgeEvent,
+    KnowledgePreparation,
     KnowledgeSource,
     KnowledgeVersion,
     Ticket,
@@ -101,6 +103,10 @@ class ReviewInput(Input):
     expected_document_version: Expected
 
 
+class DocumentDeleteInput(ReviewInput):
+    confirmation_number: Annotated[str, Field(min_length=1, max_length=32)]
+
+
 class RejectInput(ReviewInput):
     reason: Reason
 
@@ -111,7 +117,7 @@ class KnowledgeQuery(PageQuery):
 
 
 class ReviewQuery(PageQuery):
-    status: Literal["draft", "rejected"] | None = None
+    status: Literal["draft", "rejected", "suspended"] | None = None
 
 
 # 根拠は保存時の本文・解決内容・版を写し、後の変更と比較できる形にする。
@@ -215,6 +221,7 @@ def review_item(doc: KnowledgeDocument, version: KnowledgeVersion, dept: dict | 
         department=dept,
         updated_at=version.updated_at,
         row_version=version.row_version,
+        publication_suspended=doc.publication_suspended,
     )
 
 
@@ -228,6 +235,7 @@ def public_item(doc: KnowledgeDocument, version: KnowledgeVersion, dept: dict | 
         department=dept,
         updated_at=version.updated_at,
         approved_at=version.reviewed_at,
+        publication_suspended=doc.publication_suspended,
     )
 
 
@@ -256,6 +264,8 @@ def get_version(
 
 
 def review_detail(session: Session, doc: KnowledgeDocument, version: KnowledgeVersion) -> dict:
+    from app.knowledge_search import preparation_status
+
     versions = list(
         session.scalars(select(KnowledgeVersion).where(KnowledgeVersion.document_id == doc.id))
     )
@@ -294,6 +304,7 @@ def review_detail(session: Session, doc: KnowledgeDocument, version: KnowledgeVe
         reviewed_at=version.reviewed_at,
         sources=[source_dto(session, source) for source in sources],
         source_issues=source_issues(session, sources),
+        search_preparation=preparation_status(session, doc, version),
         events=events,
     )
 
@@ -361,12 +372,22 @@ def capture_sources(
 
 
 def locked_version(
-    request, session, auth, document_id, version_no, refs: list[SourceRef] | None = None
+    request,
+    session,
+    auth,
+    document_id,
+    version_no,
+    refs: list[SourceRef] | None = None,
+    search: bool = False,
 ):
     discovered = get_version(session, document_id, version_no)
     ids = {source.ticket_id for source in sources_for(session, discovered.id)}
     all_ids = ids | ({ref.ticket_id for ref in refs} if refs else set())
     actor, _ = write_actor(request, session, auth, operator=True)
+    if search:
+        from app.knowledge_search import search_state
+
+        search_state(session, lock=True)
     tickets = lock_tickets(session, all_ids)
     doc = get_document(session, document_id, True)
     version = get_version(session, document_id, version_no, True)
@@ -387,11 +408,18 @@ def knowledge_rows(session: Session, review: bool) -> tuple[list[dict], datetime
         .outerjoin(Department, KnowledgeVersion.department_id == Department.id)
     )
     stmt = (
-        stmt.where(KnowledgeVersion.status.in_(["draft", "rejected"]))
+        stmt.where(
+            KnowledgeVersion.status.in_(["draft", "rejected"])
+            | (
+                KnowledgeDocument.publication_suspended
+                & (KnowledgeDocument.published_version_id == KnowledgeVersion.id)
+            )
+        )
         if review
         else stmt.where(
             KnowledgeDocument.published_version_id == KnowledgeVersion.id,
             KnowledgeVersion.status == "approved",
+            KnowledgeDocument.publication_suspended.is_(False),
         )
     )
     rows = session.execute(stmt).all()
@@ -411,7 +439,16 @@ def knowledge_rows(session: Session, review: bool) -> tuple[list[dict], datetime
 @router.get("/reviews", summary="下書きと差し戻しを一覧", dependencies=[Depends(no_body)])
 def list_reviews(query: Annotated[ReviewQuery, Query()], operator: Operator, session: DbSession):
     items, as_of = knowledge_rows(session, True)
-    filtered = [item for item in items if not query.status or item["status"] == query.status]
+    filtered = [
+        item
+        for item in items
+        if not query.status
+        or (
+            item["publication_suspended"] and item["status"] == "approved"
+            if query.status == "suspended"
+            else item["status"] == query.status
+        )
+    ]
     for item in items:
         del item["_search"]
     return page_result(items, filtered, query, as_of)
@@ -446,6 +483,8 @@ def list_knowledge(
 )
 def get_published(document_id: UUID, auth: FullAuthenticated, session: DbSession):
     doc = get_document(session, document_id)
+    if doc.publication_suspended and auth[1].role != "operator":
+        not_found()
     version = (
         session.get(KnowledgeVersion, doc.published_version_id)
         if doc.published_version_id
@@ -678,7 +717,9 @@ def edit_draft(
 
 
 def review_version(document_id, version_no, data, request, auth, session, reject=False):
-    actor, _, doc, version = locked_version(request, session, auth, document_id, version_no)
+    actor, _, doc, version = locked_version(
+        request, session, auth, document_id, version_no, search=not reject
+    )
     conflict(data.expected_version, version.row_version)
     conflict(data.expected_document_version, doc.row_version)
     if version.status != "draft":
@@ -701,6 +742,9 @@ def review_version(document_id, version_no, data, request, auth, session, reject
                 "根拠が変わりました。原本と写しを比較し、明示的に再確認して保存してください。",
                 {"source_issues": issues},
             )
+        from app.knowledge_search import require_prepared
+
+        prepared = require_prepared(session, doc, version)
     version.status = "rejected" if reject else "approved"
     version.reviewed_by, version.reviewed_at = actor.id, datetime.now(UTC)
     version.updated_at = version.reviewed_at
@@ -708,12 +752,19 @@ def review_version(document_id, version_no, data, request, auth, session, reject
     doc.row_version += 1
     if not reject:
         doc.published_version_id = version.id
+        # 公開ポインター・検索対象の保存版・履歴を同時に確定する。
+        # [ko] 공개 포인터·검색 대상 저장 버전·이력을 동시에 확정한다.
+        # [en] Commit publication, the indexed row version, and history together.
+        prepared.indexed_row_version = version.row_version
     payload = (
         {"reason": data.reason}
         if reject
         else {
             "previous_published_version_no": previous.version_no if previous else None,
             "published_version_no": version.version_no,
+            "embedding_profile_id": prepared.profile_id,
+            "content_hash": prepared.content_hash,
+            "chunk_count": prepared.chunk_count,
         }
     )
     record(session, version, actor, version.status, payload, data.reason if reject else None)
@@ -752,3 +803,143 @@ def reject(
     operator: Operator,
 ):
     return review_version(document_id, version_no, data, request, auth, session, True)
+
+
+@router.post(
+    "/{document_id}/versions/{version_no}/delete-document",
+    summary="ナレッジ文書の全版と検索資料を完全に削除",
+    dependencies=[Depends(require_json), Depends(no_query)],
+)
+def delete_document(
+    document_id: UUID,
+    version_no: int,
+    data: DocumentDeleteInput,
+    request: Request,
+    auth: FullAuthenticated,
+    session: DbSession,
+    operator: Operator,
+):
+    from app.knowledge_search import search_state
+
+    write_actor(request, session, auth, operator=True)
+    search_state(session, lock=True)
+    doc = get_document(session, document_id, True)
+    version = get_version(session, document_id, version_no, True)
+    conflict(data.expected_document_version, doc.row_version)
+    conflict(data.expected_version, version.row_version)
+    if data.confirmation_number != doc.number:
+        invalid("削除する文書番号を正確に入力してください。")
+    result = {"document_id": str(doc.id), "number": doc.number}
+    ids = select(KnowledgeVersion.id).where(KnowledgeVersion.document_id == doc.id)
+    # 循環参照を外して全版を同時に消し、再送用の本文も残さない。
+    # [ko] 순환 참조를 해제해 모든 판을 함께 삭제하고 재전송용 본문도 남기지 않는다.
+    # [en] Remove cyclic references and every version atomically, including replayed content.
+    doc.published_version_id = None
+    session.flush()
+    session.execute(
+        update(KnowledgeVersion)
+        .where(KnowledgeVersion.document_id == doc.id)
+        .values(base_version_id=None)
+    )
+    session.execute(delete(KnowledgePreparation).where(KnowledgePreparation.version_id.in_(ids)))
+    session.execute(delete(KnowledgeSource).where(KnowledgeSource.knowledge_version_id.in_(ids)))
+    session.execute(delete(KnowledgeEvent).where(KnowledgeEvent.knowledge_version_id.in_(ids)))
+    session.execute(
+        update(IdempotencyRecord)
+        .where(IdempotencyRecord.entity_id == doc.id)
+        .values(response_status=410, response_body={})
+    )
+    session.execute(delete(KnowledgeVersion).where(KnowledgeVersion.document_id == doc.id))
+    session.delete(doc)
+    return finish(session, result)
+
+
+def change_publication(
+    document_id: UUID,
+    version_no: int,
+    operation: Literal["stop-publication", "resume-publication"],
+    data: ReviewInput,
+    request: Request,
+    auth: FullAuthenticated,
+    session: DbSession,
+    operator: Operator,
+):
+    from app.knowledge_search import preparation_status, search_state
+
+    actor, _ = write_actor(request, session, auth, operator=True)
+    search_state(session, lock=True)
+    doc = get_document(session, document_id, True)
+    version = get_version(session, document_id, version_no, True)
+    conflict(data.expected_document_version, doc.row_version)
+    conflict(data.expected_version, version.row_version)
+    stopping = operation == "stop-publication"
+    if (
+        version.id != doc.published_version_id
+        or version.status != "approved"
+        or doc.publication_suspended == stopping
+    ):
+        invalid_state()
+    if not stopping and preparation_status(session, doc, version)["status"] != "ready":
+        raise ApiError(409, "EMBEDDING_NOT_READY", "再公開には承認版の検索準備が必要です。")
+    previous_version = version.row_version
+    version.updated_at = datetime.now(UTC)
+    doc.publication_suspended = stopping
+    doc.row_version += 1
+    version.row_version += 1
+    # 本文を変えない公開操作では、準備済みの同じ本文だけを新しい保存版へ引き継ぐ。
+    # [ko] 본문이 그대로인 공개 조작에서는 준비된 동일 본문만 새 저장 버전으로 잇는다.
+    # [en] Publication changes preserve indexing only for the unchanged, already indexed version.
+    session.execute(
+        update(KnowledgePreparation)
+        .where(
+            KnowledgePreparation.version_id == version.id,
+            KnowledgePreparation.indexed_row_version == previous_version,
+        )
+        .values(indexed_row_version=version.row_version)
+    )
+    record(
+        session,
+        version,
+        actor,
+        "publication_stopped" if stopping else "publication_resumed",
+        {"published_version_no": version.version_no},
+    )
+    return finish(session, review_detail(session, doc, version))
+
+
+@router.post(
+    "/{document_id}/versions/{version_no}/stop-publication",
+    summary="承認文書の公開を停止",
+    dependencies=[Depends(require_json), Depends(no_query)],
+)
+def stop_publication(
+    document_id: UUID,
+    version_no: int,
+    data: ReviewInput,
+    request: Request,
+    auth: FullAuthenticated,
+    session: DbSession,
+    operator: Operator,
+):
+    return change_publication(
+        document_id, version_no, "stop-publication", data, request, auth, session, operator
+    )
+
+
+@router.post(
+    "/{document_id}/versions/{version_no}/resume-publication",
+    summary="承認文書を再公開",
+    dependencies=[Depends(require_json), Depends(no_query)],
+)
+def resume_publication(
+    document_id: UUID,
+    version_no: int,
+    data: ReviewInput,
+    request: Request,
+    auth: FullAuthenticated,
+    session: DbSession,
+    operator: Operator,
+):
+    return change_publication(
+        document_id, version_no, "resume-publication", data, request, auth, session, operator
+    )

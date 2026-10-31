@@ -8,6 +8,7 @@ from urllib.request import HTTPCookieProcessor, Request, build_opener
 from uuid import UUID, uuid4
 
 import pytest
+from search_fixtures import initialize_search, prepare_fixture
 from sqlalchemy import delete, select, update
 from sqlalchemy.orm import Session
 
@@ -20,6 +21,7 @@ from app.models import (
     IdempotencyRecord,
     KnowledgeDocument,
     KnowledgeEvent,
+    KnowledgePreparation,
     KnowledgeSource,
     KnowledgeVersion,
     Ticket,
@@ -44,6 +46,7 @@ class Client:
     def __init__(self):
         self.opener = build_opener(HTTPCookieProcessor(CookieJar()))
         self.csrf = ""
+        self.timeout = 10
 
     def call(self, path, body=None, method=None, key=None):
         headers = {"Origin": "http://127.0.0.1:8000", "X-CSRF-Token": self.csrf}
@@ -58,7 +61,7 @@ class Client:
             method=method,
         )
         try:
-            response = self.opener.open(request, timeout=10)
+            response = self.opener.open(request, timeout=self.timeout)
         except HTTPError as error:
             response = error
         with response:
@@ -90,6 +93,7 @@ def test_running_manual_business_flow():
     docs, tickets = [], []
     clients = [Client() for _ in ids]
     with Session(engine) as session, session.begin():
+        initialize_search(session)
         for user_id, login_id, role, manager in zip(
             ids, logins, ["employee", "operator", "employee"], [False, False, True], strict=True
         ):
@@ -161,6 +165,9 @@ def test_running_manual_business_flow():
         assert emp.call(knowledge_path + "/versions/1")[0] == 403
 
         def review(version, operation="approve"):
+            if operation == "approve":
+                with Session(engine) as session, session.begin():
+                    prepare_fixture(session, version)
             return op.ok(
                 knowledge_path + f"/versions/{version['version_no']}/" + operation,
                 dict(
@@ -238,6 +245,9 @@ def test_running_manual_business_flow():
                 client.call("/auth/logout", {})
         with Session(engine) as session, session.begin():
             versions = select(KnowledgeVersion.id).where(KnowledgeVersion.document_id.in_(docs))
+            session.execute(
+                delete(KnowledgePreparation).where(KnowledgePreparation.version_id.in_(versions))
+            )
             session.execute(delete(IdempotencyRecord).where(IdempotencyRecord.user_id.in_(ids)))
             session.execute(
                 update(KnowledgeDocument)

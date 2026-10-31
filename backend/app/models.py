@@ -18,6 +18,8 @@ from sqlalchemy import (
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from app.vector import Vector768
+
 
 class Base(DeclarativeBase):
     pass
@@ -201,6 +203,7 @@ class KnowledgeDocument(Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
     number: Mapped[str] = mapped_column(String(32), unique=True)
     published_version_id: Mapped[UUID | None] = mapped_column()
+    publication_suspended: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
     row_version: Mapped[int] = mapped_column(Integer)
     created_by: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
@@ -284,7 +287,8 @@ class KnowledgeEvent(Base):
         UniqueConstraint("knowledge_version_id", "row_version", name="uq_knowledge_event_version"),
         CheckConstraint("row_version >= 1", name="ck_knowledge_event_version"),
         CheckConstraint(
-            "event_type IN ('draft_created','saved','sources_refreshed','approved','rejected')",
+            "event_type IN ('draft_created','saved','sources_refreshed','approved','rejected',"
+            "'publication_stopped','publication_resumed')",
             name="ck_knowledge_event_type",
         ),
         CheckConstraint(
@@ -305,3 +309,86 @@ class KnowledgeEvent(Base):
     reason: Mapped[str | None] = mapped_column(Text)
     payload: Mapped[dict] = mapped_column(JSONB)
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class EmbeddingProfile(Base):
+    __tablename__ = "embedding_profiles"
+    __table_args__ = (CheckConstraint("length(id) = 64", name="ck_embedding_profile_id"),)
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    specification: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class KnowledgeSearchState(Base):
+    __tablename__ = "knowledge_search_state"
+    __table_args__ = (
+        CheckConstraint("id = 1 AND revision >= 1", name="ck_knowledge_search_singleton"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    active_profile_id: Mapped[str | None] = mapped_column(
+        ForeignKey("embedding_profiles.id", ondelete="RESTRICT")
+    )
+    revision: Mapped[int] = mapped_column(Integer)
+
+
+class KnowledgePreparation(Base):
+    __tablename__ = "knowledge_preparations"
+    __table_args__ = (
+        UniqueConstraint("version_id", "profile_id", name="uq_preparation_version_profile"),
+        CheckConstraint(
+            "source_row_version >= 1 AND document_row_version >= 1 AND state_revision >= 1 "
+            "AND chunk_count >= 1 AND "
+            "(indexed_row_version IS NULL OR indexed_row_version >= source_row_version)",
+            name="ck_preparation_versions",
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="RESTRICT")
+    )
+    profile_id: Mapped[str] = mapped_column(
+        ForeignKey("embedding_profiles.id", ondelete="RESTRICT")
+    )
+    source_row_version: Mapped[int] = mapped_column(Integer)
+    document_row_version: Mapped[int] = mapped_column(Integer)
+    state_revision: Mapped[int] = mapped_column(Integer)
+    indexed_row_version: Mapped[int | None] = mapped_column(Integer)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    sources_hash: Mapped[str] = mapped_column(String(64))
+    chunk_count: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class KnowledgeChunk(Base):
+    __tablename__ = "knowledge_chunks"
+    __table_args__ = (
+        UniqueConstraint("preparation_id", "ordinal", name="uq_chunk_ordinal"),
+        CheckConstraint(
+            "ordinal >= 0 AND body_start >= 0 AND body_end > body_start "
+            "AND body_end - body_start = length(text) "
+            "AND line_start >= 1 AND line_end >= line_start "
+            "AND input_tokens BETWEEN 1 AND 8192",
+            name="ck_chunk_position",
+        ),
+        CheckConstraint(
+            "vector_norm(embedding) BETWEEN 0.9999 AND 1.0001", name="ck_chunk_normalized"
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    preparation_id: Mapped[UUID] = mapped_column(
+        ForeignKey("knowledge_preparations.id", ondelete="CASCADE")
+    )
+    ordinal: Mapped[int] = mapped_column(Integer)
+    body_start: Mapped[int] = mapped_column(Integer)
+    body_end: Mapped[int] = mapped_column(Integer)
+    line_start: Mapped[int] = mapped_column(Integer)
+    line_end: Mapped[int] = mapped_column(Integer)
+    text: Mapped[str] = mapped_column(Text)
+    context: Mapped[str] = mapped_column(Text)
+    content_hash: Mapped[str] = mapped_column(String(64))
+    input_tokens: Mapped[int] = mapped_column(Integer)
+    embedding: Mapped[list[float]] = mapped_column(Vector768())

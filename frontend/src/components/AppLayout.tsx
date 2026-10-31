@@ -38,9 +38,11 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
 
   useLayoutEffect(() => {
     if (location.pathname === '/') return
-    setMenuOpen(false)
     const heading = mainRef.current?.querySelector('h1')
-    if (previousPath.current !== location.pathname) heading?.focus()
+    if (previousPath.current !== location.pathname) {
+      setMenuOpen(false)
+      heading?.focus()
+    }
     previousPath.current = location.pathname
     document.title = `${heading?.textContent ?? 'SolveLoop'} | SolveLoop`
   }, [location.pathname, session?.id, children])
@@ -79,7 +81,7 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
         </div>
       </header>
       <div className={styles.mockBar}>
-        <p><strong>問い合わせ・ナレッジは実API・DBに保存</strong> 架空企業のローカルデモです。公開されるのは人が承認した版だけです。AI・Radar・意味検索は未実装です。</p>
+        <p><strong>問い合わせ・ナレッジは実API・DBに保存</strong> 架空企業のローカルデモです。公開されるのは人が承認した版だけです。意味検索はローカルAIを使用します。AI回答・下書き生成・Radarは未実装です。</p>
       </div>
       <div className={showNavigation ? styles.workspace : styles.authWorkspace}>
         {showNavigation && <div className={styles.navigation}>
@@ -125,7 +127,7 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
           {children}
         </main>
       </div>
-      <footer className={styles.footer}>SolveLoop · ローカル操作デモ · 業務・認証・管理履歴はサーバー時刻です。AI・Radarは未実装です。</footer>
+      <footer className={styles.footer}>SolveLoop · 架空企業のローカルデモ · サーバー時刻で記録 · AI回答・下書き生成・Radarは未実装です。</footer>
     </>
   )
 }

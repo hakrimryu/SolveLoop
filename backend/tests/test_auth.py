@@ -105,7 +105,13 @@ def auth_engine():
         connection.execute(text("CREATE SCHEMA solveloop_auth_test"))
     mapped = engine.execution_options(schema_translate_map={None: "solveloop_auth_test"})
     try:
-        Base.metadata.create_all(mapped)
+        Base.metadata.create_all(
+            mapped,
+            tables=[
+                Base.metadata.tables[name]
+                for name in ("departments", "users", "sessions", "audit_events")
+            ],
+        )
         yield mapped
     finally:
         with engine.begin() as connection:
@@ -347,13 +353,6 @@ def test_db_constraints_and_model_schema(api, auth_engine):
         "users",
         "sessions",
         "audit_events",
-        "tickets",
-        "ticket_events",
-        "idempotency_records",
-        "knowledge_documents",
-        "knowledge_versions",
-        "knowledge_sources",
-        "knowledge_events",
     }
 
 

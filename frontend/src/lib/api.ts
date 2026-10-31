@@ -9,7 +9,7 @@ export type AccountEvent = { id: string; actor: { id: string; display_name: stri
 export type EventList = { items: AccountEvent[]; page: number; page_size: number; page_count: number; total: number }
 export type IssuedPassword = { account: Account; temporary_password: string }
 export type FormErrors = Partial<Record<string, string>>
-export type SessionState = { generation: number; status: 'checking' | 'ready' | 'error' | 'hidden'; user: User | null; notice: string; issued: IssuedPassword | null }
+export type SessionState = { generation: number; identityGeneration: number; status: 'checking' | 'ready' | 'error' | 'hidden'; user: User | null; notice: string; issued: IssuedPassword | null }
 
 export class ApiError extends Error {
   status: number
@@ -60,7 +60,7 @@ export function validateAccount(input: AccountInput, departments: Department[]):
 }
 
 export class SessionApi {
-  private state: SessionState = { generation: 0, status: 'checking', user: null, notice: '', issued: null }
+  private state: SessionState = { generation: 0, identityGeneration: 0, status: 'checking', user: null, notice: '', issued: null }
   private csrf = ''
   private controllers = new Set<AbortController>()
   private listeners = new Set<() => void>()
@@ -82,15 +82,25 @@ export class SessionApi {
   // 認証世代を進めて進行中の要求と前の利用者の資料を無効にする。
   // [ko] 인증 세대를 올려 진행 중 요청과 이전 사용자의 자료를 무효화한다.
   // [en] Advance the auth generation to invalidate pending requests and prior user data.
-  private reset(status: SessionState['status'], notice = '', user: User | null = null, issued: IssuedPassword | null = null) {
+  private cancelPending() {
     this.controllers.forEach(controller => controller.abort())
     this.controllers.clear()
-    this.csrf = ''
     this.checking = null
-    this.publish({ generation: this.state.generation + 1, status, user, notice, issued })
+  }
+  private reset(status: SessionState['status'], notice = '', user: User | null = null, issued: IssuedPassword | null = null) {
+    this.cancelPending()
+    this.csrf = ''
+    this.publish({ generation: this.state.generation + 1, identityGeneration: this.state.identityGeneration + 1, status, user, notice, issued })
   }
   invalidate(hidden = false) { this.reset(hidden ? 'hidden' : 'checking') }
-  closeIssued = () => this.publish({ issued: null })
+  // 再確認は入力の破棄と分け、同じ資格だと確認できるまで表示と要求を止める。
+  // [ko] 재확인과 입력 폐기를 분리하고 같은 자격을 확인할 때까지 표시와 요청을 중단한다.
+  // [en] Suspend display and requests without discarding drafts until identity is reverified.
+  suspend(status: 'hidden' | 'checking' | 'error', notice = '') {
+    this.cancelPending()
+    this.publish({ generation: this.state.generation + 1, status, notice, issued: null })
+  }
+  closeIssued = () => { if (this.state.issued) this.publish({ issued: null }) }
   // 応答後も世代を確認し、遅れて届いた別セッションの結果を反映させない。
   // [ko] 응답 후에도 세대를 확인해 늦게 도착한 다른 세션의 결과가 반영되지 않게 한다.
   // [en] Check the generation after responses so stale session results cannot update the UI.
@@ -136,16 +146,16 @@ export class SessionApi {
           this.reset('ready', 'アカウントの状態が変わったため、表示内容を初期化しました。', user)
         }
         this.csrf = csrf_token
-        this.publish({ user, status: 'ready' })
+        if (this.state.status !== 'ready' || JSON.stringify(this.state.user) !== JSON.stringify(user)) this.publish({ user, status: 'ready' })
         return user
       } catch (error) {
         this.assertCurrent(generation)
         if (isStale(error)) throw error
         if (error instanceof ApiError && error.status === 401) {
-          this.reset('ready', 'ログインしてください。')
+          if (this.state.status !== 'ready' || this.state.user || this.csrf) this.reset('ready', 'ログインしてください。')
           return null
         }
-        this.reset('error', errorMessage(error))
+        this.suspend('error', errorMessage(error))
         throw error
       } finally { if (generation === this.state.generation) this.checking = null }
     })()
@@ -179,7 +189,7 @@ export class SessionApi {
         this.reset('checking', errorMessage(error))
         try { await this.verify() } catch { /* 再確認画面で接続エラーを表示する。 */ }
       } else if (!options.business && (!(error instanceof ApiError) || error.status >= 500)) {
-        this.reset('error', errorMessage(error, body !== undefined))
+        this.suspend('error', errorMessage(error, body !== undefined))
       }
       throw error
     }
@@ -219,11 +229,17 @@ export const api = new SessionApi(fetch, () => channel?.postMessage('invalidate'
 // [en] Use cross-tab messages only to trigger verification, never as authentication evidence.
 export function watchSession() {
   channel = new BroadcastChannel('solveloop-auth')
+  // 通常のタブ復帰は背景確認だけにし、画面・入力・スクロールを動かさない。
+  // [ko] 일반 탭 복귀는 백그라운드 확인만 하며 화면·입력·스크롤을 건드리지 않는다.
+  // [en] Reverify normal tab returns in the background without disturbing the view or drafts.
   const refresh = () => {
+    if (document.hidden) api.closeIssued()
+    else void api.verify().catch(() => {})
+  }
+  channel.onmessage = () => {
     api.invalidate(document.hidden)
     if (!document.hidden) void api.verify().catch(() => {})
   }
-  channel.onmessage = refresh
   document.addEventListener('visibilitychange', refresh)
   window.addEventListener('focus', refresh)
   window.addEventListener('pageshow', refresh)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { Activity, useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { Link, Navigate, Outlet, Route, Routes, useBeforeUnload, useBlocker, useLocation } from 'react-router'
 import AppLayout from './components/AppLayout'
 import Dashboard from './features/dashboard/Dashboard'
@@ -13,13 +13,13 @@ import AuthScreen from './features/auth/AuthScreen'
 import Accounts, { TemporaryPasswordDialog } from './features/accounts/Accounts'
 
 function subscribeSession(listener: () => void) {
-  let generation = api.snapshot().generation
+  let generation = api.snapshot().identityGeneration
   return api.subscribe(() => {
-    if (generation !== api.snapshot().generation) {
+    if (generation !== api.snapshot().identityGeneration) {
       clearRequestPosition()
       clearKnowledgePosition()
       document.title = 'SolveLoop'
-      generation = api.snapshot().generation
+      generation = api.snapshot().identityGeneration
     }
     listener()
   })
@@ -36,12 +36,27 @@ export default function App() {
     // [ko] 다른 인증 세대로 이전 화면의 복귀 메시지를 넘기지 않는다.
     // [en] Do not carry previous navigation messages into a different auth generation.
     window.history.replaceState({ ...window.history.state, usr: null }, '', window.location.pathname + window.location.search)
-  }, [state.generation])
-  if (state.status !== 'ready') return <AppLayout session={null} notice="" onSessionEnd={() => {}} unverified>
+  }, [state.identityGeneration])
+  return <SessionView state={state} />
+}
+
+export function SessionView({ state }: { state: SessionState }) {
+  const retained = useRef<SessionState | null>(null)
+  if (retained.current?.identityGeneration !== state.identityGeneration) retained.current = null
+  if (state.status === 'ready') retained.current = state
+  else if (retained.current) retained.current = { ...retained.current, issued: null }
+  // Activityは入力を保持したままEffectを片付け、非表示のdialogも閉じる。
+  // [ko] Activity는 입력을 유지하며 Effect를 정리해 숨긴 dialog도 닫는다.
+  // [en] Activity preserves inputs while cleaning up Effects, including open dialogs.
+  return <>
+    <Activity mode={state.status === 'ready' ? 'visible' : 'hidden'}>
+      {retained.current && <Workspace key={`${retained.current.identityGeneration}:${retained.current.user?.id ?? 'anonymous'}`} state={retained.current} />}
+    </Activity>
+    {state.status !== 'ready' && <AppLayout session={null} notice="" onSessionEnd={() => {}} unverified>
     <h1 tabIndex={-1}>接続状態の確認</h1>
     {state.status === 'error' ? <div className="notice"><p role="alert">{state.notice}</p><p>表示を停止しました。ログアウトとは判定していません。</p><button className="button" onClick={() => { void api.verify().catch(() => {}) }}>再確認</button></div> : <p role="status">{state.status === 'hidden' ? '再表示時に接続状態を確認します。' : '確認中…'}</p>}
-  </AppLayout>
-  return <Workspace key={`${state.generation}:${state.user?.id ?? 'anonymous'}`} state={state} />
+    </AppLayout>}
+  </>
 }
 
 function Workspace({ state }: { state: SessionState }) {

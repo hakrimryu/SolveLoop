@@ -24,3 +24,22 @@
 .inlineLink { display: inline-block; margin-left: 16px; }
 @media (max-width: 1200px) { .editorGrid, .readGrid { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .reviewActions { padding: 16px; } .modeBar > span { margin-left: 0; } }
+.searchResults { margin: 1.5rem 0 0; padding-left: 1.5rem; }
+.searchResults > li { padding: 1rem 0; border-top: 1px solid var(--border); }
+.searchResults h2 { margin: 0 0 .5rem; font-size: 1rem; }
+.management { margin-top: 20px; padding: 20px; border: 1px solid #c44335; border-left: 4px solid #b42318; border-radius: 7px; background: #fff8f6; overflow-wrap: anywhere; }
+.management h2 { color: #8d2118; font-size: 1rem; margin-bottom: 8px; }
+.management p { font-size: .8125rem; line-height: 1.7; margin-top: 8px; }
+.managementWarning { color: #8d2118; }
+.managementAction { border-top: 1px solid #e5b5ad; margin-top: 16px; padding-top: 16px; }
+.managementAction h3 { font-size: .875rem; }
+.managementAction > button, .managementAction > a { margin-top: 12px; }
+.management .dangerButton { color: white; background: #b42318; border-color: #b42318; }
+.management .dangerButton:hover { color: white; background: #8d2118; border-color: #8d2118; }
+.management .stopButton { color: #754313; background: #fff8e9; border-color: #a57626; }
+.management .stopButton:hover { color: #563009; background: #fff0cb; border-color: #754313; }
+.managementDialog { border-top: 4px solid #b42318; }
+.confirmationField { margin: 20px 0; }
+.confirmationField label { display: block; font-size: .8125rem; font-weight: 600; }
+.confirmationField input { display: block; width: 100%; margin-top: 8px; }
+.searchExcerpt { max-height: 12rem; overflow-y: auto; }

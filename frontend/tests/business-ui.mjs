@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router'
 import RequestDetail from '../src/features/requests/RequestDetail'
 import RequestDialog from '../src/features/requests/RequestDialog'
 import KnowledgeReview from '../src/features/knowledge/KnowledgeReview'
+import KnowledgeList, { KnowledgeDetail } from '../src/features/knowledge/Knowledge'
 import { api, ApiError } from '../src/lib/api'
 import '../src/index.css'
 
@@ -32,12 +33,13 @@ async function fill(node, value) {
   })
 }
 let root, dirty
-async function mount(Component, path, request) {
+async function mount(Component, path, request, role = 'operator') {
   dirty = false
   api.request = request
   root = createRoot(fixture)
-  const props = { role: 'operator', departments: [dept], operators: [user, other], onDirtyChange: value => { dirty = value }, onClose() {} }
-  await act(async () => root.render(h(MemoryRouter, { initialEntries: [path] }, h(Routes, null, h(Route, { path: Component === RequestDetail ? '/requests/:requestId' : '*', element: h(Component, props) })))))
+  const props = { role, departments: [dept], operators: [user, other], onDirtyChange: value => { dirty = value }, onClose() {} }
+  const route = Component === RequestDetail ? '/requests/:requestId' : Component === KnowledgeDetail ? '/knowledge/:documentId' : Component === KnowledgeReview && path.includes('/versions/') ? '/knowledge/reviews/:documentId/versions/:version' : '*'
+  await act(async () => root.render(h(MemoryRouter, { initialEntries: [path] }, h(Routes, null, h(Route, { path: route, element: h(Component, props) }), (Component === KnowledgeReview && route !== '*' || Component === KnowledgeDetail) ? h(Route, { path: '/knowledge/reviews', element: h(KnowledgeList, { ...props, review: true }) }) : null))))
 }
 const cases = []
 async function check(name, run) {
@@ -157,6 +159,161 @@ await check('R3 既存根拠の比較・再確認・除外も送信中と結果�
   assert(sent.source_refs.length === 1 && sent.source_refs[0].ticket_id === source.id && dirty, '根拠か未保存状態を失いました。')
 })
 
+const reviewOf = () => ({ document_id: '00000000-0000-0000-0000-000000000401', number: 'KB-0001', version_id: '00000000-0000-0000-0000-000000000402', version_no: 1, status: 'draft', publication_suspended: false, title: '端末の認証設定', audience: '全社員', body: '保存した手順', department: dept, row_version: 1, document_row_version: 1, latest_version_no: 1, draft_version_no: 1, published_version_no: null, base_version_no: null, created_by: user, created_at: now, updated_at: now, reviewed_by: null, reviewed_at: null, sources: [], source_issues: [], events: [], search_preparation: { status: 'required', profile_id: 'test-profile', chunk_count: 0 } })
+
+await check('S15 検索準備の失敗・完了と人の承認を分離', async () => {
+  let saved = reviewOf(), failPrepare, fail = true
+  const writes = []
+  await mount(KnowledgeReview, `/knowledge/reviews/${saved.document_id}/versions/1`, async (path, body) => {
+    if (!body) return structuredClone(saved)
+    writes.push({ path, body })
+    if (path.endsWith('/prepare-search')) {
+      if (fail) return new Promise((resolve, reject) => { failPrepare = () => reject(new ApiError(503, 'AI_UNAVAILABLE', 'ローカルAIに接続できません。')) })
+      saved = { ...saved, search_preparation: { ...saved.search_preparation, status: 'ready', chunk_count: 1 } }
+    } else if (path.endsWith('/approve')) saved = { ...saved, status: 'approved', row_version: 2, document_row_version: 2, published_version_no: 1, draft_version_no: null }
+    else throw new Error('想定外の更新です。')
+    return structuredClone(saved)
+  })
+  assert(button('承認して公開').disabled, '未準備でも承認できます。')
+  await click(button('保存した版の検索準備'))
+  assert(field('本文').matches(':disabled') && button('承認して公開').disabled, '準備中に本文か承認を変更できます。')
+  await act(async () => failPrepare())
+  assert(field('本文').value === saved.body && !field('本文').matches(':disabled'), '準備失敗で本文を失いました。')
+  assert(!button('理由を入力して差し戻す').disabled && button('承認して公開').disabled, 'AI障害が差し戻しを妨げるか承認を許可しています。')
+  fail = false
+  await click(button('保存した版の検索準備'))
+  assert(!button('承認して公開').disabled && writes.length === 2 && writes.every(item => item.path.endsWith('/prepare-search')), '準備だけで自動承認されました。')
+  await fill(field('本文'), '未保存の変更')
+  assert(button('承認して公開').disabled && button('保存した版の検索準備').disabled, '未保存の編集を承認できます。')
+  await fill(field('本文'), saved.body)
+  await click(button('承認して公開'))
+  await click(button('この版を承認して公開'))
+  assert(writes.length === 3 && writes[2].path.endsWith('/approve'), '人の確認後の承認が送られていません。')
+})
+
+await check('S15 意味検索の待機・AI失敗・再検索・空結果を区別し入力保持', async () => {
+  let failSearch, empty = false
+  const writes = []
+  await mount(KnowledgeList, '/knowledge?mode=semantic', async (path, body) => {
+    assert(path === '/knowledge/search', '意味検索を別のAPIで代替しました。')
+    writes.push(structuredClone(body))
+    if (!empty) return new Promise((resolve, reject) => { failSearch = () => reject(new ApiError(504, 'AI_TIMEOUT', 'ローカルAIの時間切れです。')) })
+    return { items: [], top_k: 5, profile_id: 'test', as_of: now }
+  })
+  await fill(field('質問・探したい内容'), 'スマホを替えたら入れない')
+  await click(button('意味検索する'))
+  assert(fixture.textContent.includes('ローカルAIで質問を変換') && field('質問・探したい内容').matches(':disabled'), '待機を表示していません。')
+  await act(async () => failSearch())
+  assert(field('質問・探したい内容').value === 'スマホを替えたら入れない', '質問を失いました。')
+  assert(fixture.textContent.includes('意味検索は完了していません') && !fixture.textContent.includes('0箇所'), 'AI失敗を0件に見せています。')
+  empty = true
+  await click(button('同じ条件で再検索'))
+  assert(writes.length === 2 && JSON.stringify(writes[0]) === JSON.stringify(writes[1]) && fixture.textContent.includes('0箇所'), '同じ条件の空結果を表示できません。')
+})
+
+await check('S15 経路を離れた後の遅い検索応答を破棄', async () => {
+  let resolveSearch
+  await mount(KnowledgeList, '/knowledge?mode=semantic&q=認証', async (path, body) => body ? new Promise(resolve => { resolveSearch = resolve }) : page([]))
+  await click([...fixture.querySelectorAll('a')].find(item => item.textContent === 'キーワード検索へ'))
+  await act(async () => resolveSearch({ items: [{ ...reviewOf(), chunk_id: 'late', text: '遅い応答の秘密', cosine_distance: 0 }], top_k: 5, profile_id: 'test', as_of: now }))
+  assert(!fixture.textContent.includes('遅い応答の秘密') && fixture.textContent.includes('キーワード検索を使用中'), '離脱後の結果が混ざりました。')
+})
+
+for (const currentVersion of [1, 2]) await check(`S15 原文位置のUnicode表示・公開版${currentVersion === 1 ? '一致' : '更新'}`, async () => {
+  const saved = { ...reviewOf(), version_no: currentVersion, body: '前😀対象の手順。後', approved_at: now }
+  await mount(KnowledgeDetail, `/knowledge/${saved.document_id}?mode=semantic&q=認証&match_version=1&start=2&end=8#search-passage`, async path => path.includes('/versions/') ? { ...saved, status: 'approved' } : saved)
+  const marked = fixture.querySelector('mark')
+  assert(currentVersion === 1 ? marked?.textContent === '対象の手順。' : !marked && fixture.textContent.includes('検索時から公開版が更新'), '該当箇所か改訂の表示が一致しません。')
+})
+
+await check('文書削除は公開版と改訂版の範囲を確認し、成功後に一覧へ戻る', async () => {
+  const saved = { ...reviewOf(), status: 'approved', approved_at: now, published_version_no: 1, latest_version_no: 2, draft_version_no: 2 }
+  const writes = []
+  let resolveDelete
+  await mount(KnowledgeDetail, `/knowledge/${saved.document_id}`, async (path, body) => {
+    if (body) { writes.push({ path, body }); return new Promise(resolve => { resolveDelete = resolve }) }
+    return path.startsWith('/knowledge/reviews?') ? page([]) : structuredClone(saved)
+  })
+  await click(button('文書を削除…'))
+  assert(fixture.textContent.includes('全2版') && fixture.textContent.includes('元に戻せません') && button('文書全体を完全に削除').disabled && writes.length === 0, '削除対象と確認が不足しています。')
+  await click(button('キャンセル'))
+  assert(!fixture.querySelector('dialog') && writes.length === 0, '取消で削除しました。')
+  await click(button('文書を削除…'))
+  await fill(fixture.querySelector('dialog input'), 'KB-9999')
+  assert(button('文書全体を完全に削除').disabled, '異なる番号で削除できます。')
+  await fill(fixture.querySelector('dialog input'), saved.number)
+  await click(button('文書全体を完全に削除'))
+  assert(writes.length === 1 && writes[0].path.endsWith('/delete-document') && writes[0].body.expected_document_version === 1 && writes[0].body.confirmation_number === saved.number && button('処理中…').disabled, '二重送信か版確認に問題があります。')
+  await act(async () => resolveDelete({ document_id: saved.document_id, number: saved.number }))
+  assert(!fixture.querySelector('dialog') && fixture.textContent.includes('KB-0001 を削除しました'), '成功後もdialogが残るか完了が見えません。')
+})
+
+for (const status of [409, 503]) await check(`文書削除${status}では入力を保持し自動再送せず、最新確認を求める`, async () => {
+  const saved = reviewOf(), writes = []
+  await mount(KnowledgeReview, `/knowledge/reviews/${saved.document_id}/versions/1`, async (path, body) => {
+    if (!body) return structuredClone(saved)
+    writes.push({ path, body }); throw new ApiError(status, 'DELETE_TEST', '削除結果を確認してください。')
+  })
+  await fill(field('本文'), '削除に失敗しても残す入力')
+  await click(button('文書を削除…'))
+  await fill(fixture.querySelector('dialog input'), saved.number)
+  await click(button('文書全体を完全に削除'))
+  assert(writes.length === 1 && field('本文').value === '削除に失敗しても残す入力' && button('文書全体を完全に削除').disabled && fixture.querySelector('dialog [role="alert"]'), '削除失敗を成功にするか入力を失いました。')
+  await click(button('キャンセル'))
+  assert(fixture.textContent.includes('再確認してください'), '再確認を案内していません。')
+})
+
+await check('公開画面から停止・再公開を別々に確認し、公開状態と保存版を反映', async () => {
+  let saved = { ...reviewOf(), status: 'approved', approved_at: now, published_version_no: 1, draft_version_no: null }
+  const writes = []
+  await mount(KnowledgeDetail, `/knowledge/${saved.document_id}`, async (path, body) => {
+    if (body) {
+      writes.push({ path, body })
+      saved = { ...saved, row_version: saved.row_version + 1, document_row_version: saved.document_row_version + 1, publication_suspended: path.endsWith('/stop-publication') }
+    }
+    return structuredClone(saved)
+  })
+  assert(fixture.querySelector('[aria-label="文書の管理"]') && !fixture.textContent.includes('テスト文書'), '公開画面の管理入口か文言が不適切です。')
+  await click(button('公開を停止…'))
+  assert(writes.length === 0 && fixture.querySelector('dialog').textContent.includes('あとから再公開'), '確認前に停止するか影響説明がありません。')
+  await click(button('公開を停止'))
+  assert(writes.length === 1 && !fixture.querySelector('dialog') && fixture.textContent.includes('公開停止中 · 担当者のみ閲覧可能'), '停止完了が画面に反映されません。')
+  await click(button('再公開…'))
+  assert(writes.length === 1 && fixture.querySelector('dialog').textContent.includes('作成中の下書きは公開しません'), '確認前に再公開しました。')
+  await click(button('再公開する'))
+  assert(writes.length === 2 && writes[1].body.expected_version === 2 && !fixture.querySelector('dialog') && fixture.textContent.includes('社員全員に公開'), '再公開が最新の保存版で行われません。')
+})
+
+await check('社員の公開画面には文書管理の操作・担当者資料を表示しない', async () => {
+  const saved = { ...reviewOf(), status: 'approved', approved_at: now }
+  await mount(KnowledgeDetail, `/knowledge/${saved.document_id}`, async path => {
+    assert(!path.includes('/versions/'), '社員が担当者用APIを取得しました。')
+    return saved
+  }, 'employee')
+  assert(!fixture.querySelector('[aria-label="文書の管理"]') && !fixture.textContent.includes('文書を削除'), '社員に削除を表示しました。')
+})
+
+await check('停止の競合では成功表示せず、最新確認まで操作を止める', async () => {
+  const saved = { ...reviewOf(), status: 'approved', approved_at: now, published_version_no: 1 }
+  await mount(KnowledgeDetail, `/knowledge/${saved.document_id}`, async (path, body) => {
+    if (body) throw new ApiError(409, 'VERSION_CONFLICT', '最新版を確認してください。')
+    return saved
+  })
+  await click(button('公開を停止…')); await click(button('公開を停止'))
+  assert(fixture.querySelector('dialog [role="alert"]') && button('公開を停止').disabled && !fixture.textContent.includes('公開を停止しました'), '停止失敗を成功に見せました。')
+  await click(button('キャンセル')); await click(button('最新の保存内容を確認'))
+  assert(!button('公開を停止…').disabled, '明示確認後も操作を再開できません。')
+})
+
 globalThis.fetch = originalFetch
 results.textContent += `\n${cases.filter(item => item.startsWith('PASS')).length}/${cases.length} 通過`
 document.title = cases.some(item => item.startsWith('FAIL')) ? 'FAIL 業務画面の回帰検証' : 'PASS 業務画面の回帰検証'
+
+if (new URLSearchParams(location.search).has('preview')) {
+  for (const node of document.body.children) if (node.id !== 'fixture' && node.tagName !== 'SCRIPT') node.hidden = true
+  globalThis.fetch = async () => { throw new Error('検証中の実通信は禁止です。') }
+  const saved = { ...reviewOf(), status: 'approved', approved_at: now, published_version_no: 1, draft_version_no: null }
+  await mount(KnowledgeDetail, `/knowledge/${saved.document_id}`, async () => structuredClone(saved))
+  if (new URLSearchParams(location.search).get('preview') === 'delete') await click(button('文書を削除…'))
+  globalThis.IS_REACT_ACT_ENVIRONMENT = false
+}

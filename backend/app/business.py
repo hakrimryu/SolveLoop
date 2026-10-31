@@ -170,6 +170,10 @@ def idempotent_result(
         )
     )
     if row:
+        if row.response_status == 410:
+            raise ApiError(
+                410, "RESOURCE_DELETED", "この登録結果は削除されています。再送しません。"
+            )
         if row.request_hash != digest:
             raise ApiError(
                 409, "IDEMPOTENCY_KEY_REUSED", "同じ登録キーを別の内容には使用できません。"

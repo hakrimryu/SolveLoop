@@ -7,6 +7,7 @@ from uuid import UUID, uuid4
 import pytest
 from fastapi.testclient import TestClient
 from pydantic import ValidationError
+from search_fixtures import FixtureEmbeddings, initialize_search
 from sqlalchemy import event, select, text
 from sqlalchemy.orm import Session
 from test_auth import ORIGIN
@@ -16,6 +17,7 @@ from app.business import normalized
 from app.config import load_settings
 from app.database import build_engine
 from app.knowledge import DraftEdit, DraftInput
+from app.knowledge_search import embedding_client
 from app.main import create_app
 from app.models import Base, Department, User
 from app.seed import DEMO_PASSWORD, seed_auth
@@ -64,6 +66,10 @@ def business_engine():
     assert settings.postgres_db == "solveloop_test"
     engine = build_engine(settings)
     with engine.begin() as connection:
+        had_vector = connection.scalar(
+            text("SELECT EXISTS (SELECT 1 FROM pg_extension WHERE extname='vector')")
+        )
+        connection.execute(text("CREATE EXTENSION IF NOT EXISTS vector"))
         connection.execute(text("CREATE SCHEMA solveloop_business_test"))
     mapped = engine.execution_options(schema_translate_map={None: "solveloop_business_test"})
     try:
@@ -72,6 +78,8 @@ def business_engine():
     finally:
         with engine.begin() as connection:
             connection.execute(text("DROP SCHEMA solveloop_business_test CASCADE"))
+            if not had_vector:
+                connection.execute(text("DROP EXTENSION vector"))
         engine.dispose()
 
 
@@ -83,6 +91,7 @@ def clients(business_engine):
         )
         connection.execute(text(f"TRUNCATE {names} CASCADE"))
     with Session(business_engine) as session, session.begin():
+        initialize_search(session)
         seed_auth(session)
         encoded = password_hasher.hash(DEMO_PASSWORD)
         for ident, role, limited, manager in (
@@ -106,6 +115,7 @@ def clients(business_engine):
     app = create_app(load_settings())
     app.state.engine.dispose()
     app.state.engine = business_engine
+    app.dependency_overrides[embedding_client] = FixtureEmbeddings
     with ExitStack() as stack:
         result = {}
         for name, login_id in (
@@ -195,6 +205,8 @@ def review_path(version):
 
 
 def review(client, version, operation="approve", **changes):
+    if operation == "approve":
+        prepare(client, version)
     response = post(
         client,
         review_path(version) + "/" + operation,
@@ -202,6 +214,19 @@ def review(client, version, operation="approve", **changes):
             expected_version=version["row_version"],
             expected_document_version=version["document_row_version"],
             **changes,
+        ),
+    )
+    assert response.status_code == 200, response.text
+    return response.json()
+
+
+def prepare(client, version):
+    response = post(
+        client,
+        review_path(version) + "/prepare-search",
+        dict(
+            expected_version=version["row_version"],
+            expected_document_version=version["document_row_version"],
         ),
     )
     assert response.status_code == 200, response.text
@@ -333,6 +358,7 @@ def test_knowledge_publication_rejection_next_version_and_sources(clients):
     version = review(op, version)
     public = emp.get("/api/v1/knowledge/" + version["document_id"]).json()
     assert set(public) == {
+        "publication_suspended",
         "document_id",
         "number",
         "version_no",
@@ -540,6 +566,8 @@ def test_event_failure_rolls_back_every_business_change(clients, business_engine
     version = draft(op, ticket)
     if operation == "copy":
         version = review(op, version)
+    if operation == "approve":
+        prepare(op, version)
     before = state(business_engine)
     table = "ticket_events" if operation in {"create_ticket", "edit_ticket"} else "knowledge_events"
 
@@ -608,6 +636,8 @@ def test_concurrent_versions_approval_copy_and_idempotency(clients):
         results = list(pool.map(change, [op, second]))
     assert sorted(r.status_code for r in results) == [200, 409]
     version = draft(op)
+
+    prepare(op, version)
 
     def approve(client):
         barrier.wait(timeout=5)
@@ -694,6 +724,7 @@ def test_source_reopen_and_approval_serialize_with_real_ticket_lock(
 
     ticket = solved(clients)
     version = draft(clients["operator"], ticket)
+    prepare(clients["operator"], version)
     with Session(business_engine) as session, session.begin():
         session.get(User, UUID(int=303)).must_change_password = False
     locked, waiting, release = Event(), Event(), Event()
@@ -758,6 +789,7 @@ def test_source_reopen_and_approval_serialize_with_real_ticket_lock(
 @pytest.mark.integration
 def test_save_and_approve_cannot_both_accept_the_same_draft_version(clients):
     version = draft(clients["operator"])
+    prepare(clients["operator"], version)
     barrier = Barrier(2)
 
     def save():

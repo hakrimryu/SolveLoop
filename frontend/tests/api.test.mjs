@@ -175,7 +175,7 @@ test('401は資料を除去し、通信障害・503は認証切れと断定し�
     f.api.issued({ account: { ...user(), login_id: 'test' }, temporary_password: 'memory-only' }, false, f.api.snapshot().generation)
     f.setResponse(failure)
     await assert.rejects(f.api.request('/accounts'))
-    assert.equal(f.api.snapshot().user, null)
+    assert.deepEqual(f.api.snapshot().user, f.api.snapshot().status === 'ready' ? null : user())
     assert.equal(f.api.snapshot().issued, null)
     assert.ok(['ready', 'error'].includes(f.api.snapshot().status))
   }
@@ -226,7 +226,7 @@ test('ブラウザーのfetchをサービス自身のthisで呼ばない', async
   assert.ok(api.snapshot().user)
 })
 
-test('非表示タブと別タブ通知では資料を先に除去し、通知のユーザーを認証根拠にしない', async () => {
+test('タブ復帰は同一資格の表示と要求を維持し、認証変更の通知では破棄する', async () => {
   const saved = { fetch: globalThis.fetch, document: globalThis.document, window: globalThis.window, BroadcastChannel: globalThis.BroadcastChannel }
   const document = Object.assign(new EventTarget(), { hidden: true })
   const window = new EventTarget()
@@ -244,21 +244,89 @@ test('非表示タブと別タブ通知では資料を先に除去し、通知�
   try {
     const module = await import('../src/lib/api.ts?visibility-test')
     stop = module.watchSession()
-    assert.equal(module.api.snapshot().status, 'hidden')
+    assert.equal(module.api.snapshot().status, 'checking')
     assert.equal(module.api.snapshot().user, null)
     document.hidden = false
     document.dispatchEvent(new Event('visibilitychange'))
     await module.api.verify()
     const before = module.api.snapshot().generation
+    const identity = module.api.snapshot().identityGeneration
+    const unchanged = module.api.snapshot()
     document.hidden = true
     document.dispatchEvent(new Event('visibilitychange'))
-    assert.equal(module.api.snapshot().status, 'hidden')
-    assert.equal(module.api.snapshot().user, null)
-    assert.ok(module.api.snapshot().generation > before)
+    assert.equal(module.api.snapshot().status, 'ready')
+    assert.equal(module.api.snapshot().user.id, user().id)
+    assert.equal(module.api.snapshot().identityGeneration, identity)
+    assert.equal(module.api.snapshot().generation, before)
     document.hidden = false
+    document.dispatchEvent(new Event('visibilitychange'))
+    window.dispatchEvent(new Event('focus'))
+    window.dispatchEvent(new Event('pageshow'))
+    await module.api.verify()
+    assert.equal(module.api.snapshot(), unchanged)
     latest.onmessage({ data: { user: { id: 'forged', can_manage_accounts: true } } })
     assert.equal(module.api.snapshot().user, null)
     await module.api.verify()
     assert.equal(module.api.snapshot().user.id, user().id)
   } finally { stop?.(); Object.assign(globalThis, saved) }
+})
+
+test('一時非表示で古い要求を破棄し、同一資格だけは入力の識別を維持する', async () => {
+  const f = fixture()
+  await f.api.verify()
+  const identity = f.api.snapshot().identityGeneration
+  let complete
+  f.setResponse(() => new Promise(resolve => { complete = resolve }))
+  const pending = f.api.request('/tickets', undefined, { business: true })
+  const signal = f.calls.at(-1).options.signal
+  f.api.suspend('hidden')
+  assert.ok(signal.aborted)
+  complete(json({ items: ['古い内容'] }))
+  await assert.rejects(pending, StaleSession)
+  f.api.suspend('checking')
+  await f.api.verify()
+  assert.equal(f.api.snapshot().identityGeneration, identity)
+  assert.equal(f.api.snapshot().status, 'ready')
+  f.api.suspend('hidden')
+  f.setCsrf('changed-session')
+  await f.api.verify()
+  assert.ok(f.api.snapshot().identityGeneration > identity)
+})
+
+test('未ログインの再確認でも同じログイン画面の入力世代を維持する', async () => {
+  const api = new SessionApi(async () => json({ code: 'AUTHENTICATION_REQUIRED' }, 401))
+  await api.verify()
+  const before = api.snapshot()
+  await api.verify()
+  assert.equal(api.snapshot(), before)
+})
+
+test('再確認の通信失敗は非表示で保持し、資格変更・401では破棄する', async () => {
+  let current = user(), csrf = 'same', failure = false, unauthorized = false
+  const api = new SessionApi(async url => {
+    if (failure) throw new TypeError('network')
+    if (unauthorized) return json({ code: 'AUTHENTICATION_REQUIRED' }, 401)
+    return json(url.endsWith('/auth/me') ? current : { csrf_token: csrf })
+  })
+  await api.verify()
+  const identity = api.snapshot().identityGeneration
+  api.suspend('hidden')
+  failure = true
+  await assert.rejects(api.verify())
+  assert.equal(api.snapshot().status, 'error')
+  assert.equal(api.snapshot().identityGeneration, identity)
+  failure = false
+  await api.verify()
+  assert.equal(api.snapshot().identityGeneration, identity)
+  for (const changed of [user('22222222-2222-4222-8222-222222222222'), user(undefined, { must_change_password: true }), user(undefined, { can_manage_accounts: false })]) {
+    const before = api.snapshot().identityGeneration
+    api.suspend('hidden'); current = changed
+    await api.verify()
+    assert.ok(api.snapshot().identityGeneration > before)
+  }
+  const before = api.snapshot().identityGeneration
+  api.suspend('hidden'); unauthorized = true
+  await api.verify()
+  assert.equal(api.snapshot().user, null)
+  assert.ok(api.snapshot().identityGeneration > before)
 })

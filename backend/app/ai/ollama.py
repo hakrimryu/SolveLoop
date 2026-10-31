@@ -159,12 +159,31 @@ class OllamaClient:
     def generate(self, prompt: str) -> dict:
         return self._infer(prompt, embedding=False)
 
-    def embed(self, text: str) -> dict:
-        return self._infer(text, embedding=True)
+    def embed(
+        self, text: str, *, context_tokens: int = 2048, expected_digest: str | None = None
+    ) -> dict:
+        return self._infer(
+            text, embedding=True, context_tokens=context_tokens, expected_digest=expected_digest
+        )
 
-    def _infer(self, text: str, *, embedding: bool) -> dict:
-        if not isinstance(text, str) or not text.strip() or len(text) > 2000:
-            raise OllamaError("AI_INVALID_INPUT", "入力は空白以外の1〜2000文字にしてください。")
+    def _infer(
+        self,
+        text: str,
+        *,
+        embedding: bool,
+        context_tokens: int = 2048,
+        expected_digest: str | None = None,
+    ) -> dict:
+        if (
+            not isinstance(text, str)
+            or not text.strip()
+            or (len(text.encode("utf-8")) > 32768 if embedding else len(text) > 2000)
+            or type(context_tokens) is not int
+            or not 1 <= context_tokens <= 8192
+        ):
+            raise OllamaError(
+                "AI_INVALID_INPUT", "入力サイズとコンテキスト上限を確認してください。"
+            )
         if not INFERENCE_LOCK.acquire(blocking=False):
             raise OllamaError("AI_BUSY", "別のローカルAI処理が実行中です。")
         try:
@@ -172,17 +191,21 @@ class OllamaClient:
                 self.settings.ollama_embed_model if embedding else self.settings.ollama_chat_model
             )
             model = self.local_model(name, "embedding" if embedding else "completion")
+            if expected_digest and model["digest"] != expected_digest:
+                raise OllamaError(
+                    "AI_PROFILE_MISMATCH", "モデルのdigestが検索用の規格と異なります。"
+                )
             started = perf_counter()
             if embedding:
-                # 長い入力を黙って切り捨てず、分割規則は意味検索の実装時に定める。
-                # [ko] 긴 입력을 조용히 잘라내지 않으며 분할 규칙은 의미 검색 구현 때 정한다.
-                # [en] Reject oversized input; define chunking when adding semantic search.
+                # トークン化はOllamaに任せ、指定上限の超過は切り捨てずエラーにする。
+                # [ko] 토큰화는 Ollama에 맡기고 지정 상한 초과는 자르지 않고 오류로 처리한다.
+                # [en] Let Ollama tokenize and reject overflow instead of truncating input.
                 body = {
                     "model": name,
                     "input": [text],
                     "truncate": False,
                     "keep_alive": "5m",
-                    "options": {"num_ctx": 2048},
+                    "options": {"num_ctx": context_tokens},
                 }
                 result = self._parse(
                     Embedding,
@@ -218,6 +241,8 @@ class OllamaClient:
                 output = result.model_dump()
             if result.model != name:
                 raise OllamaError("AI_INVALID_RESPONSE", "応答のモデル名が要求と一致しません。")
+            if expected_digest and self.local_model(name, "embedding")["digest"] != expected_digest:
+                raise OllamaError("AI_PROFILE_MISMATCH", "処理中にモデルのdigestが変わりました。")
             return {
                 **output,
                 "elapsed_ms": round((perf_counter() - started) * 1000, 2),

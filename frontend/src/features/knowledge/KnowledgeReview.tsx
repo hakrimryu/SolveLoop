@@ -8,6 +8,7 @@ import { useBusinessCall, useLoad } from '../../lib/useBusiness'
 import { LoadState } from '../../components/BusinessState'
 import { KnowledgeBody, KnowledgeUnavailable } from './Knowledge'
 import type { KnowledgeProps } from './Knowledge'
+import KnowledgeManagement from './KnowledgeManagement'
 import DiscardDialog, { trapDialogFocus } from '../../components/DiscardDialog'
 import common from '../requests/Requests.module.css'
 import styles from './Knowledge.module.css'
@@ -45,6 +46,7 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
   const [busy, setBusy] = useState(false)
+  const [preparing, setPreparing] = useState(false)
   const [blocked, setBlocked] = useState(false)
   const [latest, setLatest] = useState<Review | null>(null)
   const [uncertainCreate, setUncertainCreate] = useState(false)
@@ -85,6 +87,15 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
     catch (cause) { if (!isStale(cause)) showError(errorMessage(cause)) }
     finally { setBusy(false) }
   }
+  async function prepareSearch() {
+    if (!saved || busy || blocked || inputDirty) return
+    setBusy(true); setPreparing(true); setError(''); setMessage('検索用ベクトルを準備しています。まだ承認・公開しません。')
+    try {
+      const result = await call<Review>(`${reviewApi(saved)}/prepare-search`, { expected_version: saved.row_version, expected_document_version: saved.document_row_version })
+      setSaved(result); setMessage('検索準備が完了しました。保存内容を確認して、別途承認してください。')
+    } catch (cause) { if (!isStale(cause)) { setMessage(''); showError(errorMessage(cause)); if (cause instanceof ApiError && cause.status === 409) setBlocked(true) } }
+    finally { setBusy(false); setPreparing(false) }
+  }
   // 下書き保存と公開を分け、根拠を明示変更した場合だけ置換集合を送る。
   // [ko] 초안 저장과 공개를 구분하고 근거를 명시적으로 바꾼 경우에만 교체 집합을 전송한다.
   // [en] Keep draft saving separate from publication; send source replacements only when edited.
@@ -110,7 +121,8 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
   // [en] Review saved content only, supplying both draft and document versions to detect conflicts.
   async function submitReview(event: FormEvent) {
     event.preventDefault()
-    if (!saved || !confirm || busy || blocked || inputDirty) return
+    if (!saved || !confirm || busy || blocked) return
+    if (inputDirty || confirm === 'approve' && saved.search_preparation?.status !== 'ready') return
     if (confirm === 'reject' && (!reason.trim() || [...reason.trim()].length > 1000)) { showError('差し戻しの理由を1〜1000文字で入力してください。'); return }
     const operation = confirm
     setBusy(true); setError('')
@@ -118,7 +130,7 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
     try {
       const result = await call<Review>(`${reviewApi(saved)}/${operation}`, { expected_version: saved.row_version, expected_document_version: saved.document_row_version, ...(operation === 'reject' ? { reason } : {}) })
       api.assertCurrent(generation)
-      accepted(result); setReason(''); setConfirm(null); onDirtyChange(false); setMessage(operation === 'approve' ? '承認しました。社員全員の検索に公開されています。' : '理由を記録して差し戻しました。この版は変更せず保存します。')
+      accepted(result); setReason(''); setConfirm(null); onDirtyChange(false); setMessage(operation === 'approve' ? result.publication_suspended ? '承認しました。公開停止中のため、再公開するまで社員には表示されません。' : '承認しました。社員全員の検索に公開されています。' : '理由を記録して差し戻しました。この版は変更せず保存します。')
       const current = await call<Review>(reviewApi(result)); api.assertCurrent(generation); accepted(current)
     } catch (cause) { if (!isStale(cause)) { showError(errorMessage(cause, true)); setBlocked(cause instanceof ApiError ? cause.status === 409 || cause.status >= 500 : true) } }
     finally { setBusy(false) }
@@ -163,7 +175,7 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
         <label className={common.field} htmlFor="knowledge-audience">適用対象 <span className={common.required}>必須</span></label><input className={styles.fullWidth} id="knowledge-audience" value={input.audience} maxLength={300} required aria-invalid={!!errors?.audience} aria-describedby="knowledge-audience-error" onChange={e => setInput({ ...input, audience: e.target.value })} /><p id="knowledge-audience-error" className={common.error}>{errors?.audience}</p>
         <label className={common.field} htmlFor="knowledge-department">担当部署</label><select className={styles.fullWidth} id="knowledge-department" value={input.department_id ?? ''} onChange={e => setInput({ ...input, department_id: e.target.value || null })}><option value="">未定</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}{saved?.department && !departments.some(d => d.id === saved.department!.id) && <option value={saved.department.id}>{saved.department.name}（現在の記録）</option>}</select><p className={common.help}>下書きでは未定にできます。承認前に有効な担当部署を確定してください。</p>
         <label className={common.field} htmlFor="knowledge-body">本文 <span className={common.required}>必須</span></label><textarea className={`${styles.fullWidth} ${styles.editorBody}`} id="knowledge-body" value={input.body} maxLength={20000} required aria-invalid={!!errors?.body} aria-describedby="knowledge-body-help knowledge-body-error" onChange={e => setInput({ ...input, body: e.target.value })} /><p id="knowledge-body-help" className={common.help}>20000文字以内。症状・手順・例外や注意事項を記載します。改行を保持し、HTML・Markdownは実行しません。</p><p id="knowledge-body-error" className={common.error}>{errors?.body}</p>
-        <div className={common.actions}><button type="button" className="button" disabled={!inputDirty} onClick={() => setDiscard(true)}>編集を取り消す</button><button className="button buttonPrimary" disabled={blocked}>{busy ? '保存中…' : '下書きを保存'}</button></div><p className={common.help}>保存は公開ではありません。保存した内容を確認してから承認してください。</p>
+        <div className={common.actions}><button type="button" className="button" disabled={!inputDirty} onClick={() => setDiscard(true)}>編集を取り消す</button><button className="button buttonPrimary" disabled={blocked}>{preparing ? '検索準備中…' : busy ? '保存中…' : '下書きを保存'}</button></div><p className={common.help}>保存は公開ではありません。保存した内容を確認してから承認してください。</p>
       </fieldset></form>}
     </section><aside className={`${common.section} ${styles.evidence}`} aria-label="担当者用の解決根拠"><h2>元になった解決記録</h2><p className={common.help}>担当者専用。保存時の写しは公開文書に含みません。原本の変更を確認し、採用する版を明示して保存します。</p>
       {!sources.length && <p>問い合わせの根拠は関連付けられていません。手動の規程文書なども作成できます。</p>}
@@ -175,10 +187,14 @@ function Editor({ initial, initialSource, departments, onDirtyChange }: Knowledg
       </div> })}
       {editable && <form onSubmit={e => { e.preventDefault(); if (!sourcesLocked) { setBusy(true); void call<Page<TicketItem>>(`/tickets?status=resolved&q=${encodeURIComponent(sourceQuery.trim())}`).then(data => { setSourceMatches(data.items); setCandidate(null) }).catch(cause => { if (!isStale(cause)) showError(errorMessage(cause)) }).finally(() => setBusy(false)) } }}><label className={common.field}>解決済み問い合わせを検索<input className={styles.fullWidth} disabled={sourcesLocked} value={sourceQuery} maxLength={200} placeholder="件名・問い合わせ番号" onChange={e => setSourceQuery(e.target.value)} /></label><button className="button" disabled={sourcesLocked || refs.length >= 20}>根拠の候補を検索</button>{sourceMatches && <><p className={common.help}>検索結果 {sourceMatches.length}件（最大20件）。条件を絞って解決記録を選んでください。</p>{sourceMatches.map(item => <p key={item.id}>{item.number} {item.title} <button type="button" className="button" disabled={sourcesLocked} onClick={() => { void fetchSource(item.id, true) }}>解決記録を確認</button></p>)}</>}{candidate && <div className={styles.warning}><p>{candidate.number} / 版 {candidate.version} / {candidate.title}</p><p className={styles.evidenceText}>{candidate.body}</p><p className={styles.evidenceText}>{candidate.resolution ?? '未解決のため根拠には使用できません。'}</p><button type="button" className="button" disabled={sourcesLocked || candidate.status !== 'resolved' || refs.length >= 20} onClick={() => confirmSource(candidate)}>内容を確認して根拠に追加</button></div>}</form>}
     </aside></div>
-    {editable && <section className={styles.reviewActions}><h2>保存した版を確認して判断</h2><p>{!saved ? '先に下書きを保存してください。' : inputDirty ? '未保存の変更があります。保存するか取り消してください。' : `${saved.number} / v${saved.version_no} の保存済み内容が対象です。`}</p><div><button className="button" disabled={!saved || inputDirty || busy || blocked} onClick={() => { setError(''); setConfirm('reject') }}>理由を入力して差し戻す</button><button className="button buttonPrimary" disabled={!saved || inputDirty || busy || blocked || !saved.department || !!saved.source_issues.length} onClick={() => { setError(''); setConfirm('approve') }}>承認して公開</button></div>{saved?.source_issues.length ? <p className={styles.warning}>根拠に警告があります。原本を比較して再確認した根拠と本文を保存してください。</p> : null}</section>}
+    {editable && <section className={styles.reviewActions}><h2>検索準備 → 保存した版を確認して承認</h2><p>{!saved ? '先に下書きを保存してください。' : inputDirty ? '未保存の変更があります。保存後に検索準備を実行してください。' : `${saved.number} / v${saved.version_no} の保存済み内容が対象です。`}</p><p>{!inputDirty && saved?.search_preparation?.status === 'ready' ? `検索準備済み（${saved.search_preparation.chunk_count}箇所）。承認はまだ行っていません。` : '新しい版の公開には検索準備が必要です。準備失敗時も既存の公開版は維持します。'}</p><p>ローカルAIが停止していても手動の保存・差し戻しは利用できます。準備済みの版はAIを再実行せず承認できます。</p><div><button className="button" disabled={!saved || inputDirty || busy || blocked || !!saved.source_issues.length} onClick={() => { void prepareSearch() }}>{preparing ? '検索準備中…' : '保存した版の検索準備'}</button><button className="button" disabled={!saved || inputDirty || busy || blocked} onClick={() => { setError(''); setConfirm('reject') }}>理由を入力して差し戻す</button><button className="button buttonPrimary" disabled={!saved || inputDirty || busy || blocked || !saved.department || !!saved.source_issues.length || saved.search_preparation?.status !== 'ready'} onClick={() => { setError(''); setConfirm('approve') }}>承認して公開</button></div>{saved?.source_issues.length ? <p className={styles.warning}>根拠に警告があります。原本を比較して再確認した根拠と本文を保存してください。</p> : null}</section>}
     {saved && !editable && <section className="notice">{saved.published_version_no && <Link className="button" to={`/knowledge/${saved.document_id}`}>現在の公開版を読む</Link>}{saved.draft_version_no ? <Link className="button" to={reviewUrl({ document_id: saved.document_id, version_no: saved.draft_version_no })}>作成中の下書きを開く</Link> : saved.version_no === saved.latest_version_no ? <button className="button buttonPrimary" disabled={busy || blocked} onClick={() => { void copy() }}>次の版の下書きを作成</button> : <Link className="button" to={reviewUrl({ document_id: saved.document_id, version_no: saved.latest_version_no })}>最新の版を確認</Link>}</section>}
     {saved && <section className={`${common.section} ${styles.historySection}`}><h2>保存・レビューの履歴</h2><p className={common.help}>作成 {saved.created_by.display_name}{saved.reviewed_by ? ` · レビュー ${saved.reviewed_by.display_name}` : ''} · サーバーの業務記録</p><ol className={common.history}>{saved.events.map(event => <li key={event.id}><strong>{event.actor.display_name}</strong><time>{formatDate(event.occurred_at)} JST</time><p className={common.body}>{eventText(event)}</p></li>)}</ol></section>}
-    {confirm && saved && <dialog ref={dialogRef} className={common.dialog} aria-modal="true" aria-labelledby="review-confirm-heading" onKeyDown={trapDialogFocus} onCancel={e => { e.preventDefault(); if (!busy) setConfirm(null) }}><h2 id="review-confirm-heading">{confirm === 'approve' ? '保存した版を承認して公開しますか？' : '理由を記録して差し戻しますか？'}</h2><p>{saved.number} / v{saved.version_no} · {saved.title}</p><p>{confirm === 'approve' ? '保存済みの内容を社員全員の検索に公開します。担当者用の根拠は公開しません。' : 'この版と理由を保存します。再作成は次の版で行います。'}</p><form onSubmit={submitReview}>{confirm === 'reject' && <label className={common.field}>差し戻しの理由<textarea value={reason} required maxLength={1000} disabled={busy} onChange={e => setReason(e.target.value)} /></label>}{error && <p role="alert" className={common.error}>{error}</p>}<div className={common.actions}><button ref={cancelRef} type="button" className="button" disabled={busy} onClick={() => setConfirm(null)}>確認を閉じる（理由は保持）</button><button className="button buttonPrimary" disabled={busy || blocked}>{busy ? '保存中…' : confirm === 'approve' ? 'この版を承認して公開' : '理由を記録して差し戻す'}</button></div></form></dialog>}
+    {confirm && saved && <dialog ref={dialogRef} className={common.dialog} aria-modal="true" aria-labelledby="review-confirm-heading" onKeyDown={trapDialogFocus} onCancel={e => { e.preventDefault(); if (!busy) setConfirm(null) }}>
+      <h2 id="review-confirm-heading">{confirm === 'approve' ? '保存した版を承認しますか？' : '理由を記録して差し戻しますか？'}</h2><p>{saved.number} / v{saved.version_no} · {saved.title}</p><p>{confirm === 'approve' ? saved.publication_suspended ? '公開停止中です。承認後も再公開するまで社員には表示されません。' : '保存済みの内容を社員全員の検索に公開します。担当者用の根拠は公開しません。' : 'この版と理由を保存します。再作成は次の版で行います。'}</p>
+      <form onSubmit={submitReview}>{confirm === 'reject' && <label className={common.field}>差し戻しの理由<textarea value={reason} required maxLength={1000} disabled={busy} onChange={e => setReason(e.target.value)} /></label>}{error && <p role="alert" className={common.error}>{error}</p>}<div className={common.actions}><button ref={cancelRef} type="button" className="button" disabled={busy} onClick={() => setConfirm(null)}>確認を閉じる（理由は保持）</button><button className="button buttonPrimary" disabled={busy || blocked}>{busy ? '保存中…' : confirm === 'approve' ? saved.publication_suspended ? 'この版を承認（公開停止を維持）' : 'この版を承認して公開' : '理由を記録して差し戻す'}</button></div></form>
+    </dialog>}
+    {saved && <KnowledgeManagement initial={saved} onDirtyChange={onDirtyChange} onChanged={value => setSaved(value)} />}
     {discard && <DiscardDialog onCancel={() => setDiscard(false)} onDiscard={reset} />}
   </>
 }

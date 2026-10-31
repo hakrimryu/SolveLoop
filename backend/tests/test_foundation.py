@@ -148,6 +148,62 @@ def test_postgresql_foundation_and_migrations() -> None:
                 before_sessions = connection.execute(
                     text("SELECT * FROM sessions ORDER BY id")
                 ).all()
+            command.upgrade(config, "0004_business")
+            with engine.begin() as connection:
+                connection.execute(
+                    text("""
+                    INSERT INTO knowledge_documents
+                    (id,number,row_version,created_by,created_at)
+                    VALUES (:doc,'KB-LEGACY',2,:actor,now())
+                """),
+                    {"doc": UUID(int=904), "actor": UUID(int=901)},
+                )
+                connection.execute(
+                    text("""
+                    INSERT INTO knowledge_versions
+                    (id,document_id,version_no,status,title,audience,body,department_id,
+                     created_by,created_at,updated_at,reviewed_by,reviewed_at,row_version)
+                    VALUES (:version,:doc,1,'approved','既存の承認文書','全社員',
+                            '既存の手順を保持する。',:dept,:actor,now(),now(),:actor,now(),2)
+                """),
+                    {
+                        "version": UUID(int=905),
+                        "doc": UUID(int=904),
+                        "dept": UUID(int=900),
+                        "actor": UUID(int=901),
+                    },
+                )
+                connection.execute(
+                    text("UPDATE knowledge_documents SET published_version_id=:v WHERE id=:d"),
+                    {"v": UUID(int=905), "d": UUID(int=904)},
+                )
+                connection.execute(
+                    text("""
+                    INSERT INTO knowledge_events
+                    (id,knowledge_version_id,row_version,actor_id,event_type,payload,occurred_at)
+                    VALUES (:id,:v,2,:actor,'approved','{}',now())
+                """),
+                    {"id": UUID(int=906), "v": UUID(int=905), "actor": UUID(int=901)},
+                )
+                legacy = {
+                    name: connection.execute(
+                        text(f"SELECT row_to_json(t)::text FROM {name} t ORDER BY id")
+                    ).all()
+                    for name in ("knowledge_documents", "knowledge_versions", "knowledge_events")
+                }
+                connection.execute(text("CREATE TABLE knowledge_chunks (collision integer)"))
+            with pytest.raises(RuntimeError, match="マイグレーション"):
+                command.upgrade(config, "head")
+            with engine.begin() as connection:
+                assert (
+                    connection.scalar(text("SELECT version_num FROM alembic_version"))
+                    == "0004_business"
+                )
+                assert (
+                    connection.scalar(text("SELECT to_regclass('public.embedding_profiles')"))
+                    is None
+                )
+                connection.execute(text("DROP TABLE knowledge_chunks"))
             command.upgrade(config, "head")
             with engine.connect() as connection:
                 assert (
@@ -168,8 +224,42 @@ def test_postgresql_foundation_and_migrations() -> None:
                     text("SELECT can_manage_accounts,must_change_password,row_version FROM users")
                 ).all() == [(False, False, 1), (False, False, 1)]
                 assert connection.scalar(text("SELECT count(*) FROM audit_events")) == 0
+                for name, rows in legacy.items():
+                    columns = "row_to_json(t)::text"
+                    if name == "knowledge_documents":
+                        columns = (
+                            "row_to_json((SELECT d FROM (SELECT id,number,published_version_id,"
+                            "row_version,created_by,created_at) d))::text"
+                        )
+                    assert (
+                        connection.execute(
+                            text(f"SELECT {columns} FROM {name} t ORDER BY id")
+                        ).all()
+                        == rows
+                    )
+                assert (
+                    connection.scalar(text("SELECT publication_suspended FROM knowledge_documents"))
+                    is False
+                )
+                assert connection.execute(text("SELECT * FROM knowledge_search_state")).all() == [
+                    (1, None, 1)
+                ]
+                assert connection.scalar(text("SELECT count(*) FROM knowledge_preparations")) == 0
             command.check(config)
             with engine.begin() as connection:
+                connection.execute(
+                    text("UPDATE knowledge_documents SET published_version_id=NULL WHERE id=:id"),
+                    {"id": UUID(int=904)},
+                )
+                connection.execute(
+                    text("DELETE FROM knowledge_events WHERE id=:id"), {"id": UUID(int=906)}
+                )
+                connection.execute(
+                    text("DELETE FROM knowledge_versions WHERE id=:id"), {"id": UUID(int=905)}
+                )
+                connection.execute(
+                    text("DELETE FROM knowledge_documents WHERE id=:id"), {"id": UUID(int=904)}
+                )
                 connection.execute(text("DELETE FROM sessions WHERE id=:id"), {"id": UUID(int=903)})
                 connection.execute(
                     text("DELETE FROM users WHERE id IN (:a,:b)"),
@@ -201,6 +291,10 @@ def test_postgresql_foundation_and_migrations() -> None:
                     "knowledge_versions",
                     "knowledge_sources",
                     "knowledge_events",
+                    "embedding_profiles",
+                    "knowledge_search_state",
+                    "knowledge_preparations",
+                    "knowledge_chunks",
                 }
                 assert (
                     connection.scalar(text("SELECT '[1,2,3]'::vector <-> '[4,6,3]'::vector")) == 5
@@ -209,7 +303,9 @@ def test_postgresql_foundation_and_migrations() -> None:
                 connection.execute(text("UPDATE alembic_version SET version_num = 'unknown_test'"))
             assert client.get("/health/ready").status_code == 503
             with engine.begin() as connection:
-                connection.execute(text("UPDATE alembic_version SET version_num = '0004_business'"))
+                connection.execute(
+                    text("UPDATE alembic_version SET version_num = '0006_publication_control'")
+                )
             assert client.get("/health/ready").status_code == 200
             assert app.state.engine.pool.checkedout() == 0
 

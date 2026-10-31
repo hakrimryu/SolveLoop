@@ -10,7 +10,7 @@
 
 問い合わせ・ナレッジ・Dashboardは実APIとPostgreSQLに接続しています。社員の問い合わせ登録から、担当者の割り当て・解決、手動ナレッジ作成・承認、社員の検索・閲覧まで保存できます。サーバーで役割・所有者・現在のセッションを検査し、古い版による更新は409で拒否します。業務変更と履歴は同じトランザクションで保存します。
 
-ローカルOllamaへの接続と、合成の日本語入力による生成・埋め込みのCLI検証を実装しています。業務画面のAI生成・意味検索・ベクトル保存・Knowledge Gap Radarは未実装です。Dashboardの実DB集計とRadarの未実装表示を分けています。最小シードは部門と認証用の合成アカウントだけを用意し、業務資料は0件から始まります。実際のUUID・サーバー時刻を使い、再読み込みしてもDBの資料を保持します。
+ローカルOllamaへの接続・生成のCLI検証と、承認ナレッジのchunk分割・768次元ベクトル保存・意味検索を実装しています。検索準備と人の承認を分け、現在の公開版と検索対象を同時に切り替えます。AI回答・下書き生成・Knowledge Gap Radarは未実装です。最小シードは部門と認証用の合成アカウントだけを用意し、業務資料は0件から始まります。実際のUUID・サーバー時刻を使い、再読み込みしてもDBの資料を保持します。
 
 バックエンドはPostgreSQL 17.11 / pgvector 0.8.7を使用し、部門・利用者・セッション・アカウント監査、問い合わせ・変更履歴、ナレッジ文書・版・根拠・レビュー履歴、登録キーと適用履歴を保存します。管理権限は業務の役割と独立しています。管理権限編集・アカウント削除・既存プロフィール編集は提供しません。
 
@@ -47,7 +47,9 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 6. 管理一覧で対象を選ぶと実際の変更履歴と20件ずつのページを確認できます。無効化は全接続と再ログインを停止します。再有効化しても古い接続は復活せず、新しいログインが必要です。自分の無効化はできません。
 7. 仮値の再発行は旧パスワードと全接続を無効にします。自分への再発行成功では管理資料を終了し、ログイン画面上の専用一回表示だけに値を保ちます。閉じる・移動・別ログイン・認証無効化で原文を消去します。自動コピー・原文再照会はありません。
 
-共通fetchはcookie・CSRF・no-store・エラー処理をまとめます。起動・再表示・画面移動・書込み直前にmeを確認し、同じ利用者の新ログイン、UUID/権限/制限変更、logout、401で認証世代を更新します。進行中のfetchを中断し、以前の世代の遅延応答も捨てます。管理資料・原文・編集・選択・復帰情報・業務表示・タイトルを前の利用者から引き継ぎません。別タブには秘密のない無効化通知だけを送り、受信側もサーバーを再確認します。非表示タブは内容を隠し、再確認前には再表示しません。
+共通fetchはcookie・CSRF・no-store・エラー処理をまとめます。起動・再表示・画面移動・書込み直前にmeを確認し、同じ利用者の新ログイン、UUID/権限/制限変更、logout、401で認証世代を更新します。進行中のfetchを中断し、以前の世代の遅延応答も捨てます。管理資料・原文・編集・選択・復帰情報・業務表示・タイトルを前の利用者から引き継ぎません。別タブには秘密のない無効化通知だけを送り、受信側もサーバーを再確認します。通常のタブ移動・復帰では画面を入れ替えず、最後に確認できた表示を維持して裏で資格を再確認します。
+
+タブ移動・フォーカス復帰では入力・選択範囲・スクロール・開いた業務ダイアログをそのまま維持します。同じ利用者・権限・制限状態・CSRFなら認証世代や画面を更新せず、進行中の業務要求も中断しません。書き込み直前には引き続きサーバーで資格を確認します。別ログイン・認証変更通知・401では前の利用者の入力や表示を破棄します。認証確認の通信失敗では画面を隠して再確認を案内します。仮パスワードの一回表示は非表示時に除去し、復元しません。ブラウザーの再読み込み・終了を越える入力保存ではありません。
 
 401・権限喪失の資料除去は未保存確認で取り消せません。通信障害は認証切れと断定せず表示を止めて再確認を案内します。POSTは自動再送せず、409は一覧・履歴を再取得して人が再操作します。503・応答喪失は反映済みの可能性があるため、追加を繰り返す前にIDと履歴を確認します。原文を失った場合は対象を確認して明示的に再発行してください。
 
@@ -65,17 +67,25 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 1. 解決済み問い合わせの「ナレッジの下書きを作成」、またはレビュー一覧の「手動で下書きを作成」から入力します。件名・適用対象・本文は必須で、下書きの部署は未定にできます。問い合わせの根拠がない手動文書も作成できます。
 2. 問い合わせ由来の場合は、元の番号・版・本文・解決内容の写しを確認します。「解決済み問い合わせを検索」から追加する根拠も明示的に選べます。根拠は最大20件です。HTML・Markdownは実行せず、改行を保持したプレーンテキストで表示します。
 3. 「編集」「プレビュー」を切り替え、「下書きを保存」します。保存は公開ではありません。未保存の入力がある間は承認・差し戻しを利用できません。
-4. 有効な担当部署を確定し、保存内容を確認して「承認して公開」を実行します。保存した版だけが社員全員の検索対象になります。内部の根拠・作者・差し戻し理由・レビュー履歴は公開DTOに含めません。公開する本文の情報は人が確認します。
+4. 後述の意味検索の初期化を済ませ、有効な担当部署を確定します。「保存した版の検索準備」でローカル埋め込みを用意し、内容を確認してから別途「承認して公開」を実行します。準備だけでは承認・公開しません。内部の根拠・作者・差し戻し理由・レビュー履歴は公開DTOに含めません。公開する本文の情報は人が確認します。
 5. 公開文書の改訂では最新の版を確認し、「次の版の下書きを作成」で同じ文書の次の番号を作ります。文書ごとの下書きは一つです。新しい版が承認されるまで既存の承認版を公開し続けます。
 6. 差し戻しには理由が必要です。差し戻した版と理由は変更せず保存し、その版から次の番号の下書きを作成できます。承認・差し戻し済みの版の編集や、同じ版を下書きへ戻す操作はありません。
 7. 根拠の問い合わせが変わると、版・hashを比較して警告し、承認APIも409で拒否します。再解決だけでは警告を解除しません。「現在の原本と比較」→「原本を確認済み・この版を根拠に選ぶ」→本文を確認して保存→承認の順に操作します。既存の公開版を原本変更だけで自動修正・非公開にはしません。
-8. 社員でログインしてナレッジを検索します。キーワードはNFKC+casefold後の部分一致で、空白区切りはANDです。担当部署・ページも指定できます。公開ポインターが指す現在の承認版だけを返します。意味検索は行いません。
+8. 社員でログインしてナレッジを検索します。キーワードはNFKC+casefold後の部分一致で、空白区切りはANDです。「意味検索へ」で質問文による検索に切り替え、本文の該当行から全文を確認できます。いずれも公開ポインターが指す現在の承認版だけを返します。
 
 ### 保存・競合・結果不明
 
 未保存の一般移動は破棄確認で保護します。401・権限変更・別ログインでは以前の編集・選択・表示を除去し、古い非同期応答を捨てます。業務の保存失敗では同じセッション内の入力を保持し、古い版による409では最新保存内容を別に取得して比較できます。人が確認する前に版番号を書き換えて再送しません。認証自体を再確認できない場合は表示を止めます。
 
 新規問い合わせ・新規文書・次の下書きのPOSTには `Idempotency-Key` が必須です。同じ利用者・メソッド・パス・キー・正規化入力の結果を24時間再生でき、別内容での再利用は409です。現在の認証・権限を再生前にも検査します。保存された応答は登録時点の値なので、その後は詳細GETで現在の状態を確認します。自動再送は行いません。503や応答喪失は反映済みの可能性があるため、一覧・詳細・履歴を確認してから明示的に操作してください。
+
+担当者は、ナレッジの読む画面の右側にある赤い「文書の管理」から公開停止・再公開・完全削除を実行できます。「版の詳細・改訂」は本文の改訂用です。下書き・差し戻しの版詳細にも同じ管理欄があります。社員には管理操作を表示しません。
+
+「公開を停止…」は確認後に社員の閲覧・キーワード検索・意味検索から除外し、承認本文・全版・根拠・レビュー履歴・検索ベクトルを保管します。担当者はURLまたはレビュー一覧の「公開停止」フィルターから再確認できます。「再公開…」は現在の承認版だけを確認後に戻します。停止中に改訂版を承認しても自動再公開しません。再公開には有効な規格の検索準備が必要ですが、Ollamaは呼び出しません。
+
+「文書を削除…」は公開版・下書き・差し戻しの全版、レビュー履歴、根拠の写し、検索準備とベクトルを一括で完全に削除します。確認画面で文書番号・件名・公開状態・対象範囲を確認し、文書番号を正確に入力すると最終ボタンが有効になります。番号はサーバーでも照合します。元の問い合わせ・利用者・他の文書は保持します。画面からの復元はできず、バックアップ内の資料消去も行いません。
+
+`POST /api/v1/knowledge/{document_id}/versions/{version_no}/stop-publication`・`resume-publication` は `expected_version` と `expected_document_version`、`delete-document` はさらに `confirmation_number` を必須にします。通常認証済みの担当者・Origin・CSRF・JSONを要求し、文書と版をロックして更新または削除・履歴・検索対象を同じDBトランザクションで確定します。409では最新内容を明示確認し、通信障害・503の結果不明時は自動再送しません。削除済みの登録結果は本文を除去した410の記録に置き換え、同じキーから本文の再表示や文書の再作成を行いません。公開状態と履歴の追加migrationは `0006_publication_control` です。更新時はバックアップ後に `alembic upgrade head` を実行してください。
 
 入力と表示用DTOは `frontend/src/lib/business.ts`、共通の認証・CSRF・世代境界は `frontend/src/lib/api.ts`、画面の取得・キャンセルは `frontend/src/lib/useBusiness.ts` にあります。問い合わせやナレッジのメモリ内モック保存・表示切替・失敗シミュレーターはありません。実API失敗を合成成功で代替しません。
 
@@ -106,7 +116,7 @@ docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/com
 
 `test` はNode.jsのテストランナーと型除去を使います。認証・fetch、業務PATCHと登録キー、世代更新・遅延応答破棄・通知・非表示、画面離脱によるキャンセル、Unicode入力と業務表示を検証します。実サーバーの権限・DB・HTTP検証は後述のpytestと分けます。
 
-画面内の入力保護は、開発サーバーの `/tests/business-ui.html` をブラウザーで開いて検証できます。実際のReactコンポーネントに隔離したAPI応答を渡し、本文・担当・解決入力の保持、保存後の再取得失敗、登録結果不明時の同じキー・内容による明示再試行、送信中・結果不明中の根拠変更防止を確認します。結果はページに表示され、再読み込みで再実行します。追加依存は不要です。この検証は `npm test` とは別で、実DB・HTTPの検証ではありません。検証ページは通常の本番ビルドに含めません。
+画面内の入力保護は、開発サーバーの `/tests/business-ui.html` をブラウザーで開いて検証できます。実際のReactコンポーネントに隔離したAPI応答を渡し、本文・担当・解決入力の保持、保存後の再取得失敗、登録結果不明時の同じキー・内容による明示再試行、送信中・結果不明中の根拠変更防止を確認します。`/tests/session-ui.html` は実際の認証クライアントと画面を使い、同一資格の復帰・通信障害後の回復・別利用者/セッションへの入力除去・問い合わせdialog・仮パスワードの破棄を固定応答で検証します。結果はページに表示され、再読み込みで再実行します。追加依存は不要です。この検証は `npm test` とは別で、実DB・HTTPの検証ではありません。検証ページは通常の本番ビルドに含めません。
 
 分離したPostgreSQL/APIとChromeで、社員の登録→担当者の割り当て・解決→手動下書き→承認→社員検索・閲覧を確認しました。改訂中の旧公開版維持、差し戻し後の次版、根拠変更の承認停止と明示的再確認、実409の入力保護、390/640/1440pxも確認しています。ローディング・取得503・保存503・遅延中の二重送信防止は試験専用プロキシを使ったUI検証で、実DBの障害・権限・競合テストとは区別します。ブラウザー検証は今回の操作確認であり、保存されたPlaywright自動E2Eやアクセシビリティ監査の完了を意味しません。
 
@@ -436,9 +446,9 @@ Remove-Item Env:OLLAMA_BASE_URL
 
 設定は `OLLAMA_BASE_URL`、`OLLAMA_CHAT_MODEL`、`OLLAMA_EMBED_MODEL`、`OLLAMA_GENERATE_TIMEOUT_SECONDS`、`OLLAMA_EMBED_TIMEOUT_SECONDS` です。既定はホスト用ループバック、`qwen3:8b`、`embeddinggemma-2:270m-q8_0-text`、生成120秒・埋め込み120秒です。Composeは接続先だけを `host.docker.internal` に変えます。メタデータ取得は5秒、各推論は指定したsocketの通信待機時間で制限します。CLI全体の厳密な総実行時間上限ではありません。最初の埋め込みは30秒設定でtimeoutしたため、初期ロードも考慮して120秒にしました。
 
-推論は同一Pythonプロセス内で1件に制限し、実測時のOllamaも `OLLAMA_NUM_PARALLEL=1` でした。コンテキストは生成・埋め込みとも2048、生成上限128トークン・thinking無効です。入力上限2000文字は接続試験用の制限で、トークン数や文書分割の代わりではありません。埋め込みは `truncate:false` とし、超過入力を黙って切り捨てません。検索用prefix・chunk・ベクトルprofileは今後の意味検索で定義します。
+推論は同一Pythonプロセス内で1件に制限し、実測時のOllamaも `OLLAMA_NUM_PARALLEL=1` でした。接続検証CLIはコンテキスト2048、検索用埋め込みは8192を指定します。生成は2000文字・出力128トークン・thinking無効、埋め込みの低水準呼出しは32768 UTF-8 bytesまでです。byte数をトークン数へ換算しません。埋め込みは `truncate:false` とし、超過を黙って切り捨てません。検索用の入力形式・分割規則は下記の固定profileに含めます。
 
-外部URL・cloudモデル・remote指定・ローカルGGUFでないモデルを拒否し、HTTPプロキシとredirectを使いません。自動ダウンロード・再試行・別モデルや外部供給者へのfallbackはありません。接続不能は `AI_UNAVAILABLE`、モデル不足は `AI_MODEL_NOT_FOUND`、timeoutは `AI_TIMEOUT`、混雑は `AI_BUSY`、入力拒否は `AI_INPUT_REJECTED`、不正JSON・空/未完了生成・非有限/空ベクトル・モデル名不一致は `AI_INVALID_RESPONSE` です。エラーに入力やOllamaの内部エラー本文を載せず、CLIは終了コード1、設定不正は2を返します。設定はAI利用時だけ読み、通常のAPI起動・`/health/ready` はOllamaに依存しません。現在の製品画面にAI操作はありません。
+外部URL・cloudモデル・remote指定・ローカルGGUFでないモデルを拒否し、HTTPプロキシとredirectを使いません。自動ダウンロード・再試行・別モデルや外部供給者へのfallbackはありません。接続不能は `AI_UNAVAILABLE`、モデル不足は `AI_MODEL_NOT_FOUND`、timeoutは `AI_TIMEOUT`、混雑は `AI_BUSY`、入力拒否は `AI_INPUT_REJECTED`、不正JSON・空/未完了生成・非有限/空ベクトル・モデル名不一致は `AI_INVALID_RESPONSE` です。エラーに入力やOllamaの内部エラー本文を載せず、CLIは終了コード1、設定不正は2を返します。設定はAI利用時だけ読み、通常のAPI起動・`/health/ready` はOllamaに依存しません。
 
 ### 小さい接続試験の実測
 
@@ -457,6 +467,95 @@ Remove-Item Env:OLLAMA_BASE_URL
 
 Ollama障害時の手動業務は、専用の検証DB/APIだけで `OLLAMA_BASE_URL=http://127.0.0.1:1` を指定して検証しました。AI CLIは実際に接続拒否となり、同じAPIのready・認証/アカウント管理・問い合わせ登録/解決・手動ナレッジ承認/検索の実HTTPテストは成功しています。共有のホストOllama自体は停止していません。
 
+## ナレッジの意味検索と安全な公開
+
+### 初期化・既存承認版の準備
+
+新しいマイグレーションは4表を追加し、既存の本文・アカウント・履歴を変更しません。検索は初期状態では無効です。既存環境ではDBをバックアップし、後述の専用DBでの検証を済ませてから適用してください。アプリ起動時の自動migration・自動モデル取得はありません。
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml run --rm --no-deps backend alembic upgrade head
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml run --rm --no-deps backend python -m app.ai backfill
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml run --rm --no-deps backend python -m app.ai activate
+```
+
+`backfill` は現在の承認版を全件確認し、未準備分だけを処理します。公開済みの業務状態や承認履歴は変えません。途中失敗で準備できた文書は非公開の検索準備として残り、再実行できます。`activate` はすべての現在公開版のhash・保存版・chunk数を短いDBトランザクションで再検査し、揃った場合だけprofileを一括有効化します。一部だけの完了を検索全体の準備完了として扱いません。公開文書0件の環境も明示的に有効化してください。
+
+新規・改訂版は画面の「保存した版の検索準備」→内容確認→「承認して公開」の順です。本文・適用対象・部署・根拠・文書/保存版・有効profile世代が変われば準備し直します。AI停止中も手動保存・差し戻し・既存公開版・キーワード検索は利用可能です。準備済みの版はAI呼出しなしで承認できます。未準備版の新規公開は拒否します。
+
+### 固定した埋め込み規格
+
+実行資産は `backend/app/ai/knowledge.py` にあり、非公開文書は読みません。
+
+| 項目 | 値 |
+| --- | --- |
+| モデル / digest | `embeddinggemma-2:270m-q8_0-text` / `c21dd30c1e38444d3b4faa091407b6fa97221447b4965d74931d43d7f09bbbfd` |
+| 次元・正規化 | 768 / サーバー側L2、DBでもノルムを検査 |
+| 質問 | `task: search result \| query: {query}` |
+| 文書 | `title: {title} \| text: 適用対象: {audience}` + 節の文脈 + 本文 |
+| chunk規則 | `paragraph-sentence-neighbor-v1`、本文2400 UTF-8 bytes目標、短い隣接単位600 bytesまでを前後に含む |
+| コンテキスト | 8192 tokens、`truncate=false`、実処理 `prompt_eval_count` をchunkごとに保存・検査 |
+
+公式の [検索用prefix](https://ai.google.dev/gemma/docs/embeddinggemma/inference-embeddinggemma-with-sentence-transformers)、[2世代の8K上限](https://ai.google.dev/gemma/docs/embeddinggemma/model_card_2)、[Ollamaの超過時拒否](https://docs.ollama.com/api/embed)を設計参考にしました。Ollama配布metadataの262144を入力上限の根拠にはしません。8192を指定した小さい実入力の動作を確認したもので、8192ちょうどの境界や最大長の性能を実証したものではありません。
+
+節・空行を優先し、長い単位は文/行の境界、境界がなければUTF-8サイズ内のUnicode文字で分割します。文字の切り捨てはありません。タイトル・適用対象・先行する節名を各入力に付け、短い隣接単位を重ねます。すべての長い手順と例外を一つのchunkへ収める保証はなく、結果から全文の条件も確認してください。byteの目標はトークン数の推定ではなく、実際のトークン化と超過拒否はOllamaが行います。
+
+profile IDはモデル・digest・次元・正規化・両テンプレート・context・分割規則/サイズを正規JSON化したSHA-256です。文書入力と保存した根拠集合のhash、元の保存版/文書版、有効profile世代を準備結果に保存します。chunkは版→準備結果→連番でつなぎ、原文のUnicode code point `[body_start,body_end)`・行・入力hash・実トークン数を保持します。規格が異なるベクトルは比較しません。モデルのdigestは推論前後に検査し、profileと異なれば失敗します。モデル変更は設定値だけの差替えではなく、対応profileの実装・全件準備・検証・有効化が必要です。
+
+### API・原子性・失敗
+
+| API | 入力 / 結果 |
+| --- | --- |
+| `GET /api/v1/knowledge` | 従来のキーワード検索。Ollama呼出しなし |
+| `POST /api/v1/knowledge/search` | `{query,top_k?,department_id?}`、query 1〜500文字、top_k 1〜20/既定5。現在の公開版のchunk順位を返す |
+| `POST /api/v1/knowledge/{id}/versions/{no}/prepare-search` | 担当者専用。`expected_version,expected_document_version`。保存済み本文だけを準備し、レビュー詳細の `search_preparation` を返す |
+| 既存の `…/approve` | 同じ2版番号を使用。準備・根拠・権限を再検査して公開 |
+
+意味検索/準備のPOSTもセッション・完全認証・Origin・CSRFを要求します。DB接続/行ロックを持たずに埋め込みを計算し、終了後に現在の認証を再検査します。承認は利用者→検索状態の共有ロック→根拠→文書→版の順で検査し、承認状態・公開ポインター・検索対象保存版・履歴を同時commitします。chunkの保存や履歴のDBエラーは全体rollbackし、既存公開版を維持します。外部推論そのものをDBでrollbackするという意味ではありません。
+
+SQLで現在の公開ポインター・approved・有効profile・一致する保存版・部署を限定してから、pgvectorのcosine distanceでtop-kを正確検索します。HNSWや別の検索サーバーは使いません（[pgvector v0.8.7](https://github.com/pgvector/pgvector/blob/v0.8.7/README.md)）。結果は文書/公開版/chunk ID・該当本文/位置・hash・距離を返し、担当者用根拠・履歴は含めません。同じ文書の複数chunkが含まれます。距離が小さいほど意味が近いという比較値で、正答確率・解決可能性や検索品質の評価値ではありません。
+
+未有効化は503 `SEARCH_NOT_READY`、規格の不一致は503 `SEARCH_PROFILE_UNSUPPORTED` / `AI_PROFILE_MISMATCH`、次元不一致は503 `AI_DIMENSION_MISMATCH`、未準備の承認は409 `EMBEDDING_NOT_READY`、準備中の変更は409 `EMBEDDING_STALE`、検索中のprofile変更は409 `SEARCH_PROFILE_CHANGED`です。AI障害は503、AI待ち時間超過は504で返し、結果0件やキーワード検索の成功に置き換えません。画面は入力を保持し、明示的な再検索とキーワード検索への移動を案内します。
+
+### 検証と復旧
+
+通常のCPU/CI検査は固定応答を使い、実Ollama・GPU・モデル取得を必要としません。既存の空の専用PostgreSQL検査に加え、`backend/tests/test_knowledge_search.py` が保存・距離・制約・非公開資料の除外・本文/根拠/profile/セッション変更・準備失敗・全件backfillと切替を確認します。`test_foundation.py` は旧版のアカウント・承認文書・履歴を保持する移行と、途中DDL失敗時のrollbackも検査します。`test_http_business.py` の検索準備はテスト専用固定ベクトルであり、実モデル試験とは区別します。
+
+実モデルは **専用** Composeプロジェクト/DB `solveloop_test` で別実行します。次のPowerShell例は既存の `infrastructure/.env` と通常のイメージタグを変更しません。各命令の成功を確認してから次へ進み、既存の試験環境を再利用する場合は空DB専用の全テストを再実行しないでください。
+
+```powershell
+New-Item -ItemType Directory -Path .local -Force | Out-Null
+if (Test-Path .local/search-check.env) { throw '既存の検証設定を確認してください。' }
+$searchCheckPassword = [Convert]::ToHexString([Security.Cryptography.RandomNumberGenerator]::GetBytes(32))
+@('POSTGRES_DB=solveloop_test','POSTGRES_USER=solveloop_test',"POSTGRES_PASSWORD=$searchCheckPassword",'OLLAMA_BASE_URL=http://host.docker.internal:11434') | Set-Content .local/search-check.env -Encoding ascii
+docker build --target test -t solveloop-backend-test:search-check backend
+docker build --target runtime -t solveloop-backend:search-check backend
+docker compose -p solveloop-search-check --env-file .local/search-check.env -f infrastructure/compose.yaml up -d --wait db
+docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env -e RUN_DB_TESTS=1 solveloop-backend-test:search-check
+docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env solveloop-backend:search-check alembic upgrade head
+docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env solveloop-backend:search-check python -m app.seed
+docker run -d --name solveloop-search-check-api --network solveloop-search-check_default --network-alias backend --label local.solveloop.test=semantic-search --env-file .local/search-check.env solveloop-backend:search-check
+```
+
+試験APIが起動したら、次を実行します。ホストのOllamaと指定モデルを事前に用意してください。CPUテストとは別の明示的な実AI操作です。
+
+```powershell
+docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env -e RUN_DB_TESTS=1 -e RUN_OLLAMA_TESTS=1 -e AUTH_TEST_BASE_URL=http://backend:8000 solveloop-backend-test:search-check pytest -q -rP -p no:cacheprovider tests/test_http_search.py
+```
+
+終了後、名前とラベルを確認した上で今回の試験資源だけを片付けます。
+
+```powershell
+docker inspect solveloop-search-check-api --format '{{index .Config.Labels "local.solveloop.test"}}'
+docker rm -f solveloop-search-check-api
+docker compose -p solveloop-search-check --env-file .local/search-check.env -f infrastructure/compose.yaml down --volumes
+Remove-Item -LiteralPath .local/search-check.env
+```
+
+合成の日本語文書3件を実埋め込み→保存→異なる表現の質問→改訂中の旧版維持→承認後の最新chunkだけの検索まで検証し、作成した文書/準備/ログインを終了時に片付けます。これは小さい動作確認で、正式なRecall・正解率・処理量の評価ではありません。ブラウザーでは開発サーバーの `/tests/business-ui.html` が準備/承認分離・AIエラー/空結果・入力保護・遅延応答・Unicode位置を固定応答で検証します。
+
+既存DBでは適用前に `pg_dump -Fc` で保存し、別の専用DBへ `pg_restore --no-owner --no-privileges --exit-on-error` して復元と移行を確認します。DDL途中の失敗はPostgreSQLのトランザクションで戻ります。アプリ再起動をmigration完了と混同せず、失敗後は適用revision・既存資料・readyを確認してください。追加後の破壊的downgradeは提供しません。障害時は書込みを止め、バックアップを新しいDBへ復元・確認し、確認済み接続先と対応するアプリ版へ切り替えます。原本volumeへの上書き復元・削除は自動実行しません。
+
 ## 実装予定
 - 承認済みナレッジと過去の解決事例を使った検索・回答案の作成
 - 解決履歴に基づくAI下書き生成（手動作成・人の承認は実装済み）
@@ -470,11 +569,11 @@ Ollama障害時の手動業務は、専用の検証DB/APIだけで `OLLAMA_BASE_
 | --- | --- |
 | フロントエンド（導入済み） | React 19.3.1 / TypeScript 7.0.2 / Vite 8.3.5 / React Router 7.18.5 |
 | バックエンド（実行基盤） | Python 3.13 / FastAPI 0.162.0 / SQLAlchemy 2.0.55 / Alembic 1.20.1 |
-| データベース（ローカル起動・保存を検証済み） | PostgreSQL 17.11 / pgvector 0.8.7、業務保存を実装済み、ベクトル・意味検索は未実装 |
+| データベース（ローカル起動・保存を検証済み） | PostgreSQL 17.11 / pgvector 0.8.7、業務保存・768次元ベクトル・正確意味検索 |
 | ローカル推論 | Ollama |
 | 実行環境・検証 | Docker Compose / pytest / Node.js内蔵test / Chrome操作検証 / GitHub Actions（定義済み） |
 
-生成と埋め込みのローカルOllama接続は上記CLIで検証済みです。業務画面へのAI連携と検索品質評価は今後実施します。
+生成・埋め込みのローカルOllama接続とナレッジの意味検索画面を検証済みです。問い合わせ分類・回答案・AI下書き・Radarと正式な検索品質評価は今後実施します。
 
 ## リポジトリ構成
 

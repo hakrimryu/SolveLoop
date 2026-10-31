@@ -291,3 +291,35 @@ def test_manual_api_startup_does_not_load_ai_settings_or_contact_ollama(monkeypa
         with TestClient(create_app(local_settings())) as api:
             assert api.get("/health/live").json() == {"status": "alive"}
             assert api.get("/api/v1/auth/me").status_code == 401
+
+
+def test_search_embed_uses_larger_context_without_truncation_and_pins_digest(ollama_server):
+    client, _, calls = ollama_server
+    result = client.embed("あ" * 2500, context_tokens=8192, expected_digest="a" * 64)
+    assert result["prompt_eval_count"] == 20
+    request = next(body for path, body in calls if path == "/api/embed")
+    assert request["options"] == {"num_ctx": 8192} and request["truncate"] is False
+    assert request["input"] == ["あ" * 2500]
+    calls.clear()
+    with pytest.raises(OllamaError) as error:
+        client.embed("入力", expected_digest="b" * 64)
+    assert error.value.code == "AI_PROFILE_MISMATCH"
+    assert not any(path == "/api/embed" for path, _ in calls)
+    with pytest.raises(OllamaError):
+        client.embed("あ" * 11000, context_tokens=8192)
+
+
+def test_search_embed_detects_retagging_during_inference(ollama_server, monkeypatch):
+    client, routes, _ = ollama_server
+    request = client._request
+
+    def retag(path, *args, **kwargs):
+        result = request(path, *args, **kwargs)
+        if path == "/api/embed":
+            routes["/api/tags"]["models"][1]["digest"] = "b" * 64
+        return result
+
+    monkeypatch.setattr(client, "_request", retag)
+    with pytest.raises(OllamaError) as error:
+        client.embed("入力", expected_digest="a" * 64)
+    assert error.value.code == "AI_PROFILE_MISMATCH"

@@ -17,11 +17,51 @@ EMBEDDING_INPUT = "新しいスマートフォンに変更した後、VPNの多�
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="ローカルOllamaの接続検証。業務資料は保存しません。"
+        description="ローカルOllamaの接続検証と承認ナレッジの検索準備。"
     )
-    parser.add_argument("command", choices=["check", "generate", "embed", "smoke"])
+    parser.add_argument(
+        "command", choices=["check", "generate", "embed", "smoke", "backfill", "activate"]
+    )
     args = parser.parse_args()
     try:
+        if args.command in {"backfill", "activate"}:
+            from sqlalchemy.exc import SQLAlchemyError
+
+            from app.config import load_settings
+            from app.database import build_engine
+            from app.errors import ApiError
+            from app.knowledge_search import activate, backfill
+
+            try:
+                engine = build_engine(load_settings())
+            except RuntimeError:
+                print("DBの環境設定を確認してください。設定値は表示しません。", file=sys.stderr)
+                return 2
+            try:
+                count = (
+                    backfill(engine, OllamaClient(AISettings()))
+                    if args.command == "backfill"
+                    else activate(engine)
+                )
+                print(
+                    json.dumps(
+                        {"command": args.command, "published_documents": count}, ensure_ascii=False
+                    )
+                )
+                return 0
+            except ApiError as error:
+                print(
+                    json.dumps({"code": error.code, "message": error.message}, ensure_ascii=False),
+                    file=sys.stderr,
+                )
+                return 1
+            except SQLAlchemyError:
+                print(
+                    "DB処理に失敗しました。状態を確認してから再実行してください。", file=sys.stderr
+                )
+                return 1
+            finally:
+                engine.dispose()
         client = OllamaClient(AISettings())
         report = {"scope": "local_connection_smoke", "ollama_version": client.version()}
         if args.command == "check":

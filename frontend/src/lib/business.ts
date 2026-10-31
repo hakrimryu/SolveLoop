@@ -9,13 +9,15 @@ export type Page<T> = { items: T[]; page: number; page_size: number; page_count:
 export type TicketItem = { id: string; number: string; title: string; status: Status; department: Department | null; assignee: UserRef | null; requester?: UserRef; created_at: string; updated_at: string }
 export type BusinessEvent = { id: string; event_type: string; actor: UserRef; occurred_at: string; payload: Record<string, unknown>; version_no?: number; row_version?: number }
 export type Ticket = TicketItem & { requester: UserRef; body: string; resolution: string | null; resolved_at: string | null; version: number; events: BusinessEvent[] }
-export type PublishedItem = { document_id: string; number: string; version_no: number; title: string; audience: string; department: Department | null; updated_at: string; approved_at: string }
+export type PublishedItem = { document_id: string; number: string; publication_suspended: boolean; version_no: number; title: string; audience: string; department: Department | null; updated_at: string; approved_at: string }
 export type Published = PublishedItem & { body: string }
+export type SemanticItem = PublishedItem & { version_id: string; chunk_id: string; ordinal: number; text: string; context: string; body_start: number; body_end: number; line_start: number; line_end: number; content_hash: string; chunk_hash: string; cosine_distance: number }
+export type SemanticResult = { items: SemanticItem[]; top_k: number; profile_id: string; as_of: string }
 export type ReviewItem = Omit<PublishedItem, 'approved_at'> & { version_id: string; status: 'draft' | 'approved' | 'rejected'; row_version: number }
 export type Source = { ticket_id: string; ticket_number: string; ticket_version: number; title: string; body: string; resolution: string; department: Department | null; resolved_at: string; updated_at: string; content_hash: string }
 export type SourceRef = { ticket_id: string; expected_ticket_version: number }
 export type SourceIssue = { ticket_id: string; code: 'SOURCE_CHANGED' | 'SOURCE_NOT_RESOLVED'; expected_ticket_version: number; current_ticket_version: number | null }
-export type Review = ReviewItem & { body: string; document_row_version: number; latest_version_no: number; draft_version_no: number | null; published_version_no: number | null; base_version_no: number | null; created_by: UserRef; created_at: string; reviewed_by: UserRef | null; reviewed_at: string | null; sources: Source[]; source_issues: SourceIssue[]; events: BusinessEvent[] }
+export type Review = ReviewItem & { body: string; document_row_version: number; latest_version_no: number; draft_version_no: number | null; published_version_no: number | null; base_version_no: number | null; created_by: UserRef; created_at: string; reviewed_by: UserRef | null; reviewed_at: string | null; sources: Source[]; source_issues: SourceIssue[]; events: BusinessEvent[]; search_preparation: { status: 'ready' | 'required'; profile_id: string | null; chunk_count: number } }
 export type KnowledgeInput = { title: string; audience: string; body: string; department_id: string | null }
 export type DashboardData = { as_of: string; total: number; counts: Record<Status, number>; recent_tickets: TicketItem[]; unassigned_count?: number; own_unresolved_count?: number; review_pending_count?: number; reviews?: ReviewItem[] }
 export type BusinessProps = { role: Role; departments: Department[]; onDirtyChange: (dirty: boolean) => void }
@@ -30,7 +32,7 @@ export function validateKnowledge(input: KnowledgeInput) { return { title: valid
 export function apiQuery(params: URLSearchParams, allowed: string[]) { const result = new URLSearchParams(); for (const key of allowed) if (params.has(key)) result.set(key, params.get(key)!); return result.toString() }
 
 export function eventText(event: BusinessEvent) {
-  const labels: Record<string, string> = { created: '問い合わせを登録', body_updated: '問い合わせ内容を変更', assignment_changed: '担当部署・担当者を変更', started: '対応を開始', resolved: '解決内容を記録して解決', reopened: '問い合わせを再開', draft_created: '下書きを作成', saved: '下書きを保存', sources_refreshed: '根拠を再確認して保存', approved: '承認して公開', rejected: '理由を記録して差し戻し' }
+  const labels: Record<string, string> = { created: '問い合わせを登録', body_updated: '問い合わせ内容を変更', assignment_changed: '担当部署・担当者を変更', started: '対応を開始', resolved: '解決内容を記録して解決', reopened: '問い合わせを再開', draft_created: '下書きを作成', saved: '下書きを保存', sources_refreshed: '根拠を再確認して保存', approved: '承認', publication_stopped: '公開を停止', publication_resumed: '再公開', rejected: '理由を記録して差し戻し' }
   const p = event.payload
   if (event.event_type === 'assignment_changed') {
     const before = p.before as { department?: Department; assignee?: UserRef }
