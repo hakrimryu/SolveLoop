@@ -1,0 +1,65 @@
+{
+  "synthetic": true,
+  "scope": "demo_not_evaluation",
+  "scenarios": [
+    {
+      "name": "knowledge-gap",
+      "ticket_ids": [
+        "5250aed9-66db-5519-9825-c87a734e6e1d",
+        "0fb250de-809f-5100-a0a8-a025ccb7db67",
+        "44994346-188d-5bf0-8f42-5f8bae77a90c",
+        "b49c03bb-45e1-58eb-ae84-dae5a2490769",
+        "15447fb6-1021-5534-8575-f49e18782f62",
+        "2a64d97f-0d80-51fb-9cc8-71dc715b561d",
+        "284e722d-acd9-59e9-b785-2593dd674ebb",
+        "7cb8431b-7265-54cb-a7f5-e92779ceec65"
+      ],
+      "source_ticket_ids": [
+        "5250aed9-66db-5519-9825-c87a734e6e1d",
+        "0fb250de-809f-5100-a0a8-a025ccb7db67",
+        "44994346-188d-5bf0-8f42-5f8bae77a90c"
+      ],
+      "observation": "携帯交換後のMFA再登録は初期文書にない。3名の解決担当者の記録から人が根拠を選ぶ。実判定の一致は保証しない。"
+    },
+    {
+      "name": "covered-repeat",
+      "ticket_ids": [
+        "78a448fe-c096-59cb-b775-b0330cf51c2b",
+        "685c8726-cd6d-5f29-be93-acbbbea1a263",
+        "094dff64-6760-5ea4-9e90-7bf2c35b57e3",
+        "348c149b-2d67-5500-a08b-cb1f2ec482fd",
+        "cb19a73c-e0be-578d-b6a9-93036d4d7522",
+        "b4d2839b-0df0-545f-bbdd-bd6d2d39e893"
+      ],
+      "source_ticket_ids": [],
+      "observation": "経費の入力・領収書添付・送信はKB-0013に記載。繰り返しと文書不足を分ける。"
+    },
+    {
+      "name": "lookalike",
+      "ticket_ids": [
+        "22c20741-cc9d-52f7-b38b-4a0c27a2e21d",
+        "46e51d93-a899-546f-be97-de87adfc18e3",
+        "6cd99d93-f5d7-5d81-98b8-9977afa12f86",
+        "51f2d5c2-bb6a-568a-8648-3ed541f343cd",
+        "c7d8af2a-2ef5-5730-83f3-564b68f764cb",
+        "6a7c05c3-df3b-561b-91a7-77db534bee04",
+        "c4b7aa43-65cd-5663-980a-369c5517ba0b"
+      ],
+      "source_ticket_ids": [],
+      "observation": "導入権限と機種変更の認証登録は別の手順。曖昧な2件を含め、全構成員条件・連鎖・重複候補を実結果で確認する。"
+    },
+    {
+      "name": "insufficient-evidence",
+      "ticket_ids": [
+        "c3eac7f0-0e63-5bfa-a6b1-16c5b1fbac01",
+        "1a132fab-a891-56f0-aeda-e08a383e7362",
+        "7f31e369-2d4b-5e8a-920a-420a75c1be04",
+        "22155c86-56df-533f-a23a-d1f7b548f08d",
+        "153641d9-a98c-52a9-8bfc-806bba952acf",
+        "ffb1e2a0-fb94-5111-8255-d8fb673ddbbb"
+      ],
+      "source_ticket_ids": [],
+      "observation": "勤怠CSVのE42は調査中。解決記録を作らずS17の根拠に選ばない。"
+    }
+  ]
+}

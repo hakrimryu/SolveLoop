@@ -1,0 +1,148 @@
+{
+  "synthetic": true,
+  "name": "株式会社 柳",
+  "departments": [
+    {
+      "id": "00000000-0000-0000-0000-000000000065",
+      "code": "IT",
+      "name": "IT"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000066",
+      "code": "HR",
+      "name": "人事"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000067",
+      "code": "GENERAL",
+      "name": "総務"
+    },
+    {
+      "id": "00000000-0000-0000-0000-000000000068",
+      "code": "ACCOUNTING",
+      "name": "経理"
+    }
+  ],
+  "users": [
+    {
+      "id": "00000000-0000-0000-0000-0000000000c9",
+      "login_id": "employee",
+      "display_name": "佐藤 美咲",
+      "role": "employee",
+      "department_code": "GENERAL",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000ca",
+      "login_id": "operator",
+      "display_name": "山田 花子",
+      "role": "operator",
+      "department_code": "IT",
+      "can_manage_accounts": true
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000cb",
+      "login_id": "it.suzuki",
+      "display_name": "鈴木 健太",
+      "role": "operator",
+      "department_code": "IT",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000cc",
+      "login_id": "it.takahashi",
+      "display_name": "高橋 直樹",
+      "role": "operator",
+      "department_code": "IT",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000cd",
+      "login_id": "hr.tanaka",
+      "display_name": "田中 由紀",
+      "role": "operator",
+      "department_code": "HR",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000ce",
+      "login_id": "general.ito",
+      "display_name": "伊藤 恵",
+      "role": "operator",
+      "department_code": "GENERAL",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000cf",
+      "login_id": "accounting.watanabe",
+      "display_name": "渡辺 誠",
+      "role": "operator",
+      "department_code": "ACCOUNTING",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000d0",
+      "login_id": "sales.nakamura",
+      "display_name": "中村 彩",
+      "role": "employee",
+      "department_code": "GENERAL",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000d1",
+      "login_id": "dev.kobayashi",
+      "display_name": "小林 蓮",
+      "role": "employee",
+      "department_code": "IT",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000d2",
+      "login_id": "dev.kato",
+      "display_name": "加藤 翔",
+      "role": "employee",
+      "department_code": "IT",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000d3",
+      "login_id": "hr.yoshida",
+      "display_name": "吉田 葵",
+      "role": "employee",
+      "department_code": "HR",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000d4",
+      "login_id": "sales.yamada",
+      "display_name": "山田 悠",
+      "role": "employee",
+      "department_code": "GENERAL",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000d5",
+      "login_id": "accounting.sasaki",
+      "display_name": "佐々木 優",
+      "role": "employee",
+      "department_code": "ACCOUNTING",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000d6",
+      "login_id": "dev.yamaguchi",
+      "display_name": "山口 遥",
+      "role": "employee",
+      "department_code": "IT",
+      "can_manage_accounts": false
+    },
+    {
+      "id": "00000000-0000-0000-0000-0000000000d7",
+      "login_id": "general.matsumoto",
+      "display_name": "松本 陽菜",
+      "role": "employee",
+      "department_code": "GENERAL",
+      "can_manage_accounts": false
+    }
+  ]
+}

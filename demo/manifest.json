@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "seed_version": "yanagi-v1",
+  "random_seed": 20261031,
+  "as_of": "2026-09-30T18:00:00+09:00",
+  "synthetic": true,
+  "files": {
+    "company/company.json": "f2b70cd8b0e0240b8a9a2f59e2b1f20354de4539b00b17bdf3ec45ad1771ba0a",
+    "knowledge/01.txt": "5285e746bfed38966530eee53878797ccd0d64705c80b16ecb47a867ad698b13",
+    "knowledge/02.txt": "7f834be60a52c01eb1071f8c9bde3024a089ff2cc3671e5c55085dfdede40984",
+    "knowledge/03.txt": "499164e5c89752451304c13e1bd2eaa437438c2e2898d5ab040c5ce5173f9543",
+    "knowledge/04.txt": "2bef8a5a186b03dc90f91790195639501d7c9de55dfb506d029ec16ed50dac33",
+    "knowledge/05.txt": "2e8585bf9b2f4ef9386bb751ee0240b404b55b81ffbfc8408f88f85710a15dd0",
+    "knowledge/06.txt": "a7cf0944bf2a33f087413c28be4c7e03a4607cca82cf87a45db07ec6e7144727",
+    "knowledge/07.txt": "bd7eb69f4a7f3ad74c929ac9f8d7cd0a3fb2a8b6c6a215102033df12b2de20c8",
+    "knowledge/08.txt": "e32fa6aed33b310ffd1a5acdde8bb05a5a525ed321f49346de57c4cf9358b33e",
+    "knowledge/09.txt": "133298c304a1b459469ae80adbde5fbe0eaa04db79c79f464a9dd275969ebb64",
+    "knowledge/10.txt": "fcfb153cd5a991d13d363cc46d8785b360363c2e2ca07594a564806ef206c9b7",
+    "knowledge/11.txt": "4df85c7f08e341e3fd9697336f4df85b4a1ebc58ea4604eee92c2a48154189a2",
+    "knowledge/12.txt": "c95276ba05e2e1c6a2ccc34fd5193f98129b56f13aae0e8943bbf9e867fc1f55",
+    "knowledge/13.txt": "f98f8ebaec993f442b3f00cf9fa64b84d616d0a0586c3146c21506850566037d",
+    "knowledge/14.txt": "2443156a1cfa99eff4595335c92e541879d0116b81c984024f84f2ac42708c4c",
+    "knowledge/15.txt": "eda01d0fe1b641c1d24b9dca3a80066fe7a57583f4154c762700d2f64cf6297f",
+    "knowledge/catalog.json": "35c1ccbc21a1659fb68e05ed56ae4cedce15b420434cc1dab3e035a4c816c93f",
+    "scenarios/scenarios.json": "43c2e3231a1e57a7c11c7cc43cf7d6bb2be181cbe0700c36c6bcbade6ab6cd45",
+    "tickets/tickets.json": "65f6cfebf48544468234076ea3585168c4d6467803bbd09fd9eb7032178e39c3"
+  }
+}

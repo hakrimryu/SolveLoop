@@ -34,7 +34,7 @@ jobs:
       - name: 空のPostgreSQLでマイグレーションとAPIを検証
         run: |
           docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --wait --wait-timeout 90 db
-          docker run --rm --network solveloop-ci_default --env-file infrastructure/.env -e RUN_DB_TESTS=1 solveloop-backend-test:ci
+          docker run --rm --network solveloop-ci_default --env-file infrastructure/.env -e RUN_DB_TESTS=1 --mount type=bind,src="$PWD/demo",dst=/demo,readonly solveloop-backend-test:ci
           docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml run --rm --no-deps backend alembic upgrade head
           docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml run --rm --no-deps backend python -m app.seed
           docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml run --rm --no-deps backend python -m app.seed

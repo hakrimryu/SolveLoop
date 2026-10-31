@@ -4,6 +4,8 @@
 
 架空企業「株式会社 柳」を題材にした個人ポートフォリオです。社員・問い合わせ・社内文書には合成データを使用します。
 
+[専用の再現デモ](demo/README.md)では15人・問い合わせ100件・初期承認文書15件を固定入力から適用・検査・リセットできます。通常環境に自動投入せず、別のDB・API・画面で実行します。
+
 ## 開発状況
 
 ログイン・ログアウト・本人のパスワード変更とアカウント管理画面は、ローカルAPIに接続しています。サーバーの管理権限と初回変更の必要状態を使い、アカウント一覧・追加・無効化・再有効化・仮パスワード再発行・変更履歴を操作できます。
@@ -397,7 +399,7 @@ DBを使わない単体検査と、DB・実HTTPの統合検査を分けていま
 docker build --target test -t solveloop-backend-test:local backend
 docker run --rm solveloop-backend-test:local ruff check .
 docker run --rm solveloop-backend-test:local ruff format --check .
-docker run --rm solveloop-backend-test:local
+docker run --rm --mount "type=bind,src=$((Get-Location).Path)/demo,dst=/demo,readonly" solveloop-backend-test:local
 ```
 
 [基本CI](.github/workflows/ci.yaml) は Ubuntu 24.04 のGitHub Actionsで、lockを変更しないイメージ構築・Ruff・単体テスト・空のPostgreSQLでのマイグレーション・認証/権限・シード再適用・実HTTPの両役割ログイン/ログアウトとアカウント管理生涯周期・DB停止/復旧を実行する定義です。`solveloop-ci` 専用の環境・DB・volumeを作り、終了時にその検証volumeだけを削除します。既存の `solveloop` DBには実行しません。問い合わせ・ナレッジの権限、版競合、根拠・公開ポインター、履歴原子性と実HTTPの手動業務フローも対象です。フロントCI・実AI評価は対象外です。ローカルで相当の検証を実行しましたが、GitHub Actions上ではまだ実行していません。
@@ -531,7 +533,7 @@ $searchCheckPassword = [Convert]::ToHexString([Security.Cryptography.RandomNumbe
 docker build --target test -t solveloop-backend-test:search-check backend
 docker build --target runtime -t solveloop-backend:search-check backend
 docker compose -p solveloop-search-check --env-file .local/search-check.env -f infrastructure/compose.yaml up -d --wait db
-docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env -e RUN_DB_TESTS=1 solveloop-backend-test:search-check
+docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env -e RUN_DB_TESTS=1 --mount "type=bind,src=$((Get-Location).Path)/demo,dst=/demo,readonly" solveloop-backend-test:search-check
 docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env solveloop-backend:search-check alembic upgrade head
 docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env solveloop-backend:search-check python -m app.seed
 docker run -d --name solveloop-search-check-api --network solveloop-search-check_default --network-alias backend --label local.solveloop.test=semantic-search --env-file .local/search-check.env solveloop-backend:search-check
@@ -652,7 +654,7 @@ cd backend
 uv run python -X utf8 -m pytest -q -s tests/test_radar_calibration.py
 ```
 
-実HTTPの循環確認は、上記の検索用試験環境とは**別の空の専用DB/API**で、最小合成アカウントと検索profileを準備し、`RUN_DB_TESTS=1`・`RUN_OLLAMA_TESTS=1`・`AUTH_TEST_BASE_URL` を明示して `tests/test_http_radar.py` を実行します。11件の合成問い合わせと少数の文書を作り、反復検出・不足/対応判定・S17生成と人の編集に相当する保存・検索準備・承認・同じ問い合わせ集合同士の再判定を検証します。試験資料を元のDBへ投入したり、自動リセットしたりしません。正式な品質評価、最終規模のシード拡張は後続です。
+実HTTPの循環確認は、上記の検索用試験環境とは**別の空の専用DB/API**で、最小合成アカウントと検索profileを準備し、`RUN_DB_TESTS=1`・`RUN_OLLAMA_TESTS=1`・`AUTH_TEST_BASE_URL` を明示して `tests/test_http_radar.py` を実行します。11件の合成問い合わせと少数の文書を作り、反復検出・不足/対応判定・S17生成と人の編集に相当する保存・検索準備・承認・同じ問い合わせ集合同士の再判定を検証します。試験資料を元のDBへ投入したり、自動リセットしたりしません。正式な品質評価は後続です。最終規模のシードと専用環境は [再現デモ](demo/README.md) を参照してください。
 
 ## 技術構成
 

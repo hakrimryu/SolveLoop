@@ -1,0 +1,170 @@
+{
+  "synthetic": true,
+  "documents": [
+    {
+      "id": "2f5463c0-60a3-5354-bcc7-8b953415372d",
+      "version_id": "56ea7540-2d4a-57c5-9ff2-cc5be0032760",
+      "number": "KB-0001",
+      "title": "VPNの基本接続",
+      "audience": "社外から会社PCで接続する社員",
+      "department_code": "IT",
+      "body_file": "knowledge/01.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "392bb015-7d28-5ddf-b012-c4bb69fad5e5",
+      "version_id": "240881df-03ef-5128-a23e-2efbe6251ec9",
+      "number": "KB-0002",
+      "title": "VPNクライアントのインストール",
+      "audience": "会社PCにVPNアプリを導入する社員",
+      "department_code": "IT",
+      "body_file": "knowledge/02.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "ecf4a90d-5688-5cef-8b33-2a6f8d9abe8e",
+      "version_id": "df9a7cfc-0789-5c97-a9be-4a495b7862cf",
+      "number": "KB-0003",
+      "title": "会社アカウントのパスワード変更",
+      "audience": "会社アカウントを利用する全社員",
+      "department_code": "IT",
+      "body_file": "knowledge/03.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "5dbd87d3-9a75-5cc8-b796-2d2e6c9b0b80",
+      "version_id": "9dfcdf82-8292-5505-90de-6d3ccc2c776a",
+      "number": "KB-0004",
+      "title": "ソフトウェアの利用申請",
+      "audience": "業務ソフトの追加を希望する社員",
+      "department_code": "IT",
+      "body_file": "knowledge/04.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "65d3d487-dc03-585f-8bc9-03220f50f210",
+      "version_id": "19ced107-4fc4-5ee7-bd48-bb4c98cdf74b",
+      "number": "KB-0005",
+      "title": "会社端末の紛失・盗難連絡",
+      "audience": "会社PCや携帯電話を紛失した社員",
+      "department_code": "IT",
+      "body_file": "knowledge/05.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "8cec4ef6-12d8-597b-be1e-3bec91a21e9e",
+      "version_id": "83448908-09a6-56e1-9b39-199023902f1b",
+      "number": "KB-0006",
+      "title": "入社前の準備書類",
+      "audience": "入社予定者の受入担当",
+      "department_code": "HR",
+      "body_file": "knowledge/06.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "b3e79c12-a4e1-5f72-aef1-224cb8d7cca4",
+      "version_id": "921902a6-b641-54da-aa03-31728d4f819a",
+      "number": "KB-0007",
+      "title": "休暇の申請・取消",
+      "audience": "休暇を申請する社員",
+      "department_code": "HR",
+      "body_file": "knowledge/07.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "fe59d919-5b1e-5473-a3f1-870a60ad3892",
+      "version_id": "6e82a58b-ba20-54ba-98d7-cd6ef2ba3cfb",
+      "number": "KB-0008",
+      "title": "打刻漏れの修正",
+      "audience": "出退勤の打刻を忘れた社員",
+      "department_code": "HR",
+      "body_file": "knowledge/08.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "795b65f4-4972-5bf9-a4c6-132e01f9fb9a",
+      "version_id": "fa6531af-f1e1-5b8c-8aa6-a7c8070dbe23",
+      "number": "KB-0009",
+      "title": "会議室の予約と変更",
+      "audience": "社内会議を開催する社員",
+      "department_code": "GENERAL",
+      "body_file": "knowledge/09.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "b3c869df-cf14-5fe5-8f02-88d9fc506be0",
+      "version_id": "135d68f4-681e-5e8d-b368-aaeb3f97b987",
+      "number": "KB-0010",
+      "title": "消耗品・備品の補充依頼",
+      "audience": "事務用品を必要とする社員",
+      "department_code": "GENERAL",
+      "body_file": "knowledge/10.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "1b510f3b-3ff9-5439-a965-9a308afe53bb",
+      "version_id": "751311d4-7b06-53ae-83d7-8427389f4a3d",
+      "number": "KB-0011",
+      "title": "来客の受付登録",
+      "audience": "来客対応を担当する社員",
+      "department_code": "GENERAL",
+      "body_file": "knowledge/11.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "7453500b-18d4-53d6-865e-124dfc9d6840",
+      "version_id": "e77b2077-203c-59bb-8410-62eeb7022c50",
+      "number": "KB-0012",
+      "title": "住所・通勤経路の変更",
+      "audience": "住所や通勤経路が変わった社員",
+      "department_code": "GENERAL",
+      "body_file": "knowledge/12.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "5f4d6600-2efd-544e-a422-64eb1d64f9ba",
+      "version_id": "523fe7c4-3aaa-5daf-b0b6-a5b8804158e6",
+      "number": "KB-0013",
+      "title": "出張交通費の経費申請",
+      "audience": "出張交通費を精算する社員",
+      "department_code": "ACCOUNTING",
+      "body_file": "knowledge/13.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "c5c63d72-99cc-52c7-9522-390cd1229b44",
+      "version_id": "e44349d8-2d8e-5ec9-b265-4ec2a9dd2868",
+      "number": "KB-0014",
+      "title": "請求書の提出と支払予定確認",
+      "audience": "取引先から請求書を受領する社員",
+      "department_code": "ACCOUNTING",
+      "body_file": "knowledge/14.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    },
+    {
+      "id": "f6a1b799-c6f1-5a60-99da-203f644a2745",
+      "version_id": "3a012d19-e71b-5d34-9407-19de4f2a6c70",
+      "number": "KB-0015",
+      "title": "出張前の仮払申請と精算",
+      "audience": "出張費の仮払いを必要とする社員",
+      "department_code": "ACCOUNTING",
+      "body_file": "knowledge/15.txt",
+      "created_days_ago": 88,
+      "approved_days_ago": 87
+    }
+  ]
+}
