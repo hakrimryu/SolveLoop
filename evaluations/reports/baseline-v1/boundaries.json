@@ -1,0 +1,36 @@
+[
+  {
+    "case": "unpublished_direct",
+    "status": 404,
+    "expected": 404,
+    "pass": true,
+    "error_code": "NOT_FOUND"
+  },
+  {
+    "case": "nonowned_direct",
+    "status": 404,
+    "expected": 404,
+    "pass": true,
+    "error_code": "NOT_FOUND"
+  },
+  {
+    "case": "employee_ai",
+    "status": 403,
+    "expected": 403,
+    "pass": true,
+    "error_code": "FORBIDDEN"
+  },
+  {
+    "case": "employee_radar",
+    "status": 403,
+    "expected": 403,
+    "pass": true,
+    "error_code": "FORBIDDEN"
+  },
+  {
+    "case": "unpublished_semantic_search",
+    "status": 200,
+    "pass": true,
+    "exposed": false
+  }
+]

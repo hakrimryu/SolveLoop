@@ -1,0 +1,4065 @@
+{
+  "question_scores": {
+    "calibration": {
+      "all": {
+        "classification": {
+          "n": 24,
+          "macro_f1": 0.9772727272727273,
+          "confusion": {
+            "IT": {
+              "IT": 6
+            },
+            "HR": {
+              "HR": 6
+            },
+            "GENERAL": {
+              "GENERAL": 5,
+              "ERROR": 1
+            },
+            "ACCOUNTING": {
+              "ACCOUNTING": 6
+            }
+          },
+          "classes": {
+            "IT": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "HR": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            },
+            "GENERAL": {
+              "tp": 5,
+              "fp": 0,
+              "fn": 1,
+              "f1": 0.9090909090909091
+            },
+            "ACCOUNTING": {
+              "tp": 6,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          }
+        },
+        "ambiguous": {
+          "n": 0,
+          "correct": 0,
+          "rate": null
+        },
+        "search": {
+          "n": 12,
+          "hits": 11.0,
+          "recall_at_5": 0.9166666666666666
+        },
+        "insufficient": {
+          "n": 12,
+          "correct": 12,
+          "rate": 1.0
+        },
+        "attack_insufficient": {
+          "n": 0,
+          "correct": 0,
+          "rate": null
+        },
+        "answerable_status": {
+          "n": 12,
+          "correct": 7,
+          "rate": 0.5833333333333334
+        },
+        "sources": {
+          "uses": 14,
+          "valid": 14,
+          "rate": 1.0
+        },
+        "errors": {
+          "answer:AI_INVALID_OUTPUT": 2,
+          "search:AI_UNAVAILABLE": 1,
+          "answer:AI_UNAVAILABLE": 3,
+          "classification:AI_UNAVAILABLE": 1
+        }
+      },
+      "rounds": [
+        {
+          "classification": {
+            "n": 8,
+            "macro_f1": 1.0,
+            "confusion": {
+              "IT": {
+                "IT": 2
+              },
+              "HR": {
+                "HR": 2
+              },
+              "GENERAL": {
+                "GENERAL": 2
+              },
+              "ACCOUNTING": {
+                "ACCOUNTING": 2
+              }
+            },
+            "classes": {
+              "IT": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              },
+              "HR": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              },
+              "GENERAL": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              },
+              "ACCOUNTING": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              }
+            }
+          },
+          "ambiguous": {
+            "n": 0,
+            "correct": 0,
+            "rate": null
+          },
+          "search": {
+            "n": 4,
+            "hits": 4.0,
+            "recall_at_5": 1.0
+          },
+          "insufficient": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "attack_insufficient": {
+            "n": 0,
+            "correct": 0,
+            "rate": null
+          },
+          "answerable_status": {
+            "n": 4,
+            "correct": 3,
+            "rate": 0.75
+          },
+          "sources": {
+            "uses": 6,
+            "valid": 6,
+            "rate": 1.0
+          },
+          "errors": {
+            "answer:AI_INVALID_OUTPUT": 1
+          }
+        },
+        {
+          "classification": {
+            "n": 8,
+            "macro_f1": 0.9166666666666666,
+            "confusion": {
+              "IT": {
+                "IT": 2
+              },
+              "HR": {
+                "HR": 2
+              },
+              "GENERAL": {
+                "ERROR": 1,
+                "GENERAL": 1
+              },
+              "ACCOUNTING": {
+                "ACCOUNTING": 2
+              }
+            },
+            "classes": {
+              "IT": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              },
+              "HR": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              },
+              "GENERAL": {
+                "tp": 1,
+                "fp": 0,
+                "fn": 1,
+                "f1": 0.6666666666666666
+              },
+              "ACCOUNTING": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              }
+            }
+          },
+          "ambiguous": {
+            "n": 0,
+            "correct": 0,
+            "rate": null
+          },
+          "search": {
+            "n": 4,
+            "hits": 3.0,
+            "recall_at_5": 0.75
+          },
+          "insufficient": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "attack_insufficient": {
+            "n": 0,
+            "correct": 0,
+            "rate": null
+          },
+          "answerable_status": {
+            "n": 4,
+            "correct": 1,
+            "rate": 0.25
+          },
+          "sources": {
+            "uses": 2,
+            "valid": 2,
+            "rate": 1.0
+          },
+          "errors": {
+            "search:AI_UNAVAILABLE": 1,
+            "answer:AI_UNAVAILABLE": 3,
+            "classification:AI_UNAVAILABLE": 1
+          }
+        },
+        {
+          "classification": {
+            "n": 8,
+            "macro_f1": 1.0,
+            "confusion": {
+              "IT": {
+                "IT": 2
+              },
+              "HR": {
+                "HR": 2
+              },
+              "GENERAL": {
+                "GENERAL": 2
+              },
+              "ACCOUNTING": {
+                "ACCOUNTING": 2
+              }
+            },
+            "classes": {
+              "IT": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              },
+              "HR": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              },
+              "GENERAL": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              },
+              "ACCOUNTING": {
+                "tp": 2,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              }
+            }
+          },
+          "ambiguous": {
+            "n": 0,
+            "correct": 0,
+            "rate": null
+          },
+          "search": {
+            "n": 4,
+            "hits": 4.0,
+            "recall_at_5": 1.0
+          },
+          "insufficient": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "attack_insufficient": {
+            "n": 0,
+            "correct": 0,
+            "rate": null
+          },
+          "answerable_status": {
+            "n": 4,
+            "correct": 3,
+            "rate": 0.75
+          },
+          "sources": {
+            "uses": 6,
+            "valid": 6,
+            "rate": 1.0
+          },
+          "errors": {
+            "answer:AI_INVALID_OUTPUT": 1
+          }
+        }
+      ]
+    },
+    "holdout": {
+      "all": {
+        "classification": {
+          "n": 84,
+          "macro_f1": 0.9078525641025641,
+          "confusion": {
+            "IT": {
+              "IT": 21,
+              "NULL": 3
+            },
+            "HR": {
+              "HR": 15,
+              "GENERAL": 3,
+              "IT": 3
+            },
+            "GENERAL": {
+              "GENERAL": 18
+            },
+            "ACCOUNTING": {
+              "ACCOUNTING": 21
+            }
+          },
+          "classes": {
+            "IT": {
+              "tp": 21,
+              "fp": 3,
+              "fn": 3,
+              "f1": 0.875
+            },
+            "HR": {
+              "tp": 15,
+              "fp": 0,
+              "fn": 6,
+              "f1": 0.8333333333333334
+            },
+            "GENERAL": {
+              "tp": 18,
+              "fp": 3,
+              "fn": 0,
+              "f1": 0.9230769230769231
+            },
+            "ACCOUNTING": {
+              "tp": 21,
+              "fp": 0,
+              "fn": 0,
+              "f1": 1.0
+            }
+          }
+        },
+        "ambiguous": {
+          "n": 12,
+          "correct": 12,
+          "rate": 1.0
+        },
+        "search": {
+          "n": 60,
+          "hits": 60.0,
+          "recall_at_5": 1.0
+        },
+        "insufficient": {
+          "n": 36,
+          "correct": 35,
+          "rate": 0.9722222222222222
+        },
+        "attack_insufficient": {
+          "n": 12,
+          "correct": 12,
+          "rate": 1.0
+        },
+        "answerable_status": {
+          "n": 60,
+          "correct": 48,
+          "rate": 0.8
+        },
+        "sources": {
+          "uses": 131,
+          "valid": 131,
+          "rate": 1.0
+        },
+        "errors": {
+          "answer:AI_UNAVAILABLE": 1,
+          "search:AI_UNAVAILABLE": 1
+        }
+      },
+      "rounds": [
+        {
+          "classification": {
+            "n": 28,
+            "macro_f1": 0.9078525641025641,
+            "confusion": {
+              "IT": {
+                "IT": 7,
+                "NULL": 1
+              },
+              "HR": {
+                "HR": 5,
+                "GENERAL": 1,
+                "IT": 1
+              },
+              "GENERAL": {
+                "GENERAL": 6
+              },
+              "ACCOUNTING": {
+                "ACCOUNTING": 7
+              }
+            },
+            "classes": {
+              "IT": {
+                "tp": 7,
+                "fp": 1,
+                "fn": 1,
+                "f1": 0.875
+              },
+              "HR": {
+                "tp": 5,
+                "fp": 0,
+                "fn": 2,
+                "f1": 0.8333333333333334
+              },
+              "GENERAL": {
+                "tp": 6,
+                "fp": 1,
+                "fn": 0,
+                "f1": 0.9230769230769231
+              },
+              "ACCOUNTING": {
+                "tp": 7,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              }
+            }
+          },
+          "ambiguous": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "search": {
+            "n": 20,
+            "hits": 20.0,
+            "recall_at_5": 1.0
+          },
+          "insufficient": {
+            "n": 12,
+            "correct": 12,
+            "rate": 1.0
+          },
+          "attack_insufficient": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "answerable_status": {
+            "n": 20,
+            "correct": 16,
+            "rate": 0.8
+          },
+          "sources": {
+            "uses": 43,
+            "valid": 43,
+            "rate": 1.0
+          },
+          "errors": {}
+        },
+        {
+          "classification": {
+            "n": 28,
+            "macro_f1": 0.9078525641025641,
+            "confusion": {
+              "IT": {
+                "IT": 7,
+                "NULL": 1
+              },
+              "HR": {
+                "HR": 5,
+                "GENERAL": 1,
+                "IT": 1
+              },
+              "GENERAL": {
+                "GENERAL": 6
+              },
+              "ACCOUNTING": {
+                "ACCOUNTING": 7
+              }
+            },
+            "classes": {
+              "IT": {
+                "tp": 7,
+                "fp": 1,
+                "fn": 1,
+                "f1": 0.875
+              },
+              "HR": {
+                "tp": 5,
+                "fp": 0,
+                "fn": 2,
+                "f1": 0.8333333333333334
+              },
+              "GENERAL": {
+                "tp": 6,
+                "fp": 1,
+                "fn": 0,
+                "f1": 0.9230769230769231
+              },
+              "ACCOUNTING": {
+                "tp": 7,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              }
+            }
+          },
+          "ambiguous": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "search": {
+            "n": 20,
+            "hits": 20.0,
+            "recall_at_5": 1.0
+          },
+          "insufficient": {
+            "n": 12,
+            "correct": 11,
+            "rate": 0.9166666666666666
+          },
+          "attack_insufficient": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "answerable_status": {
+            "n": 20,
+            "correct": 16,
+            "rate": 0.8
+          },
+          "sources": {
+            "uses": 44,
+            "valid": 44,
+            "rate": 1.0
+          },
+          "errors": {
+            "answer:AI_UNAVAILABLE": 1,
+            "search:AI_UNAVAILABLE": 1
+          }
+        },
+        {
+          "classification": {
+            "n": 28,
+            "macro_f1": 0.9078525641025641,
+            "confusion": {
+              "IT": {
+                "IT": 7,
+                "NULL": 1
+              },
+              "HR": {
+                "HR": 5,
+                "GENERAL": 1,
+                "IT": 1
+              },
+              "GENERAL": {
+                "GENERAL": 6
+              },
+              "ACCOUNTING": {
+                "ACCOUNTING": 7
+              }
+            },
+            "classes": {
+              "IT": {
+                "tp": 7,
+                "fp": 1,
+                "fn": 1,
+                "f1": 0.875
+              },
+              "HR": {
+                "tp": 5,
+                "fp": 0,
+                "fn": 2,
+                "f1": 0.8333333333333334
+              },
+              "GENERAL": {
+                "tp": 6,
+                "fp": 1,
+                "fn": 0,
+                "f1": 0.9230769230769231
+              },
+              "ACCOUNTING": {
+                "tp": 7,
+                "fp": 0,
+                "fn": 0,
+                "f1": 1.0
+              }
+            }
+          },
+          "ambiguous": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "search": {
+            "n": 20,
+            "hits": 20.0,
+            "recall_at_5": 1.0
+          },
+          "insufficient": {
+            "n": 12,
+            "correct": 12,
+            "rate": 1.0
+          },
+          "attack_insufficient": {
+            "n": 4,
+            "correct": 4,
+            "rate": 1.0
+          },
+          "answerable_status": {
+            "n": 20,
+            "correct": 16,
+            "rate": 0.8
+          },
+          "sources": {
+            "uses": 44,
+            "valid": 44,
+            "rate": 1.0
+          },
+          "errors": {}
+        }
+      ]
+    }
+  },
+  "radar": [
+    {
+      "split": "calibration",
+      "repeat": 1,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 10,
+      "detection_error": null,
+      "pairs": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 10,
+        "predicted": 10,
+        "gold": 20,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "problem_groups": {
+        "matched": 1,
+        "predicted": 1,
+        "gold": 2,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "coverage_occurrences": {
+        "total": 5,
+        "uncovered": 4,
+        "unknown": 1,
+        "unanalyzed": 0,
+        "unknown_errors": {
+          "AI_UNAVAILABLE": 1
+        }
+      },
+      "gap": {
+        "tp": 0,
+        "predicted": 0,
+        "gold": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "group_decisions": [
+        {
+          "group": "RCV",
+          "gold": "gap",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 4,
+            "unknown": 1,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.8,
+              "unknown": 0.2
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "d435c9b2d74d06193b3e85d49fad5a84c69fff47acbfb9bb6dbc80e9dec72ddc"
+        },
+        {
+          "group": "RCM",
+          "gold": "covered",
+          "predicted": "undetected"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 10,
+        "correct": 4,
+        "counts": {
+          "undetected": 5,
+          "uncovered": 4,
+          "unknown": 1
+        },
+        "decisions": [
+          {
+            "ticket": "007ca815-ef6f-55ce-8dd8-eba9fd16eaea",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "534e8797-e202-5cd3-8bf0-4914c3649f0e",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "546358ba-05e4-5742-8e6d-fdeb1f4ff104",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "83c4cd55-bce8-52c7-8ed9-ef5ea7a51c71",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "d29e4853-350e-54b0-bb0e-924a6f982154",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "3eeb992c-4313-5338-aff6-3f084958ccbf",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "41ffda48-2d99-5be6-a118-e3c1ede6ecf6",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c5eef3f4-5999-5d83-a085-6a9b08b1b688",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f933732c-512d-5dc1-bdd1-8085b38cd899",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "fd2374b4-005e-52b3-b5a8-800711c5540a",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          }
+        ]
+      }
+    },
+    {
+      "split": "calibration",
+      "repeat": 2,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 10,
+      "detection_error": null,
+      "pairs": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 10,
+        "predicted": 10,
+        "gold": 20,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "problem_groups": {
+        "matched": 1,
+        "predicted": 1,
+        "gold": 2,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "coverage_occurrences": {
+        "total": 5,
+        "uncovered": 5,
+        "unanalyzed": 0,
+        "unknown_errors": {}
+      },
+      "gap": {
+        "tp": 1,
+        "predicted": 1,
+        "gold": 1,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "group_decisions": [
+        {
+          "group": "RCV",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "d435c9b2d74d06193b3e85d49fad5a84c69fff47acbfb9bb6dbc80e9dec72ddc"
+        },
+        {
+          "group": "RCM",
+          "gold": "covered",
+          "predicted": "undetected"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 10,
+        "correct": 5,
+        "counts": {
+          "undetected": 5,
+          "uncovered": 5
+        },
+        "decisions": [
+          {
+            "ticket": "007ca815-ef6f-55ce-8dd8-eba9fd16eaea",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "534e8797-e202-5cd3-8bf0-4914c3649f0e",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "546358ba-05e4-5742-8e6d-fdeb1f4ff104",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "83c4cd55-bce8-52c7-8ed9-ef5ea7a51c71",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "d29e4853-350e-54b0-bb0e-924a6f982154",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "3eeb992c-4313-5338-aff6-3f084958ccbf",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "41ffda48-2d99-5be6-a118-e3c1ede6ecf6",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c5eef3f4-5999-5d83-a085-6a9b08b1b688",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f933732c-512d-5dc1-bdd1-8085b38cd899",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "fd2374b4-005e-52b3-b5a8-800711c5540a",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "split": "calibration",
+      "repeat": 3,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 10,
+      "detection_error": null,
+      "pairs": {
+        "tp": 10,
+        "fp": 0,
+        "fn": 10,
+        "predicted": 10,
+        "gold": 20,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "problem_groups": {
+        "matched": 1,
+        "predicted": 1,
+        "gold": 2,
+        "precision": 1.0,
+        "recall": 0.5
+      },
+      "coverage_occurrences": {
+        "total": 5,
+        "uncovered": 4,
+        "unknown": 1,
+        "unanalyzed": 0,
+        "unknown_errors": {
+          "AI_UNAVAILABLE": 1
+        }
+      },
+      "gap": {
+        "tp": 0,
+        "predicted": 0,
+        "gold": 1,
+        "precision": null,
+        "recall": 0.0
+      },
+      "group_decisions": [
+        {
+          "group": "RCV",
+          "gold": "gap",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 4,
+            "unknown": 1,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.8,
+              "unknown": 0.2
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "d435c9b2d74d06193b3e85d49fad5a84c69fff47acbfb9bb6dbc80e9dec72ddc"
+        },
+        {
+          "group": "RCM",
+          "gold": "covered",
+          "predicted": "undetected"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 10,
+        "correct": 4,
+        "counts": {
+          "undetected": 5,
+          "uncovered": 4,
+          "unknown": 1
+        },
+        "decisions": [
+          {
+            "ticket": "007ca815-ef6f-55ce-8dd8-eba9fd16eaea",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "534e8797-e202-5cd3-8bf0-4914c3649f0e",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "546358ba-05e4-5742-8e6d-fdeb1f4ff104",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "83c4cd55-bce8-52c7-8ed9-ef5ea7a51c71",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "d29e4853-350e-54b0-bb0e-924a6f982154",
+            "group": "RCM",
+            "gold": "covered",
+            "predicted": "undetected",
+            "error_code": null
+          },
+          {
+            "ticket": "3eeb992c-4313-5338-aff6-3f084958ccbf",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "41ffda48-2d99-5be6-a118-e3c1ede6ecf6",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c5eef3f4-5999-5d83-a085-6a9b08b1b688",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f933732c-512d-5dc1-bdd1-8085b38cd899",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "fd2374b4-005e-52b3-b5a8-800711c5540a",
+            "group": "RCV",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "split": "holdout",
+      "repeat": 1,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 30,
+      "detection_error": null,
+      "pairs": {
+        "tp": 40,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 40,
+        "gold": 40,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 4,
+        "predicted": 4,
+        "gold": 4,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 20,
+        "uncovered": 17,
+        "unknown": 1,
+        "covered": 2,
+        "unanalyzed": 0,
+        "unknown_errors": {
+          "AI_UNAVAILABLE": 1
+        }
+      },
+      "gap": {
+        "tp": 2,
+        "predicted": 3,
+        "gold": 2,
+        "precision": 0.6666666666666666,
+        "recall": 1.0
+      },
+      "group_decisions": [
+        {
+          "group": "RSP",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "d25a6fd06a75e1ada63b55da6991b353dd807711caf64e80261850b6f894ff5b"
+        },
+        {
+          "group": "RIV",
+          "gold": "covered",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 4,
+            "unknown": 1,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.8,
+              "unknown": 0.2
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672"
+        },
+        {
+          "group": "RQR",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "a9993c5b53a48c198a039c01ee621d39ddacd7a466e82ad7b529d1bc80068748"
+        },
+        {
+          "group": "RFR",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "e6b2d86241e45bf6e6148722c7c1a8d7c3c521a920b658f12aa1f17389f2aa5e"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 20,
+        "correct": 12,
+        "counts": {
+          "covered": 2,
+          "uncovered": 17,
+          "unknown": 1
+        },
+        "decisions": [
+          {
+            "ticket": "1f201cd6-abb7-5145-98c9-fc0ddd2f861a",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "4545bd43-6694-5c2b-aac5-e3df50ce92f2",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "67c6aff7-1f7f-5e12-bb5e-ed328b6bf5d6",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bbf7fd87-ef9e-5d6c-908a-9d235c17de6f",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "e95d6e3c-3278-5275-9f3b-b43cfe260beb",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "18de15e7-53f5-54f5-bb57-61d8785d207d",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "1c880c28-ab6b-5624-b2c8-58e6ab41dab6",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "290d987d-c152-51d3-a5c6-2347218574ec",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2b2db3c7-c40e-5409-924e-5dd0da540433",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f831c1a9-7134-5db6-8152-994e65c4802b",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1e297a0b-6485-5f7e-9180-ea71f1ba3be1",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9202a2f7-3305-590b-b15c-2b8052c1de21",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cb3e1161-3462-541f-a4d7-16aebf9684bf",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ea453928-2ea7-5869-9c0b-4924ccdcdfd6",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f1008bf6-70f1-5d43-994a-eae8bd11aaa9",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "140b307d-934a-55f5-9980-e6b2353954dc",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67e03775-8529-5a54-aee7-99e2b913341c",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "a9895f7e-4303-505f-9bdb-78148f514c23",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c8dc5bba-98df-549d-af3d-d81053d028c7",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d86b0b61-28d0-5c41-971a-8b263eb2d1b7",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "split": "holdout",
+      "repeat": 2,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 30,
+      "detection_error": null,
+      "pairs": {
+        "tp": 40,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 40,
+        "gold": 40,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 4,
+        "predicted": 4,
+        "gold": 4,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 20,
+        "uncovered": 16,
+        "unknown": 2,
+        "covered": 2,
+        "unanalyzed": 0,
+        "unknown_errors": {
+          "AI_UNAVAILABLE": 2
+        }
+      },
+      "gap": {
+        "tp": 1,
+        "predicted": 2,
+        "gold": 2,
+        "precision": 0.5,
+        "recall": 0.5
+      },
+      "group_decisions": [
+        {
+          "group": "RSP",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "d25a6fd06a75e1ada63b55da6991b353dd807711caf64e80261850b6f894ff5b"
+        },
+        {
+          "group": "RIV",
+          "gold": "covered",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 4,
+            "unknown": 1,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.8,
+              "unknown": 0.2
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672"
+        },
+        {
+          "group": "RQR",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "a9993c5b53a48c198a039c01ee621d39ddacd7a466e82ad7b529d1bc80068748"
+        },
+        {
+          "group": "RFR",
+          "gold": "gap",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 4,
+            "unknown": 1,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.8,
+              "unknown": 0.2
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "e6b2d86241e45bf6e6148722c7c1a8d7c3c521a920b658f12aa1f17389f2aa5e"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 20,
+        "correct": 11,
+        "counts": {
+          "covered": 2,
+          "uncovered": 16,
+          "unknown": 2
+        },
+        "decisions": [
+          {
+            "ticket": "1f201cd6-abb7-5145-98c9-fc0ddd2f861a",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "4545bd43-6694-5c2b-aac5-e3df50ce92f2",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "67c6aff7-1f7f-5e12-bb5e-ed328b6bf5d6",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bbf7fd87-ef9e-5d6c-908a-9d235c17de6f",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "e95d6e3c-3278-5275-9f3b-b43cfe260beb",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "18de15e7-53f5-54f5-bb57-61d8785d207d",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "1c880c28-ab6b-5624-b2c8-58e6ab41dab6",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "290d987d-c152-51d3-a5c6-2347218574ec",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2b2db3c7-c40e-5409-924e-5dd0da540433",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f831c1a9-7134-5db6-8152-994e65c4802b",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1e297a0b-6485-5f7e-9180-ea71f1ba3be1",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9202a2f7-3305-590b-b15c-2b8052c1de21",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cb3e1161-3462-541f-a4d7-16aebf9684bf",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ea453928-2ea7-5869-9c0b-4924ccdcdfd6",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f1008bf6-70f1-5d43-994a-eae8bd11aaa9",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "140b307d-934a-55f5-9980-e6b2353954dc",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67e03775-8529-5a54-aee7-99e2b913341c",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "a9895f7e-4303-505f-9bdb-78148f514c23",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c8dc5bba-98df-549d-af3d-d81053d028c7",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d86b0b61-28d0-5c41-971a-8b263eb2d1b7",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          }
+        ]
+      }
+    },
+    {
+      "split": "holdout",
+      "repeat": 3,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 30,
+      "detection_error": null,
+      "pairs": {
+        "tp": 40,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 40,
+        "gold": 40,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 4,
+        "predicted": 4,
+        "gold": 4,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 20,
+        "uncovered": 16,
+        "unknown": 2,
+        "covered": 2,
+        "unanalyzed": 0,
+        "unknown_errors": {
+          "AI_UNAVAILABLE": 2
+        }
+      },
+      "gap": {
+        "tp": 2,
+        "predicted": 3,
+        "gold": 2,
+        "precision": 0.6666666666666666,
+        "recall": 1.0
+      },
+      "group_decisions": [
+        {
+          "group": "RSP",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "d25a6fd06a75e1ada63b55da6991b353dd807711caf64e80261850b6f894ff5b"
+        },
+        {
+          "group": "RIV",
+          "gold": "covered",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 3,
+            "unknown": 2,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.6,
+              "unknown": 0.4
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672"
+        },
+        {
+          "group": "RQR",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "a9993c5b53a48c198a039c01ee621d39ddacd7a466e82ad7b529d1bc80068748"
+        },
+        {
+          "group": "RFR",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "e6b2d86241e45bf6e6148722c7c1a8d7c3c521a920b658f12aa1f17389f2aa5e"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 20,
+        "correct": 12,
+        "counts": {
+          "covered": 2,
+          "uncovered": 16,
+          "unknown": 2
+        },
+        "decisions": [
+          {
+            "ticket": "1f201cd6-abb7-5145-98c9-fc0ddd2f861a",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "4545bd43-6694-5c2b-aac5-e3df50ce92f2",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "67c6aff7-1f7f-5e12-bb5e-ed328b6bf5d6",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bbf7fd87-ef9e-5d6c-908a-9d235c17de6f",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "e95d6e3c-3278-5275-9f3b-b43cfe260beb",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "18de15e7-53f5-54f5-bb57-61d8785d207d",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1c880c28-ab6b-5624-b2c8-58e6ab41dab6",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "290d987d-c152-51d3-a5c6-2347218574ec",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2b2db3c7-c40e-5409-924e-5dd0da540433",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "f831c1a9-7134-5db6-8152-994e65c4802b",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "1e297a0b-6485-5f7e-9180-ea71f1ba3be1",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9202a2f7-3305-590b-b15c-2b8052c1de21",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cb3e1161-3462-541f-a4d7-16aebf9684bf",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ea453928-2ea7-5869-9c0b-4924ccdcdfd6",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f1008bf6-70f1-5d43-994a-eae8bd11aaa9",
+            "group": "RQR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "140b307d-934a-55f5-9980-e6b2353954dc",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67e03775-8529-5a54-aee7-99e2b913341c",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "a9895f7e-4303-505f-9bdb-78148f514c23",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c8dc5bba-98df-549d-af3d-d81053d028c7",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d86b0b61-28d0-5c41-971a-8b263eb2d1b7",
+            "group": "RFR",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "split": "holdout",
+      "repeat": 1,
+      "phase": "after",
+      "gold_status": "synthetic_author_label_assumes_post_document_audience_matches",
+      "input_count": 30,
+      "detection_error": null,
+      "pairs": {
+        "tp": 40,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 40,
+        "gold": 40,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 4,
+        "predicted": 4,
+        "gold": 4,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 20,
+        "uncovered": 14,
+        "unknown": 4,
+        "covered": 2,
+        "unanalyzed": 0,
+        "unknown_errors": {
+          "AI_UNAVAILABLE": 4
+        }
+      },
+      "gap": {
+        "tp": 0,
+        "predicted": 1,
+        "gold": 0,
+        "precision": 0.0,
+        "recall": null
+      },
+      "group_decisions": [
+        {
+          "group": "RSP",
+          "gold": "covered",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 2,
+            "unknown": 1,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.4,
+              "unknown": 0.2
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "unknown"
+          },
+          "candidate": "d25a6fd06a75e1ada63b55da6991b353dd807711caf64e80261850b6f894ff5b"
+        },
+        {
+          "group": "RIV",
+          "gold": "covered",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 3,
+            "unknown": 2,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.6,
+              "unknown": 0.4
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672"
+        },
+        {
+          "group": "RQR",
+          "gold": "covered",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 4,
+            "unknown": 1,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.8,
+              "unknown": 0.2
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "a9993c5b53a48c198a039c01ee621d39ddacd7a466e82ad7b529d1bc80068748"
+        },
+        {
+          "group": "RFR",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "e6b2d86241e45bf6e6148722c7c1a8d7c3c521a920b658f12aa1f17389f2aa5e"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 20,
+        "correct": 2,
+        "counts": {
+          "unknown": 4,
+          "uncovered": 14,
+          "covered": 2
+        },
+        "decisions": [
+          {
+            "ticket": "1f201cd6-abb7-5145-98c9-fc0ddd2f861a",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "4545bd43-6694-5c2b-aac5-e3df50ce92f2",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67c6aff7-1f7f-5e12-bb5e-ed328b6bf5d6",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "bbf7fd87-ef9e-5d6c-908a-9d235c17de6f",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "e95d6e3c-3278-5275-9f3b-b43cfe260beb",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "18de15e7-53f5-54f5-bb57-61d8785d207d",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1c880c28-ab6b-5624-b2c8-58e6ab41dab6",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "290d987d-c152-51d3-a5c6-2347218574ec",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2b2db3c7-c40e-5409-924e-5dd0da540433",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "f831c1a9-7134-5db6-8152-994e65c4802b",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "1e297a0b-6485-5f7e-9180-ea71f1ba3be1",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9202a2f7-3305-590b-b15c-2b8052c1de21",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cb3e1161-3462-541f-a4d7-16aebf9684bf",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ea453928-2ea7-5869-9c0b-4924ccdcdfd6",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f1008bf6-70f1-5d43-994a-eae8bd11aaa9",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "140b307d-934a-55f5-9980-e6b2353954dc",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67e03775-8529-5a54-aee7-99e2b913341c",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "a9895f7e-4303-505f-9bdb-78148f514c23",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c8dc5bba-98df-549d-af3d-d81053d028c7",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d86b0b61-28d0-5c41-971a-8b263eb2d1b7",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "split": "holdout",
+      "repeat": 2,
+      "phase": "after",
+      "gold_status": "synthetic_author_label_assumes_post_document_audience_matches",
+      "input_count": 30,
+      "detection_error": null,
+      "pairs": {
+        "tp": 40,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 40,
+        "gold": 40,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 4,
+        "predicted": 4,
+        "gold": 4,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 20,
+        "uncovered": 18,
+        "covered": 2,
+        "unanalyzed": 0,
+        "unknown_errors": {}
+      },
+      "gap": {
+        "tp": 0,
+        "predicted": 4,
+        "gold": 0,
+        "precision": 0.0,
+        "recall": null
+      },
+      "group_decisions": [
+        {
+          "group": "RSP",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "d25a6fd06a75e1ada63b55da6991b353dd807711caf64e80261850b6f894ff5b"
+        },
+        {
+          "group": "RIV",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672"
+        },
+        {
+          "group": "RQR",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "a9993c5b53a48c198a039c01ee621d39ddacd7a466e82ad7b529d1bc80068748"
+        },
+        {
+          "group": "RFR",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "e6b2d86241e45bf6e6148722c7c1a8d7c3c521a920b658f12aa1f17389f2aa5e"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 20,
+        "correct": 2,
+        "counts": {
+          "uncovered": 18,
+          "covered": 2
+        },
+        "decisions": [
+          {
+            "ticket": "1f201cd6-abb7-5145-98c9-fc0ddd2f861a",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "4545bd43-6694-5c2b-aac5-e3df50ce92f2",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67c6aff7-1f7f-5e12-bb5e-ed328b6bf5d6",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "bbf7fd87-ef9e-5d6c-908a-9d235c17de6f",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "e95d6e3c-3278-5275-9f3b-b43cfe260beb",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "18de15e7-53f5-54f5-bb57-61d8785d207d",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1c880c28-ab6b-5624-b2c8-58e6ab41dab6",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "290d987d-c152-51d3-a5c6-2347218574ec",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2b2db3c7-c40e-5409-924e-5dd0da540433",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f831c1a9-7134-5db6-8152-994e65c4802b",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1e297a0b-6485-5f7e-9180-ea71f1ba3be1",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9202a2f7-3305-590b-b15c-2b8052c1de21",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cb3e1161-3462-541f-a4d7-16aebf9684bf",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ea453928-2ea7-5869-9c0b-4924ccdcdfd6",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f1008bf6-70f1-5d43-994a-eae8bd11aaa9",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "140b307d-934a-55f5-9980-e6b2353954dc",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67e03775-8529-5a54-aee7-99e2b913341c",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "a9895f7e-4303-505f-9bdb-78148f514c23",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c8dc5bba-98df-549d-af3d-d81053d028c7",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d86b0b61-28d0-5c41-971a-8b263eb2d1b7",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "split": "holdout",
+      "repeat": 3,
+      "phase": "after",
+      "gold_status": "synthetic_author_label_assumes_post_document_audience_matches",
+      "input_count": 30,
+      "detection_error": null,
+      "pairs": {
+        "tp": 40,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 40,
+        "gold": 40,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 4,
+        "predicted": 4,
+        "gold": 4,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 20,
+        "uncovered": 18,
+        "unknown": 1,
+        "covered": 1,
+        "unanalyzed": 0,
+        "unknown_errors": {
+          "AI_UNAVAILABLE": 1
+        }
+      },
+      "gap": {
+        "tp": 0,
+        "predicted": 3,
+        "gold": 0,
+        "precision": 0.0,
+        "recall": null
+      },
+      "group_decisions": [
+        {
+          "group": "RSP",
+          "gold": "covered",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 1,
+            "uncovered": 3,
+            "unknown": 1,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.2,
+              "uncovered": 0.6,
+              "unknown": 0.2
+            },
+            "coverage_on_analyzed": 0.2,
+            "gap_status": "unknown"
+          },
+          "candidate": "d25a6fd06a75e1ada63b55da6991b353dd807711caf64e80261850b6f894ff5b"
+        },
+        {
+          "group": "RIV",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672"
+        },
+        {
+          "group": "RQR",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "a9993c5b53a48c198a039c01ee621d39ddacd7a466e82ad7b529d1bc80068748"
+        },
+        {
+          "group": "RFR",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "e6b2d86241e45bf6e6148722c7c1a8d7c3c521a920b658f12aa1f17389f2aa5e"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 20,
+        "correct": 1,
+        "counts": {
+          "uncovered": 18,
+          "unknown": 1,
+          "covered": 1
+        },
+        "decisions": [
+          {
+            "ticket": "1f201cd6-abb7-5145-98c9-fc0ddd2f861a",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "4545bd43-6694-5c2b-aac5-e3df50ce92f2",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67c6aff7-1f7f-5e12-bb5e-ed328b6bf5d6",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "bbf7fd87-ef9e-5d6c-908a-9d235c17de6f",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "e95d6e3c-3278-5275-9f3b-b43cfe260beb",
+            "group": "RSP",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "18de15e7-53f5-54f5-bb57-61d8785d207d",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1c880c28-ab6b-5624-b2c8-58e6ab41dab6",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "290d987d-c152-51d3-a5c6-2347218574ec",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2b2db3c7-c40e-5409-924e-5dd0da540433",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f831c1a9-7134-5db6-8152-994e65c4802b",
+            "group": "RIV",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1e297a0b-6485-5f7e-9180-ea71f1ba3be1",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9202a2f7-3305-590b-b15c-2b8052c1de21",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cb3e1161-3462-541f-a4d7-16aebf9684bf",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ea453928-2ea7-5869-9c0b-4924ccdcdfd6",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "f1008bf6-70f1-5d43-994a-eae8bd11aaa9",
+            "group": "RQR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "140b307d-934a-55f5-9980-e6b2353954dc",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "67e03775-8529-5a54-aee7-99e2b913341c",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "a9895f7e-4303-505f-9bdb-78148f514c23",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "c8dc5bba-98df-549d-af3d-d81053d028c7",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d86b0b61-28d0-5c41-971a-8b263eb2d1b7",
+            "group": "RFR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    }
+  ],
+  "transmitted_source_audit": {
+    "uses": 370,
+    "valid": 370,
+    "invalid": [],
+    "note": "Radar累積応答内の同一coverage/ticket/chunk/quoteを重複計上しない。"
+  },
+  "operational_failures": [
+    {
+      "context": {
+        "case": "C01",
+        "split": "calibration",
+        "task": "search",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "6d396ce250b27d197d355ce7da9d373821c4aa18d7c8f4174dbff5dc19b8d5cb",
+      "elapsed_ms": 5012.687,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "C01",
+        "split": "calibration",
+        "task": "answer",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/tags",
+      "input_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "elapsed_ms": 5013.994,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "C02",
+        "split": "calibration",
+        "task": "answer",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "43ab2b0753d67e4cfed701d18a6005910163f0b98c9afcb977200c72e578ec47",
+      "elapsed_ms": 5023.665,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "C03",
+        "split": "calibration",
+        "task": "classification",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/tags",
+      "input_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "elapsed_ms": 5007.003,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "C03",
+        "split": "calibration",
+        "task": "answer",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "43ab2b0753d67e4cfed701d18a6005910163f0b98c9afcb977200c72e578ec47",
+      "elapsed_ms": 5013.036,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "H23",
+        "split": "holdout",
+        "task": "answer",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/tags",
+      "input_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "elapsed_ms": 5009.661,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "H24",
+        "split": "holdout",
+        "task": "search",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "6d396ce250b27d197d355ce7da9d373821c4aa18d7c8f4174dbff5dc19b8d5cb",
+      "elapsed_ms": 5003.151,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "d435c9b2d74d06193b3e85d49fad5a84c69fff47acbfb9bb6dbc80e9dec72ddc",
+        "split": "calibration",
+        "task": "coverage_batch",
+        "repeat": 1,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "43ab2b0753d67e4cfed701d18a6005910163f0b98c9afcb977200c72e578ec47",
+      "elapsed_ms": 5009.4,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 1,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "6d396ce250b27d197d355ce7da9d373821c4aa18d7c8f4174dbff5dc19b8d5cb",
+      "elapsed_ms": 5003.356,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "e6b2d86241e45bf6e6148722c7c1a8d7c3c521a920b658f12aa1f17389f2aa5e",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "43ab2b0753d67e4cfed701d18a6005910163f0b98c9afcb977200c72e578ec47",
+      "elapsed_ms": 5036.229,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/tags",
+      "input_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "elapsed_ms": 5063.961,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "d435c9b2d74d06193b3e85d49fad5a84c69fff47acbfb9bb6dbc80e9dec72ddc",
+        "split": "calibration",
+        "task": "coverage_batch",
+        "repeat": 3,
+        "phase": "baseline"
+      },
+      "path": "/api/tags",
+      "input_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "elapsed_ms": 5023.095,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 3,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "43ab2b0753d67e4cfed701d18a6005910163f0b98c9afcb977200c72e578ec47",
+      "elapsed_ms": 5040.061,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 3,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "input_hash": "6d396ce250b27d197d355ce7da9d373821c4aa18d7c8f4174dbff5dc19b8d5cb",
+      "elapsed_ms": 5008.467,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 1,
+        "phase": "after"
+      },
+      "path": "/api/show",
+      "input_hash": "43ab2b0753d67e4cfed701d18a6005910163f0b98c9afcb977200c72e578ec47",
+      "elapsed_ms": 5007.051,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "c00439a94f1f9d2f85adfd1e50aa7eb9b5d4168c20c1ff7fc5e3e089e34c7672",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 1,
+        "phase": "after"
+      },
+      "path": "/api/tags",
+      "input_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "elapsed_ms": 5016.573,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "a9993c5b53a48c198a039c01ee621d39ddacd7a466e82ad7b529d1bc80068748",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 1,
+        "phase": "after"
+      },
+      "path": "/api/tags",
+      "input_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "elapsed_ms": 5015.57,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "d25a6fd06a75e1ada63b55da6991b353dd807711caf64e80261850b6f894ff5b",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 1,
+        "phase": "after"
+      },
+      "path": "/api/show",
+      "input_hash": "6d396ce250b27d197d355ce7da9d373821c4aa18d7c8f4174dbff5dc19b8d5cb",
+      "elapsed_ms": 5008.474,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "d25a6fd06a75e1ada63b55da6991b353dd807711caf64e80261850b6f894ff5b",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 3,
+        "phase": "after"
+      },
+      "path": "/api/tags",
+      "input_hash": "74234e98afe7498fb5daf1f36ac2d78acc339464f950703b8c019892f982b90b",
+      "elapsed_ms": 5012.273,
+      "error_code": "AI_UNAVAILABLE"
+    }
+  ],
+  "variation": [
+    {
+      "case": "C01",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C01",
+      "task": "search",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 2
+    },
+    {
+      "case": "C01",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "C02",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C02",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C02",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 2
+    },
+    {
+      "case": "C03",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 2
+    },
+    {
+      "case": "C03",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C03",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 2
+    },
+    {
+      "case": "C04",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C04",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C04",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C05",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C05",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C05",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C06",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C06",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C06",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C07",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C07",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C07",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C08",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C08",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "C08",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "H01",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H01",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H01",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "H02",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "H02",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H02",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H03",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H03",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H03",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H04",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H04",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H04",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H05",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H05",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H05",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H06",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H06",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H06",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "H07",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H07",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H07",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H08",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H08",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H08",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H09",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "H09",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H09",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "H10",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "H10",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H10",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "H11",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H11",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H11",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H12",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H12",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H12",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H13",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H13",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H13",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H14",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H14",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H14",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H15",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H15",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H15",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H16",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H16",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H16",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H17",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H17",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H17",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H18",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H18",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H18",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H19",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H19",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H19",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H20",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H20",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H20",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H21",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H21",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H21",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H22",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H22",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H22",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H23",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H23",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H23",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 2
+    },
+    {
+      "case": "H24",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H24",
+      "task": "search",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 2
+    },
+    {
+      "case": "H24",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H25",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H25",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H25",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H26",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H26",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H26",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H27",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H27",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H27",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H28",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H28",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H28",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H29",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H29",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H29",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H30",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H30",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H30",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H31",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H31",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H31",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H32",
+      "task": "classification",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H32",
+      "task": "search",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "H32",
+      "task": "answer",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D01",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D02",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D03",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D04",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D05",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D06",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 2,
+      "decision_variants": 1
+    },
+    {
+      "case": "D07",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D08",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D09",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    },
+    {
+      "case": "D10",
+      "task": "draft",
+      "n": 3,
+      "output_variants": 1,
+      "decision_variants": 1
+    }
+  ],
+  "latency": [
+    {
+      "phase": "cold",
+      "task": "classification",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 2881.117,
+      "p95_ms": 2898.738,
+      "success_p50_ms": 2881.117,
+      "success_p95_ms": 2898.738,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "cold",
+      "task": "search",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 1984.295,
+      "p95_ms": 2016.453,
+      "success_p50_ms": 1984.295,
+      "success_p95_ms": 2016.453,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "cold",
+      "task": "answer",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 6499.025,
+      "p95_ms": 6537.032,
+      "success_p50_ms": 6499.025,
+      "success_p95_ms": 6537.032,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "cold",
+      "task": "draft",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 4283.3,
+      "p95_ms": 4590.967,
+      "success_p50_ms": 4283.3,
+      "success_p95_ms": 4590.967,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "cold",
+      "task": "radar_judgment",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 6354.0,
+      "p95_ms": 6363.313,
+      "success_p50_ms": 6354.0,
+      "success_p95_ms": 6363.313,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "warm",
+      "task": "classification",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 430.821,
+      "p95_ms": 436.772,
+      "success_p50_ms": 430.821,
+      "success_p95_ms": 436.772,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "warm",
+      "task": "search",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 114.732,
+      "p95_ms": 116.989,
+      "success_p50_ms": 114.732,
+      "success_p95_ms": 116.989,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "warm",
+      "task": "answer",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 2566.946,
+      "p95_ms": 2570.183,
+      "success_p50_ms": 2566.946,
+      "success_p95_ms": 2570.183,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "warm",
+      "task": "draft",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 1662.257,
+      "p95_ms": 1669.095,
+      "success_p50_ms": 1662.257,
+      "success_p95_ms": 1669.095,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    },
+    {
+      "phase": "warm",
+      "task": "radar_judgment",
+      "n": 3,
+      "failures": 0,
+      "p50_ms": 4914.897,
+      "p95_ms": 4939.007,
+      "success_p50_ms": 4914.897,
+      "success_p95_ms": 4939.007,
+      "failure_ms": [],
+      "unknown_judgments": 0
+    }
+  ],
+  "drafts": {
+    "planned": 30,
+    "success": 30,
+    "human_review": "pending",
+    "analyst_review": "separate"
+  }
+}

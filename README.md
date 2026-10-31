@@ -595,7 +595,7 @@ Remove-Item -LiteralPath .local/search-check.env
 docker run --rm --network solveloop-search-check_default --env-file .local/search-check.env -e RUN_DB_TESTS=1 -e RUN_OLLAMA_TESTS=1 -e AUTH_TEST_BASE_URL=http://backend:8000 solveloop-backend-test:search-check pytest -q -rP -p no:cacheprovider tests/test_http_ticket_analysis.py
 ```
 
-この検査は合成問い合わせ・公開文書・解決事例を作り、分類・両方の根拠・無関係な質問の不足判断・業務状態の不変を実HTTPで確認します。作成した資料は試験DBに残し、自動削除・リセットはしません。再実行は別の空試験環境を使ってください。実行した少量の動作確認を、正解率や正式なRAG品質評価として扱いません。正式な品質評価は後続です。
+この検査は合成問い合わせ・公開文書・解決事例を作り、分類・両方の根拠・無関係な質問の不足判断・業務状態の不変を実HTTPで確認します。作成した資料は試験DBに残し、自動削除・リセットはしません。再実行は別の空試験環境を使ってください。実行した少量の動作確認を、正解率や正式なRAG品質評価として扱いません。正式な品質評価は[ローカルAI評価](evaluations/README.md)に分離しています。
 
 ## 解決記録からのAI下書き案
 
@@ -654,7 +654,13 @@ cd backend
 uv run python -X utf8 -m pytest -q -s tests/test_radar_calibration.py
 ```
 
-実HTTPの循環確認は、上記の検索用試験環境とは**別の空の専用DB/API**で、最小合成アカウントと検索profileを準備し、`RUN_DB_TESTS=1`・`RUN_OLLAMA_TESTS=1`・`AUTH_TEST_BASE_URL` を明示して `tests/test_http_radar.py` を実行します。11件の合成問い合わせと少数の文書を作り、反復検出・不足/対応判定・S17生成と人の編集に相当する保存・検索準備・承認・同じ問い合わせ集合同士の再判定を検証します。試験資料を元のDBへ投入したり、自動リセットしたりしません。正式な品質評価は後続です。最終規模のシードと専用環境は [再現デモ](demo/README.md) を参照してください。
+実HTTPの循環確認は、上記の検索用試験環境とは**別の空の専用DB/API**で、最小合成アカウントと検索profileを準備し、`RUN_DB_TESTS=1`・`RUN_OLLAMA_TESTS=1`・`AUTH_TEST_BASE_URL` を明示して `tests/test_http_radar.py` を実行します。11件の合成問い合わせと少数の文書を作り、反復検出・不足/対応判定・S17生成と人の編集に相当する保存・検索準備・承認・同じ問い合わせ集合同士の再判定を検証します。試験資料を元のDBへ投入したり、自動リセットしたりしません。正式な品質評価は[ローカルAI評価](evaluations/README.md)に分離しています。最終規模のシードと専用環境は [再現デモ](demo/README.md) を参照してください。
+
+## 実AI評価（S21）
+
+新規合成質問40件（校正8・保留32）、独立したRadar問い合わせ40件、下書き10種を既存ローカルモデルで3回ずつ実行しました。保留質問の分類macro-F1は0.90785、Recall@5は60/60、答なしの根拠不足応答は35/36です。Radarの保留反復検出は各回4/4群、precision/recallとも1.0で事前目標0.80以上に到達しました。知識不足判定precisionの5/8は別の参考指標であり、過剰な不足判定が残ります。追加文書承認後の正解ラベルは対象条件の一致が未確認のため条件付きの参考値です。下書きの注意抽出にも欠落があり、利用者レビューは完了0/10・確認待ち10/10です。小規模合成評価の結果で、一般的な業務性能や製品全体の品質達成を保証しません。
+
+[評価入力・分母・再現コマンド](evaluations/README.md)、[実測・失敗・cold/warm時間](evaluations/reports/baseline-v1/report.md)、[S20再診断（保留外）](evaluations/reports/s20-diagnostic/report.md)を参照してください。原本/S20デモと分離したDB、既存prompt/threshold、実埋め込み・実生成を使用し、保留結果に合わせた調整は行っていません。
 
 ## 技術構成
 
@@ -666,7 +672,7 @@ uv run python -X utf8 -m pytest -q -s tests/test_radar_calibration.py
 | ローカル推論 | Ollama |
 | 実行環境・検証 | Docker Compose / pytest / Node.js内蔵test / Chrome操作検証 / GitHub Actions（定義済み） |
 
-生成・埋め込みのローカルOllama接続、意味検索、問い合わせ分類・回答案、解決記録からのAI下書き案を少量の合成資料で動作確認しています。Radarも少量の実モデル動作を確認しています。正式な品質評価は後続です。
+生成・埋め込みのローカルOllama接続、意味検索、問い合わせ分類・回答案、解決記録からのAI下書き案を少量の合成資料で動作確認しています。Radarも少量の実モデル動作を確認しています。正式な品質評価は[ローカルAI評価](evaluations/README.md)に分離しています。
 
 ## リポジトリ構成
 
@@ -678,7 +684,7 @@ demo/              架空企業のデータと再現シナリオ
 evaluations/       検索・分類・Radarの評価
 ```
 
-AI/Radar・デモ動画・評価結果は実装と検証に合わせて追加します。
+デモ動画などの提出用資料は今後の作業です。
 
 ## 参考・利用した OSS
 

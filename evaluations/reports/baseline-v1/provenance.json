@@ -1,0 +1,22 @@
+{
+  "product_head": "044cc692df9527a0fb99c1368b5c2fd1a04dc5c3",
+  "product_python_files_verified": 28,
+  "dataset_and_protocol_hashes_unchanged": true,
+  "initial_runner_hash": "9232b4fedccb580cc2ffd490d838163751f2ec3d87976f4b05f8c3ce5b7a88dd",
+  "continuation": {
+    "reason": "unload応答直後のresident残留。非resident確認を10秒以内で待つ制御へ修正。基準線の品質試行は再実行・置換しない。",
+    "runner_hash": "8436da16a7ddc81ab74bbfa7759480adf51e74203c37fe215b8a114666b33ba3",
+    "started_at": "2026-10-31T08:28:02.245336+00:00"
+  },
+  "final_evaluation_sources": {
+    "evaluations/check_boundaries.py": "fd0d5153e253ece0c9582a9afb8beb788df50286e609c2c1942cf8be602cf3b4",
+    "evaluations/diagnose_s20.py": "59a399fbd419e4db944f951e41354ccff8836fb463f48bc3426633dc7c08c359",
+    "evaluations/review.py": "028ccbe420b1788ee9f9ea17e778c114747305f108468546d4fd1c3ade1d71da",
+    "evaluations/run.py": "32e9fadb5d801855484ac629fbbe1a1db3c2abcf05d068168ab52f8e24025066",
+    "evaluations/score.py": "872913746afba7a9104e2d991d4d7de404a8d9dda04282fa03fec20dff442f07",
+    "evaluations/summarize_s20.py": "17d811dd3532b46b7477065f2689565f1836351a953c04d3466b18c40e8949fc",
+    "evaluations/test_evaluation.py": "18dca0228099fd4ba7d191fef7514eed1a6bb00c9aad61d8c539fbaff2a19823"
+  },
+  "changes_after_measurement": "評価resetの検索singleton復元・実行環境間import分類・集計/出典監査の検査と報告を整備。製品コード/モデル/prompt/threshold/正解データは変更なし。",
+  "raw_results_policy": "生Ollama/API応答・dump・個人環境はGit対象外。公開値は派生結果。"
+}

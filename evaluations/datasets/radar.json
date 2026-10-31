@@ -1,0 +1,402 @@
+[
+  {
+    "id": "RCM1",
+    "split": "calibration",
+    "department": "IT",
+    "title": "メールの容量警告が表示され、削除後も受信箱が上限です",
+    "body": "メールの容量警告が表示され、削除後も受信箱が上限です。保存資料は残したいです。",
+    "group": "RCM",
+    "coverage": "covered",
+    "document": "mail"
+  },
+  {
+    "id": "RCM2",
+    "split": "calibration",
+    "department": "IT",
+    "title": "メールボックスの容量が一杯で警告が消えません",
+    "body": "メールボックスの容量が一杯で警告が消えません。保存が必要な添付があります。",
+    "group": "RCM",
+    "coverage": "covered",
+    "document": "mail"
+  },
+  {
+    "id": "RCM3",
+    "split": "calibration",
+    "department": "IT",
+    "title": "受信メールの容量上限という警告です",
+    "body": "受信メールの容量上限という警告です。削除済みを含めた整理の方法を教えてください。",
+    "group": "RCM",
+    "coverage": "covered",
+    "document": "mail"
+  },
+  {
+    "id": "RCM4",
+    "split": "calibration",
+    "department": "IT",
+    "title": "メール容量の警告が続きます",
+    "body": "メール容量の警告が続きます。必要な業務資料を消さずに整理したいです。",
+    "group": "RCM",
+    "coverage": "covered",
+    "document": "mail"
+  },
+  {
+    "id": "RCM5",
+    "split": "calibration",
+    "department": "IT",
+    "title": "メールボックスが満杯と表示されます",
+    "body": "メールボックスが満杯と表示されます。業務保存期間を守って空きを作りたいです。",
+    "group": "RCM",
+    "coverage": "covered",
+    "document": "mail"
+  },
+  {
+    "id": "RCV1",
+    "split": "calibration",
+    "department": "GENERAL",
+    "title": "社員用入館証のICが読み取れずゲートが開きません",
+    "body": "社員用入館証のICが読み取れずゲートが開きません。交換方法を知りたいです。",
+    "group": "RCV",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RCV2",
+    "split": "calibration",
+    "department": "GENERAL",
+    "title": "社員入館証のICが反応せず入れません",
+    "body": "社員入館証のICが反応せず入れません。ゲートは正常で証の交換が必要そうです。",
+    "group": "RCV",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RCV3",
+    "split": "calibration",
+    "department": "GENERAL",
+    "title": "出社時に社員証のICが読めません",
+    "body": "出社時に社員証のICが読めません。入館ゲートで弾かれるので交換を相談します。",
+    "group": "RCV",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RCV4",
+    "split": "calibration",
+    "department": "GENERAL",
+    "title": "社員用の入館ICカードが読み取りエラーです",
+    "body": "社員用の入館ICカードが読み取りエラーです。交換の申請先を知りたいです。",
+    "group": "RCV",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RCV5",
+    "split": "calibration",
+    "department": "GENERAL",
+    "title": "入館用社員証をかざしてもIC読み取りが失敗します",
+    "body": "入館用社員証をかざしてもIC読み取りが失敗します。カード交換を頼みたいです。",
+    "group": "RCV",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RSP1",
+    "split": "holdout",
+    "department": "IT",
+    "title": "共有プリンターの印刷キューが停止し、古いジョブの後ろで待機しています",
+    "body": "共有プリンターの印刷キューが停止し、古いジョブの後ろで待機しています。自分のジョブを取り消す方法を知りたいです。",
+    "group": "RSP",
+    "coverage": "covered",
+    "document": "spool"
+  },
+  {
+    "id": "RSP2",
+    "split": "holdout",
+    "department": "IT",
+    "title": "印刷キューに自分の古いジョブが残って停止中です",
+    "body": "印刷キューに自分の古いジョブが残って停止中です。共有プリンターの待機を解除したいです。",
+    "group": "RSP",
+    "coverage": "covered",
+    "document": "spool"
+  },
+  {
+    "id": "RSP3",
+    "split": "holdout",
+    "department": "IT",
+    "title": "共有プリンターへの印刷がキューで止まりました",
+    "body": "共有プリンターへの印刷がキューで止まりました。自分のジョブ取消と一時停止解除の手順を確認します。",
+    "group": "RSP",
+    "coverage": "covered",
+    "document": "spool"
+  },
+  {
+    "id": "RSP4",
+    "split": "holdout",
+    "department": "IT",
+    "title": "古い印刷ジョブがキューを塞ぎ、共有プリンターが一時停止しています",
+    "body": "古い印刷ジョブがキューを塞ぎ、共有プリンターが一時停止しています。自分のジョブだけ消したいです。",
+    "group": "RSP",
+    "coverage": "covered",
+    "document": "spool"
+  },
+  {
+    "id": "RSP5",
+    "split": "holdout",
+    "department": "IT",
+    "title": "共有プリンターで自分の印刷ジョブが停止したままです",
+    "body": "共有プリンターで自分の印刷ジョブが停止したままです。キューの取消とテスト印刷の手順が必要です。",
+    "group": "RSP",
+    "coverage": "covered",
+    "document": "spool"
+  },
+  {
+    "id": "RIV1",
+    "split": "holdout",
+    "department": "ACCOUNTING",
+    "title": "同一取引の請求書が二通届きました",
+    "body": "同一取引の請求書が二通届きました。番号と金額が同じで、未登録です。二重支払を防ぐ方法を確認します。",
+    "group": "RIV",
+    "coverage": "covered",
+    "document": "invoice"
+  },
+  {
+    "id": "RIV2",
+    "split": "holdout",
+    "department": "ACCOUNTING",
+    "title": "未登録の請求書が重複しています",
+    "body": "未登録の請求書が重複しています。取引先と請求番号、金額が同じなので二件目の支払を止めたいです。",
+    "group": "RIV",
+    "coverage": "covered",
+    "document": "invoice"
+  },
+  {
+    "id": "RIV3",
+    "split": "holdout",
+    "department": "ACCOUNTING",
+    "title": "同じ番号と金額の請求書を二枚受領しました",
+    "body": "同じ番号と金額の請求書を二枚受領しました。支払はまだです。経理への重複確認を依頼したいです。",
+    "group": "RIV",
+    "coverage": "covered",
+    "document": "invoice"
+  },
+  {
+    "id": "RIV4",
+    "split": "holdout",
+    "department": "ACCOUNTING",
+    "title": "請求書が二重に届いており、同じ取引先と請求番号です",
+    "body": "請求書が二重に届いており、同じ取引先と請求番号です。未払いのまま重複登録を防ぎたいです。",
+    "group": "RIV",
+    "coverage": "covered",
+    "document": "invoice"
+  },
+  {
+    "id": "RIV5",
+    "split": "holdout",
+    "department": "ACCOUNTING",
+    "title": "同じ取引の請求が二件あります",
+    "body": "同じ取引の請求が二件あります。番号と金額を照合すると同じで未払いです。二重登録の防止手順を教えてください。",
+    "group": "RIV",
+    "coverage": "covered",
+    "document": "invoice"
+  },
+  {
+    "id": "RQR1",
+    "split": "holdout",
+    "department": "HR",
+    "title": "電車の遅延証明書QRを勤怠へ自動取り込みしたいです",
+    "body": "電車の遅延証明書QRを勤怠へ自動取り込みしたいです。連携設定の手順が見つかりません。",
+    "group": "RQR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RQR2",
+    "split": "holdout",
+    "department": "HR",
+    "title": "遅延証明書のQRコードを勤怠に自動反映する連携が動きません",
+    "body": "遅延証明書のQRコードを勤怠に自動反映する連携が動きません。設定を確認したいです。",
+    "group": "RQR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RQR3",
+    "split": "holdout",
+    "department": "HR",
+    "title": "勤怠で電車遅延証明のQRを読み込んで自動連携したいです",
+    "body": "勤怠で電車遅延証明のQRを読み込んで自動連携したいです。設定手順を知りたいです。",
+    "group": "RQR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RQR4",
+    "split": "holdout",
+    "department": "HR",
+    "title": "鉄道の遅延証明書QRを勤怠へ取り込む自動連携を設定できません",
+    "body": "鉄道の遅延証明書QRを勤怠へ取り込む自動連携を設定できません。設定方法が必要です。",
+    "group": "RQR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RQR5",
+    "split": "holdout",
+    "department": "HR",
+    "title": "遅延証明のQRコードから勤怠へ自動登録する連携が未設定です",
+    "body": "遅延証明のQRコードから勤怠へ自動登録する連携が未設定です。導入手順を教えてください。",
+    "group": "RQR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RFR1",
+    "split": "holdout",
+    "department": "GENERAL",
+    "title": "冷凍試料を宅配で発送したいです",
+    "body": "冷凍試料を宅配で発送したいです。温度を保つ梱包と専用集荷の予約手順を知りたいです。",
+    "group": "RFR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RFR2",
+    "split": "holdout",
+    "department": "GENERAL",
+    "title": "冷凍の試料発送を相談します",
+    "body": "冷凍の試料発送を相談します。保冷温度の決め方と冷凍便の集荷予約が分かりません。",
+    "group": "RFR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RFR3",
+    "split": "holdout",
+    "department": "GENERAL",
+    "title": "凍結試料を配送します",
+    "body": "凍結試料を配送します。冷凍梱包の温度基準と専用便の集荷を手配したいです。",
+    "group": "RFR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RFR4",
+    "split": "holdout",
+    "department": "GENERAL",
+    "title": "冷凍状態の試料を送ります",
+    "body": "冷凍状態の試料を送ります。適切な梱包温度と冷凍集荷の予約手続きを確認します。",
+    "group": "RFR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RFR5",
+    "split": "holdout",
+    "department": "GENERAL",
+    "title": "試料の冷凍発送で温度管理の梱包条件と専用集荷予約を知りたいです",
+    "body": "試料の冷凍発送で温度管理の梱包条件と専用集荷予約を知りたいです。通常便は使いません。",
+    "group": "RFR",
+    "coverage": "uncovered",
+    "document": ""
+  },
+  {
+    "id": "RN1",
+    "split": "holdout",
+    "department": null,
+    "title": "共有プリンターで紙詰まりが発生しました。紙を引き抜く方向と故障時の安全確認を教えてください。",
+    "body": "共有プリンターで紙詰まりが発生しました。紙を引き抜く方向と故障時の安全確認を教えてください。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RN2",
+    "split": "holdout",
+    "department": null,
+    "title": "取引先から請求書をまだ受け取っていません。初回の発行依頼を出したいです。",
+    "body": "取引先から請求書をまだ受け取っていません。初回の発行依頼を出したいです。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RN3",
+    "split": "holdout",
+    "department": null,
+    "title": "勤務開始を遅らせる育児短時間勤務を申請したいです。まだ申請はしていません。",
+    "body": "勤務開始を遅らせる育児短時間勤務を申請したいです。まだ申請はしていません。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RN4",
+    "split": "holdout",
+    "department": null,
+    "title": "常温のパンフレットを宅配便で送ります。発送棚と締切を確認します。",
+    "body": "常温のパンフレットを宅配便で送ります。発送棚と締切を確認します。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RN5",
+    "split": "holdout",
+    "department": null,
+    "title": "備品ロッカーの暗証番号を変更したいです。",
+    "body": "備品ロッカーの暗証番号を変更したいです。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RN6",
+    "split": "holdout",
+    "department": null,
+    "title": "研究会の参加証明書の発行先を確認したいです。",
+    "body": "研究会の参加証明書の発行先を確認したいです。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RB1",
+    "split": "holdout",
+    "department": "IT",
+    "title": "会議室予約システムの予定が二重登録されます。繰返し予定の同期設定を確認したいです。",
+    "body": "会議室予約システムの予定が二重登録されます。繰返し予定の同期設定を確認したいです。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RB2",
+    "split": "holdout",
+    "department": "IT",
+    "title": "会議室の繰返し予定が同期されるたび二重に登録されます。予約設定を直したいです。",
+    "body": "会議室の繰返し予定が同期されるたび二重に登録されます。予約設定を直したいです。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RB3",
+    "split": "holdout",
+    "department": "IT",
+    "title": "会議室予約の同期で定期予定が二重になります。繰返しの登録設定を教えてください。",
+    "body": "会議室予約の同期で定期予定が二重になります。繰返しの登録設定を教えてください。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  },
+  {
+    "id": "RB4",
+    "split": "holdout",
+    "department": "IT",
+    "title": "会議室の定期予約を同期すると予定が重複します。二重登録の設定を確認します。",
+    "body": "会議室の定期予約を同期すると予定が重複します。二重登録の設定を確認します。",
+    "group": null,
+    "coverage": null,
+    "document": ""
+  }
+]

@@ -1,0 +1,1557 @@
+{
+  "scope": "s20_diagnostic_not_holdout",
+  "manifest_hash": "dcfb4b5caec143bd5b9eb93875bf1531c8702e20a67ad827de66bc2882ee8c99",
+  "search_profile": "66970997f085b0035c9e72dcb256249a5ce169fd5a8a566408aa63e89004b6b5",
+  "parameters": {
+    "days": 30,
+    "statuses": [
+      "open",
+      "in_progress",
+      "resolved"
+    ],
+    "threshold": 0.92,
+    "group_rule": "sorted-seed-all-pairs-v1",
+    "time_field": "created_at",
+    "minimum_group": 5,
+    "maximum_tickets": 100,
+    "ticket_profile_id": "c72b53d323d23e492e3f14cf0eaeed4cf1805cccbde85157b7f7382fe2cef6a8",
+    "ticket_profile_specification": {
+      "model": "embeddinggemma-2:270m-q8_0-text",
+      "digest": "c21dd30c1e38444d3b4faa091407b6fa97221447b4965d74931d43d7f09bbbfd",
+      "purpose": "ticket-pair-clustering-v1",
+      "dimensions": 768,
+      "input_fields": [
+        "body"
+      ],
+      "normalization": "l2-v1",
+      "context_tokens": 8192,
+      "input_template": "task: clustering | query: {body}"
+    }
+  },
+  "candidate": {
+    "id": "5c2cbfdf9e7cd128171a8ac4b6b6af8829fda35ac3be313d5881279053089432",
+    "ticket_ids": [
+      "0fb250de-809f-5100-a0a8-a025ccb7db67",
+      "15447fb6-1021-5534-8575-f49e18782f62",
+      "284e722d-acd9-59e9-b785-2593dd674ebb",
+      "2a64d97f-0d80-51fb-9cc8-71dc715b561d",
+      "44994346-188d-5bf0-8f42-5f8bae77a90c",
+      "5250aed9-66db-5519-9825-c87a734e6e1d",
+      "6a7c05c3-df3b-561b-91a7-77db534bee04",
+      "7cb8431b-7265-54cb-a7f5-e92779ceec65",
+      "b49c03bb-45e1-58eb-ae84-dae5a2490769"
+    ],
+    "minimum_similarity": 0.9212527010604358,
+    "overlap": true
+  },
+  "results": [
+    {
+      "phase": "s20_before",
+      "repeat": 1,
+      "summary": {
+        "total": 9,
+        "analyzed": 9,
+        "covered": 0,
+        "uncovered": 9,
+        "unknown": 0,
+        "unanalyzed": 0,
+        "rates": {
+          "covered": 0.0,
+          "uncovered": 1.0,
+          "unknown": 0.0
+        },
+        "coverage_on_analyzed": 0.0,
+        "gap_status": "gap"
+      },
+      "elapsed_ms": 108595.465,
+      "unknown_errors": {},
+      "judgments": {
+        "0fb250de-809f-5100-a0a8-a025ccb7db67": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料には具体的な手順が記載されていません。資料はVPNクライアントのインストールや基本接続、端末紛失時の連絡手順についてのみ記載されており、MFA登録の変更や再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "MFA登録の変更手順",
+            "スマートフォン交換後の認証アプリの再登録方法",
+            "新しい端末でのMFA登録の具体的なステップ",
+            "認証アプリが使えない場合の代替手段",
+            "IT担当への連絡時の必要な情報",
+            "MFA登録の再設定に関する注意事項"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 348,
+            "input_hash": "d577e22de69c9c121ffdd05c796dc565c6c7b949dfaec43f5e8e9fa9ebf93084",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2600
+          }
+        },
+        "15447fb6-1021-5534-8575-f49e18782f62": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料にはMFA再登録に関する具体的な手順が記載されていません。資料はVPN接続やクライアントインストール、端末紛失時の連絡手順についてのみ記載されており、MFA再登録の手順や条件が不足しています。",
+          "missing_information": [
+            "MFA再登録の具体的な手順",
+            "新しい端末でのMFA登録に必要な条件",
+            "認証アプリの再登録に関する詳細",
+            "認証失敗時の対応手順",
+            "IT担当への連絡の必要条件",
+            "認証情報の再取得方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 409,
+            "input_hash": "56873252fcff06e55ed94f8522210dea63bdbbfb420c2187b9d7fcc3525ca7c3",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2601
+          }
+        },
+        "284e722d-acd9-59e9-b785-2593dd674ebb": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料には具体的なMFA再登録手順や対応方法が記載されていません。資料はVPNクライアントのインストールや基本接続に関するものであり、MFAの再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "MFA再登録の具体的な手順",
+            "スマートフォン交換後の認証アプリの再登録方法",
+            "IT担当への連絡手段",
+            "認証アプリが利用できない場合の代替手段",
+            "MFA再登録に関する社内ポリシー",
+            "認証アプリの削除や再インストールに関する手順"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 340,
+            "input_hash": "4bb92a6441dcffda8f732852de6180743ee902c8e1b5baf67e1e584b5a6ad9bc",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2601
+          }
+        },
+        "2a64d97f-0d80-51fb-9cc8-71dc715b561d": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPNのMFA認証再登録に関するものですが、提供された資料には具体的なMFA認証再登録手順が記載されていません。資料は基本接続手順やクライアントインストール手順、端末紛失時の連絡手順を説明していますが、認証アプリの再登録やスマートフォン交換後の対応については触れていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA認証再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "旧端末の認証アプリが使用できなくなった際の対応方法",
+            "新端末での認証登録の申請プロセス",
+            "IT担当への連絡時の必要な情報",
+            "認証情報の再取得または再設定の方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 467,
+            "input_hash": "91a52aee32d3d6c88e3031e4e63824392dac2f6e07ab51567d6778da8754398e",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2606
+          }
+        },
+        "44994346-188d-5bf0-8f42-5f8bae77a90c": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN多要素認証再登録に関するものですが、提供された資料には具体的な再登録手順や対応方法が記載されていません。資料はVPNクライアントのインストールや基本接続、端末紛失時の連絡手順についてのみ記載されており、認証再登録の解決には十分ではありません。",
+          "missing_information": [
+            "スマートフォン交換後の認証アプリ再登録の手順",
+            "認証アプリが旧端末で利用できない場合の代替手段",
+            "新端末での認証再登録に必要な情報や条件",
+            "IT担当への連絡時の具体的な内容",
+            "認証再登録の承認プロセス",
+            "認証アプリの再登録に必要な権限や管理者の介入要否"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 445,
+            "input_hash": "8d398c0959391db1f8bf86ba94dc640d1b00bb5fd9389c6169452b468c10981d",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2602
+          }
+        },
+        "5250aed9-66db-5519-9825-c87a734e6e1d": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN MFA認証再登録に関するものですが、提供された資料には具体的な手順や解決策が記載されていません。資料は基本接続手順やインストール手順、紛失連絡手順について述べており、MFA認証の再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA認証再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "IT担当への連絡先や手続き",
+            "認証方法の変更や再設定に関する情報",
+            "旧端末の認証アプリの利用不能に関する対応",
+            "新端末での認証登録の詳細なステップ"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 438,
+            "input_hash": "e9c89b2d8336d373a69a3c1bff112732380f40721a58584b056d93437fa8a4c2",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2609
+          }
+        },
+        "6a7c05c3-df3b-561b-91a7-77db534bee04": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「VPN導入後の端末交換認証」に関するものであり、具体的な解決手順が資料に記載されていない。資料には端末交換後の認証再登録に関する手順が含まれていないため、必要な手順や条件が不足している。",
+          "missing_information": [
+            "端末交換後の認証再登録の具体的な手順",
+            "新端末の登録に関する詳細な手順",
+            "MFA（多要素認証）の再登録に関する手順",
+            "IT担当への連絡時の必要な情報",
+            "認証再登録の例外・注意事項",
+            "認証再登録の完了確認方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "5501e2e94bb9f7a24d1c3386223ed022448bcc92fead2e8a82a7b1ee485d6d69",
+            "attempts": 1,
+            "prompt_eval_count": 2601,
+            "eval_count": 402
+          }
+        },
+        "7cb8431b-7265-54cb-a7f5-e92779ceec65": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN接続におけるMFA失敗とその解決手順を求めるものですが、提供された資料にはMFA再登録に関する具体的な手順が含まれていません。資料はVPN接続の基本手順やクライアントのインストール、端末紛失時の連絡手順について述べていますが、スマートフォン交換後の認証再登録の手順は提示されていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "IT担当への連絡時の詳細な手順",
+            "認証方法の変更や再発行に関する情報",
+            "端末番号や利用停止の手続きに関する詳細",
+            "認証失敗時の代替手段や対応策"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "4d3627f671012769e7bd20e354d31b4e21fcd245db73cb9b971e793d2c2e5fa0",
+            "attempts": 1,
+            "prompt_eval_count": 2599,
+            "eval_count": 455
+          }
+        },
+        "b49c03bb-45e1-58eb-ae84-dae5a2490769": {
+          "status": "uncovered",
+          "rationale": "問い合わせは携帯交換後のVPN追加認証に関するものですが、提供された資料には具体的なMFA再登録手順や認証アプリの移行に関する情報が含まれていません。資料は基本接続やインストール手順、紛失連絡の手順を説明していますが、スマートフォン交換後の認証移行に関する解決手順は提示されていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA再登録手順",
+            "認証アプリの移行に関する具体的な指示",
+            "旧端末の利用停止または削除手順",
+            "新端末での認証登録の詳細なステップ",
+            "IT担当への連絡時の必要情報",
+            "認証アプリの種類や対応方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "98f21b3a1cc4417f2bd5acd7c7e4305faa34d7ec59aeb8edab46af4cd02e181d",
+            "attempts": 1,
+            "prompt_eval_count": 2606,
+            "eval_count": 441
+          }
+        }
+      }
+    },
+    {
+      "phase": "s20_before",
+      "repeat": 2,
+      "summary": {
+        "total": 9,
+        "analyzed": 9,
+        "covered": 0,
+        "uncovered": 9,
+        "unknown": 0,
+        "unanalyzed": 0,
+        "rates": {
+          "covered": 0.0,
+          "uncovered": 1.0,
+          "unknown": 0.0
+        },
+        "coverage_on_analyzed": 0.0,
+        "gap_status": "gap"
+      },
+      "elapsed_ms": 34937.916000000005,
+      "unknown_errors": {},
+      "judgments": {
+        "0fb250de-809f-5100-a0a8-a025ccb7db67": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料には具体的な手順が記載されていません。資料はVPNクライアントのインストールや基本接続、端末紛失時の連絡手順についてのみ記載されており、MFA登録の変更や再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "MFA登録の変更手順",
+            "スマートフォン交換後の認証アプリの再登録方法",
+            "新しい端末でのMFA登録の具体的なステップ",
+            "認証アプリが使えない場合の代替手段",
+            "IT担当への連絡時の必要な情報",
+            "MFA登録の再設定に関する社内ポリシー"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 350,
+            "input_hash": "d577e22de69c9c121ffdd05c796dc565c6c7b949dfaec43f5e8e9fa9ebf93084",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2600
+          }
+        },
+        "15447fb6-1021-5534-8575-f49e18782f62": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料にはMFA再登録に関する具体的な手順が記載されていません。資料はVPN接続やクライアントのインストール、端末紛失時の連絡手順について述べていますが、MFAの再登録手順は含まれていません。",
+          "missing_information": [
+            "MFA再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "新しい端末でのMFA登録の方法",
+            "認証アプリが使用できない場合の代替手段",
+            "IT担当への連絡の必要性",
+            "認証情報の再取得に関する手順"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 407,
+            "input_hash": "56873252fcff06e55ed94f8522210dea63bdbbfb420c2187b9d7fcc3525ca7c3",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2601
+          }
+        },
+        "284e722d-acd9-59e9-b785-2593dd674ebb": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料には具体的なMFA再登録手順や対応方法が記載されていません。資料中のKB-0001とKB-0002はVPN接続やインストールに関するものであり、MFA再登録の手順には該当しません。",
+          "missing_information": [
+            "MFA再登録の具体的な手順",
+            "スマートフォン交換後の認証アプリの再登録方法",
+            "IT担当への連絡手段",
+            "認証アプリが利用できない場合の代替手段",
+            "MFA再登録に必要な権限や承認プロセス",
+            "MFA再登録の例外や注意事項"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 352,
+            "input_hash": "4bb92a6441dcffda8f732852de6180743ee902c8e1b5baf67e1e584b5a6ad9bc",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2601
+          }
+        },
+        "2a64d97f-0d80-51fb-9cc8-71dc715b561d": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN MFA認証の再登録に関するものですが、提供された資料には具体的なMFA再登録手順や対応方法が記載されていません。資料は基本接続やクライアントインストール、端末紛失時の連絡手順についてのみ記載されており、MFA認証の再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA認証再登録の具体的な手順",
+            "認証アプリが使用できなくなった場合の代替手段",
+            "新端末での認証登録の申請プロセス",
+            "IT担当への連絡時の必要な情報",
+            "認証アプリの再インストール手順",
+            "認証情報の再取得方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 446,
+            "input_hash": "91a52aee32d3d6c88e3031e4e63824392dac2f6e07ab51567d6778da8754398e",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2606
+          }
+        },
+        "44994346-188d-5bf0-8f42-5f8bae77a90c": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN多要素認証再登録に関するものですが、提供された資料には具体的な再登録手順や対応方法が記載されていません。資料はVPNクライアントのインストールや基本接続、端末紛失時の連絡手順についてのみ記載されており、認証再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "スマートフォン交換後の認証アプリ再登録の手順",
+            "認証アプリが旧端末で利用できない場合の代替手段",
+            "新端末での認証再登録に必要な情報や条件",
+            "IT担当への連絡時の具体的な内容",
+            "認証再登録の例外や注意事項",
+            "認証アプリの再登録に関する問い合わせ先"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 438,
+            "input_hash": "8d398c0959391db1f8bf86ba94dc640d1b00bb5fd9389c6169452b468c10981d",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2602
+          }
+        },
+        "5250aed9-66db-5519-9825-c87a734e6e1d": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN MFA認証再登録に関するものですが、提供された資料には具体的な手順や解決策が記載されていません。資料は基本接続手順やインストール手順、紛失連絡の手順を説明していますが、MFA認証の再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA認証再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "IT担当への連絡先や手続き",
+            "認証方法の変更や再設定に関する情報",
+            "認証アプリの代替手段や代替認証方法",
+            "認証失敗時の対応手順"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 436,
+            "input_hash": "e9c89b2d8336d373a69a3c1bff112732380f40721a58584b056d93437fa8a4c2",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2609
+          }
+        },
+        "6a7c05c3-df3b-561b-91a7-77db534bee04": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「VPN導入後の端末交換認証」に関するものであり、具体的な解決手順が資料に記載されていない。資料には端末交換後の認証再登録に関する手順が含まれていないため、必要な手順や条件が不足している。",
+          "missing_information": [
+            "端末交換後の認証再登録の具体的な手順",
+            "新端末の登録に関する詳細な手順",
+            "MFA（多要素認証）の再登録に関する手順",
+            "IT担当への連絡時の必要な情報",
+            "認証再登録の例外・注意事項",
+            "端末交換後の認証再登録の承認プロセス"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "5501e2e94bb9f7a24d1c3386223ed022448bcc92fead2e8a82a7b1ee485d6d69",
+            "attempts": 1,
+            "prompt_eval_count": 2601,
+            "eval_count": 409
+          }
+        },
+        "7cb8431b-7265-54cb-a7f5-e92779ceec65": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN接続におけるMFA失敗とその解決手順を求めるものですが、提供された資料にはMFA再登録に関する具体的な手順が含まれていません。資料はVPN接続の基本手順やクライアントのインストール、端末紛失時の連絡手順について述べていますが、スマートフォン交換後の認証再登録の手順は提示されていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "IT担当への連絡時の詳細な手順",
+            "認証方法の変更や再発行に関する情報",
+            "端末番号や利用停止の手続きに関する詳細",
+            "認証失敗時の代替手段や対応策"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "4d3627f671012769e7bd20e354d31b4e21fcd245db73cb9b971e793d2c2e5fa0",
+            "attempts": 1,
+            "prompt_eval_count": 2599,
+            "eval_count": 455
+          }
+        },
+        "b49c03bb-45e1-58eb-ae84-dae5a2490769": {
+          "status": "uncovered",
+          "rationale": "問い合わせは携帯交換後のVPN追加認証に関するものですが、提供された資料には具体的なMFA再登録手順や新端末への認証移行に関する情報が含まれていません。資料は基本接続やインストール手順、紛失連絡の手順に限定されており、スマートフォン交換後の認証再登録には対応していません。",
+          "missing_information": [
+            "新端末に認証アプリを再登録する具体的な手順",
+            "旧端末の認証解除または移行に関する手順",
+            "MFA認証の再登録に必要な情報（例：QRコード、コード、パスワードなど）",
+            "認証アプリの再登録に必要な管理者権限やIT担当との連携手順",
+            "認証アプリが使用できない場合の代替手段",
+            "認証再登録後に確認すべきステップ"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "98f21b3a1cc4417f2bd5acd7c7e4305faa34d7ec59aeb8edab46af4cd02e181d",
+            "attempts": 1,
+            "prompt_eval_count": 2606,
+            "eval_count": 332
+          }
+        }
+      }
+    },
+    {
+      "phase": "s20_before",
+      "repeat": 3,
+      "summary": {
+        "total": 9,
+        "analyzed": 9,
+        "covered": 0,
+        "uncovered": 9,
+        "unknown": 0,
+        "unanalyzed": 0,
+        "rates": {
+          "covered": 0.0,
+          "uncovered": 1.0,
+          "unknown": 0.0
+        },
+        "coverage_on_analyzed": 0.0,
+        "gap_status": "gap"
+      },
+      "elapsed_ms": 34987.806,
+      "unknown_errors": {},
+      "judgments": {
+        "0fb250de-809f-5100-a0a8-a025ccb7db67": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料には具体的な手順が記載されていません。資料はVPNクライアントのインストールや基本接続、端末紛失時の連絡手順についてのみ記載されており、MFA登録の変更や再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "MFA登録の変更手順",
+            "スマートフォン交換後の認証アプリの再登録方法",
+            "新しい端末でのMFA登録の具体的なステップ",
+            "認証アプリが使えない場合の代替手段",
+            "IT担当への連絡時の必要な情報",
+            "MFA登録の再設定に関する社内ポリシー"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 350,
+            "input_hash": "d577e22de69c9c121ffdd05c796dc565c6c7b949dfaec43f5e8e9fa9ebf93084",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2600
+          }
+        },
+        "15447fb6-1021-5534-8575-f49e18782f62": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料にはMFA再登録に関する具体的な手順が記載されていません。資料はVPN接続やクライアントのインストール、端末紛失時の連絡手順について述べていますが、MFAの再登録手順は含まれていません。",
+          "missing_information": [
+            "MFA再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "新しい端末でのMFA登録の方法",
+            "認証アプリが使用できない場合の代替手段",
+            "IT担当への連絡の必要性",
+            "認証情報の再取得に関する手順"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 407,
+            "input_hash": "56873252fcff06e55ed94f8522210dea63bdbbfb420c2187b9d7fcc3525ca7c3",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2601
+          }
+        },
+        "284e722d-acd9-59e9-b785-2593dd674ebb": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のMFA再登録に関するものですが、提供された資料には具体的なMFA再登録手順や対応方法が記載されていません。資料中のKB-0001とKB-0002はVPN接続やインストールに関するものであり、MFA再登録の手順には該当しません。",
+          "missing_information": [
+            "MFA再登録の具体的な手順",
+            "スマートフォン交換後の認証アプリの再登録方法",
+            "IT担当への連絡手段",
+            "認証アプリが利用できない場合の代替手段",
+            "MFA再登録に必要な権限や承認プロセス",
+            "MFA再登録の例外や注意事項"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 352,
+            "input_hash": "4bb92a6441dcffda8f732852de6180743ee902c8e1b5baf67e1e584b5a6ad9bc",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2601
+          }
+        },
+        "2a64d97f-0d80-51fb-9cc8-71dc715b561d": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN MFA認証の再登録に関するものですが、提供された資料には具体的なMFA再登録手順や対応方法が記載されていません。資料は基本接続やクライアントインストール、端末紛失時の連絡手順についてのみ記載されており、MFA認証の再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA認証再登録の具体的な手順",
+            "認証アプリが使用できなくなった場合の代替手段",
+            "新端末での認証登録の申請プロセス",
+            "IT担当への連絡時の必要な情報",
+            "認証アプリの再インストール手順",
+            "認証情報の再取得方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 446,
+            "input_hash": "91a52aee32d3d6c88e3031e4e63824392dac2f6e07ab51567d6778da8754398e",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2606
+          }
+        },
+        "44994346-188d-5bf0-8f42-5f8bae77a90c": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN多要素認証再登録に関するものですが、提供された資料には具体的な再登録手順や対応方法が記載されていません。資料はVPNクライアントのインストールや基本接続、端末紛失時の連絡手順についてのみ記載されており、認証再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "スマートフォン交換後の認証アプリ再登録の手順",
+            "認証アプリが旧端末で利用できない場合の代替手段",
+            "新端末での認証再登録に必要な情報や条件",
+            "IT担当への連絡時の具体的な内容",
+            "認証再登録の例外や注意事項",
+            "認証アプリの再登録に関する問い合わせ先"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 438,
+            "input_hash": "8d398c0959391db1f8bf86ba94dc640d1b00bb5fd9389c6169452b468c10981d",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2602
+          }
+        },
+        "5250aed9-66db-5519-9825-c87a734e6e1d": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN MFA認証再登録に関するものですが、提供された資料には具体的な手順や解決策が記載されていません。資料は基本接続手順やインストール手順、紛失連絡の手順を説明していますが、MFA認証の再登録に関する情報は含まれていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA認証再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "IT担当への連絡先や手続き",
+            "認証方法の変更や再設定に関する情報",
+            "認証アプリの代替手段や代替認証方法",
+            "認証失敗時の対応手順"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 436,
+            "input_hash": "e9c89b2d8336d373a69a3c1bff112732380f40721a58584b056d93437fa8a4c2",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2609
+          }
+        },
+        "6a7c05c3-df3b-561b-91a7-77db534bee04": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「VPN導入後の端末交換認証」に関するものであり、具体的な解決手順が資料に記載されていない。資料には端末交換後の認証再登録に関する手順が含まれていないため、必要な手順や条件が不足している。",
+          "missing_information": [
+            "端末交換後の認証再登録の具体的な手順",
+            "新端末の登録に関する詳細な手順",
+            "MFA（多要素認証）の再登録に関する手順",
+            "IT担当への連絡時の必要な情報",
+            "認証再登録の例外・注意事項",
+            "端末交換後の認証再登録の承認プロセス"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "5501e2e94bb9f7a24d1c3386223ed022448bcc92fead2e8a82a7b1ee485d6d69",
+            "attempts": 1,
+            "prompt_eval_count": 2601,
+            "eval_count": 409
+          }
+        },
+        "7cb8431b-7265-54cb-a7f5-e92779ceec65": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN接続におけるMFA失敗とその解決手順を求めるものですが、提供された資料にはMFA再登録に関する具体的な手順が含まれていません。資料はVPN接続の基本手順やクライアントのインストール、端末紛失時の連絡手順について述べていますが、スマートフォン交換後の認証再登録の手順は提示されていません。",
+          "missing_information": [
+            "スマートフォン交換後のMFA再登録の具体的な手順",
+            "認証アプリの再登録に関する指示",
+            "IT担当への連絡時の詳細な手順",
+            "認証方法の変更や再発行に関する情報",
+            "端末番号や利用停止の手続きに関する詳細",
+            "認証失敗時の代替手段や対応策"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "4d3627f671012769e7bd20e354d31b4e21fcd245db73cb9b971e793d2c2e5fa0",
+            "attempts": 1,
+            "prompt_eval_count": 2599,
+            "eval_count": 455
+          }
+        },
+        "b49c03bb-45e1-58eb-ae84-dae5a2490769": {
+          "status": "uncovered",
+          "rationale": "問い合わせは携帯交換後のVPN追加認証に関するものですが、提供された資料には具体的なMFA再登録手順や新端末への認証移行に関する情報が含まれていません。資料は基本接続やインストール手順、紛失連絡の手順に限定されており、スマートフォン交換後の認証再登録には対応していません。",
+          "missing_information": [
+            "新端末に認証アプリを再登録する具体的な手順",
+            "旧端末の認証解除または移行に関する手順",
+            "MFA認証の再登録に必要な情報（例：QRコード、コード、パスワードなど）",
+            "認証アプリの再登録に必要な管理者権限やIT担当との連携手順",
+            "認証アプリが使用できない場合の代替手段",
+            "認証再登録後に確認すべきステップ"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "98f21b3a1cc4417f2bd5acd7c7e4305faa34d7ec59aeb8edab46af4cd02e181d",
+            "attempts": 1,
+            "prompt_eval_count": 2606,
+            "eval_count": 332
+          }
+        }
+      }
+    },
+    {
+      "phase": "s20_after",
+      "repeat": 1,
+      "summary": {
+        "total": 9,
+        "analyzed": 9,
+        "covered": 4,
+        "uncovered": 5,
+        "unknown": 0,
+        "unanalyzed": 0,
+        "rates": {
+          "covered": 0.4444444444444444,
+          "uncovered": 0.5555555555555556,
+          "unknown": 0.0
+        },
+        "coverage_on_analyzed": 0.4444444444444444,
+        "gap_status": "gap"
+      },
+      "elapsed_ms": 43123.401,
+      "unknown_errors": {},
+      "judgments": {
+        "0fb250de-809f-5100-a0a8-a025ccb7db67": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題である「携帯交換後のVPN追加認証について」を直接的に解決する手順を含んでいる。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 308,
+            "input_hash": "d0039f5f79777473bf348fffd2b90707e7bd0b083a9e62f87a1ff5bad4994951",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2581
+          }
+        },
+        "15447fb6-1021-5534-8575-f49e18782f62": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「携帯交換後のVPN追加認証について」であり、具体的には新しい携帯でMFAを登録し直したいという状況です。資料中のKB-0016は「携帯交換後のVPN MFA認証の再登録」について記載されており、手順としてIT担当者が本人確認を行う、旧端末の認証登録を失効し、新端末用の認証登録を再発行する、新端末の認証アプリを登録する、認証コードでVPNに接続できることを確認するといった内容が含まれています。しかし、この手順はIT担当者による介入が必須であり、ユーザー自身が行える手順ではありません。また、問い合わせでは「新しい携帯でMFAを登録し直したい」というユーザー側の行動が求められているため、IT担当者による手順を裏付けるだけでは解決手順が不十分です。",
+          "missing_information": [
+            "ユーザー自身が行えるMFA登録の手順",
+            "認証アプリのインストール手順",
+            "認証コードの取得方法",
+            "認証アプリの登録画面の操作手順",
+            "認証コード入力後の接続確認手順",
+            "認証失敗時の対処方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 546,
+            "input_hash": "5d6f17afd9defe1be213c7a6b15e543fcf93af9a7fce22e69a1401d62661baf1",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2582
+          }
+        },
+        "284e722d-acd9-59e9-b785-2593dd674ebb": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「携帯交換後のVPN追加認証について」であり、資料KB-0016は「携帯交換後のVPN MFA認証の再登録」について記載されています。この文書はMFA認証の再登録手順を説明していますが、具体的な技術的な手順や実際の操作方法は記載されていません。また、他の資料はVPNクライアントのインストールや基本接続についてであり、MFA認証の再登録に直接関係する情報は不足しています。",
+          "missing_information": [
+            "具体的な操作手順",
+            "認証アプリの再登録方法",
+            "IT担当者との連携方法",
+            "認証コードの取得方法",
+            "新端末の設定手順",
+            "旧端末の認証登録失効の詳細"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 449,
+            "input_hash": "39fc7b85fb97f800ba2ee6a4b1af7c2df0071f29b1555770a74d2ac9cfbd1ae2",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2582
+          }
+        },
+        "2a64d97f-0d80-51fb-9cc8-71dc715b561d": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題であるスマートフォン交換後のMFA再登録を解決する具体的な手順を裏付けています。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 308,
+            "input_hash": "f00fca3ab10ad50c3e60a888fe0af3de6f88c1d055bdad12a1793298e49611a6",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2587
+          }
+        },
+        "44994346-188d-5bf0-8f42-5f8bae77a90c": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN多要素認証再登録に関するものですが、提供された資料には具体的な手順が含まれていますが、その手順が十分に明確でなく、実際の解決に必要な詳細な条件や例外が欠如しています。",
+          "missing_information": [
+            "具体的な本人確認の方法",
+            "旧端末の認証登録失効の手順",
+            "新端末での認証アプリの登録方法",
+            "認証コードの取得方法",
+            "IT担当者への問い合わせの具体的な手順",
+            "認証失敗時の対応手順"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 392,
+            "input_hash": "76da9dd6b0ace4ae62a8fdd83c4910c347d1222f229a987d9a3c388fc87a5f86",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2583
+          }
+        },
+        "5250aed9-66db-5519-9825-c87a734e6e1d": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題と直接的に一致しています。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 287,
+            "input_hash": "859dba3cdab3971e5128c2f1ee29f161211a8a0e6e606f7cca55776a9185a39a",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2590
+          }
+        },
+        "6a7c05c3-df3b-561b-91a7-77db534bee04": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「VPN導入後の端末交換認証」に関するものであり、資料中の「KB-0016」は「携帯交換後のVPN MFA認証の再登録」について記載されています。この文書はMFA認証の再登録手順を説明していますが、問い合わせは端末交換後の認証に進めない状況を報告しており、具体的な解決手順が不足しています。また、他の資料はインストール手順や基本接続についてのみ記載されており、端末交換後の認証に関する手順は見つかりません。",
+          "missing_information": [
+            "端末交換後の認証失敗の具体的なエラーメッセージ",
+            "旧端末と新端末の種類（iOS/Androidなど）",
+            "IT担当者との連絡先情報",
+            "認証アプリの種類（例：Google Authenticatorなど）",
+            "端末交換の日時や手順",
+            "認証コードの取得方法や状況"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "9bf55973e6edb65e42be47749faeccbe762991a63fa5747d5d7c22acfd5997b2",
+            "attempts": 1,
+            "prompt_eval_count": 2582,
+            "eval_count": 686
+          }
+        },
+        "7cb8431b-7265-54cb-a7f5-e92779ceec65": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN接続におけるMFA失敗に関するものですが、提供された資料には具体的な解決手順が含まれていますが、その手順が完全に問い合わせの状況をカバーしているとは言えません。特に、新端末での認証アプリの再登録に関する手順は明示されており、その実施に必要な詳細な条件や例外が不足しています。",
+          "missing_information": [
+            "新端末での認証アプリの再登録に必要な具体的な手順",
+            "旧端末の認証登録を失効する際の詳細な手順",
+            "本人確認の具体的な方法",
+            "認証コードの取得方法",
+            "認証コードでVPNに接続する際の詳細な手順",
+            "IT担当者への問い合わせ時の具体的な連絡手段"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "e21e276a843d9278e9e0a30d5a5d70715484aac066640defceeca8bdf8fec3d1",
+            "attempts": 2,
+            "prompt_eval_count": 2593,
+            "eval_count": 522
+          }
+        },
+        "b49c03bb-45e1-58eb-ae84-dae5a2490769": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題と直接的に一致しています。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "03d5b30cbe022e1f9fed66c11c4d78c031638c9e71faa00621ae1bd7b0ae812b",
+            "attempts": 1,
+            "prompt_eval_count": 2587,
+            "eval_count": 287
+          }
+        }
+      }
+    },
+    {
+      "phase": "s20_after",
+      "repeat": 2,
+      "summary": {
+        "total": 9,
+        "analyzed": 9,
+        "covered": 4,
+        "uncovered": 4,
+        "unknown": 1,
+        "unanalyzed": 0,
+        "rates": {
+          "covered": 0.4444444444444444,
+          "uncovered": 0.4444444444444444,
+          "unknown": 0.1111111111111111
+        },
+        "coverage_on_analyzed": 0.4444444444444444,
+        "gap_status": "unknown"
+      },
+      "elapsed_ms": 43248.309,
+      "unknown_errors": {
+        "AI_INVALID_OUTPUT": 1
+      },
+      "judgments": {
+        "0fb250de-809f-5100-a0a8-a025ccb7db67": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題である「携帯交換後のVPN追加認証について」を直接的に解決する手順を含んでいる。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 308,
+            "input_hash": "d0039f5f79777473bf348fffd2b90707e7bd0b083a9e62f87a1ff5bad4994951",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2581
+          }
+        },
+        "15447fb6-1021-5534-8575-f49e18782f62": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「携帯交換後のVPN追加認証について」であり、具体的には新しい携帯でMFAを登録し直したいという状況です。資料中のKB-0016は「携帯交換後のVPN MFA認証の再登録」について記載されており、手順としてIT担当者が本人確認を行う、旧端末の認証登録を失効し、新端末用の認証登録を再発行する、新端末の認証アプリを登録する、認証コードでVPNに接続できることを確認するといった内容が含まれています。しかし、この手順はIT担当者による介入が必要であり、ユーザー自身が行える手順ではありません。また、問い合わせでは「新しい携帯でMFAを登録し直したい」というユーザー側の行動が求められているため、IT担当者による手順の実施が前提となるため、解決手順が完全に裏付けられていません。",
+          "missing_information": [
+            "ユーザー自身がMFAを登録し直せる手順",
+            "認証アプリの再登録に関する具体的な手順",
+            "IT担当者による本人確認の詳細",
+            "旧端末の認証登録を失効する方法",
+            "新端末の認証アプリを登録する手順",
+            "認証コードでVPNに接続する方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 494,
+            "input_hash": "5d6f17afd9defe1be213c7a6b15e543fcf93af9a7fce22e69a1401d62661baf1",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2582
+          }
+        },
+        "284e722d-acd9-59e9-b785-2593dd674ebb": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「携帯交換後のVPN追加認証について」であり、資料KB-0016は「携帯交換後のVPN MFA認証の再登録」について記載されています。この文書はMFA認証の再登録手順を説明していますが、具体的な技術的な手順や実際の操作方法は記載されていません。また、他の資料はVPNクライアントのインストールや基本接続についてのみ記載されており、MFA認証の再登録に関する解決手順を裏付ける情報が不足しています。",
+          "missing_information": [
+            "具体的な操作手順",
+            "認証アプリの再登録方法",
+            "IT担当者との連携方法",
+            "認証コードの取得方法",
+            "新端末での認証アプリのインストール手順",
+            "認証失敗時の対応方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 459,
+            "input_hash": "39fc7b85fb97f800ba2ee6a4b1af7c2df0071f29b1555770a74d2ac9cfbd1ae2",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2582
+          }
+        },
+        "2a64d97f-0d80-51fb-9cc8-71dc715b561d": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題であるスマートフォン交換後のMFA再登録を解決する具体的な手順を裏付けています。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 308,
+            "input_hash": "f00fca3ab10ad50c3e60a888fe0af3de6f88c1d055bdad12a1793298e49611a6",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2587
+          }
+        },
+        "44994346-188d-5bf0-8f42-5f8bae77a90c": {
+          "status": "unknown",
+          "rationale": "AI・通信・形式または出典の検証に失敗しました。",
+          "missing_information": [
+            "新しい判定記録で再実行してください。"
+          ],
+          "error_code": "AI_INVALID_OUTPUT",
+          "trace": null
+        },
+        "5250aed9-66db-5519-9825-c87a734e6e1d": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題と直接的に一致しています。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 287,
+            "input_hash": "859dba3cdab3971e5128c2f1ee29f161211a8a0e6e606f7cca55776a9185a39a",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2590
+          }
+        },
+        "6a7c05c3-df3b-561b-91a7-77db534bee04": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「VPN導入後の端末交換認証」に関するものであり、資料中の「KB-0016」は「携帯交換後のVPN MFA認証の再登録」について記載されています。この文書はMFA認証の再登録手順を説明していますが、問い合わせは端末交換後の認証に進めない状況を報告しており、具体的な解決手順が不足しています。また、他の資料はインストール手順や基本接続についてのみ記載されており、端末交換後の認証に関する手順は見つかりません。",
+          "missing_information": [
+            "端末交換後の認証失敗の具体的なエラーメッセージ",
+            "旧端末と新端末の関連性の確認方法",
+            "IT担当者との連携手順",
+            "認証アプリの再登録に関する詳細な手順",
+            "認証コードの取得方法",
+            "認証失敗時の代替手段"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "9bf55973e6edb65e42be47749faeccbe762991a63fa5747d5d7c22acfd5997b2",
+            "attempts": 1,
+            "prompt_eval_count": 2582,
+            "eval_count": 678
+          }
+        },
+        "7cb8431b-7265-54cb-a7f5-e92779ceec65": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN接続におけるMFA失敗に関するものですが、提供された資料には具体的な解決手順が含まれていますが、その手順が完全に問い合わせの状況をカバーしているとは言えません。特に、新端末での認証アプリの再登録に関する手順は明示されており、その実施に必要な詳細な条件や例外が不足しています。",
+          "missing_information": [
+            "新端末での認証アプリの再登録に必要な具体的な手順",
+            "旧端末の認証登録を失効する際の詳細な手順",
+            "本人確認の具体的な方法",
+            "認証コードの取得方法",
+            "認証コードでVPNに接続する際の詳細な手順",
+            "IT担当者への問い合わせ時の具体的な連絡手段"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "e21e276a843d9278e9e0a30d5a5d70715484aac066640defceeca8bdf8fec3d1",
+            "attempts": 2,
+            "prompt_eval_count": 2593,
+            "eval_count": 522
+          }
+        },
+        "b49c03bb-45e1-58eb-ae84-dae5a2490769": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題と直接的に一致しています。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "03d5b30cbe022e1f9fed66c11c4d78c031638c9e71faa00621ae1bd7b0ae812b",
+            "attempts": 1,
+            "prompt_eval_count": 2587,
+            "eval_count": 287
+          }
+        }
+      }
+    },
+    {
+      "phase": "s20_after",
+      "repeat": 3,
+      "summary": {
+        "total": 9,
+        "analyzed": 9,
+        "covered": 3,
+        "uncovered": 4,
+        "unknown": 2,
+        "unanalyzed": 0,
+        "rates": {
+          "covered": 0.3333333333333333,
+          "uncovered": 0.4444444444444444,
+          "unknown": 0.2222222222222222
+        },
+        "coverage_on_analyzed": 0.3333333333333333,
+        "gap_status": "unknown"
+      },
+      "elapsed_ms": 51388.445999999996,
+      "unknown_errors": {
+        "AI_INVALID_OUTPUT": 1,
+        "AI_UNAVAILABLE": 1
+      },
+      "judgments": {
+        "0fb250de-809f-5100-a0a8-a025ccb7db67": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題である「携帯交換後のVPN追加認証について」を直接的に解決する手順を含んでいる。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 308,
+            "input_hash": "d0039f5f79777473bf348fffd2b90707e7bd0b083a9e62f87a1ff5bad4994951",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2581
+          }
+        },
+        "15447fb6-1021-5534-8575-f49e18782f62": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「携帯交換後のVPN追加認証について」であり、具体的には新しい携帯でMFAを登録し直したいという状況です。資料中のKB-0016は「携帯交換後のVPN MFA認証の再登録」について記載されており、手順としてIT担当者が本人確認を行う、旧端末の認証登録を失効し、新端末用の認証登録を再発行する、新端末の認証アプリを登録する、認証コードでVPNに接続できることを確認するといった内容が含まれています。しかし、この手順はIT担当者による介入が必要であり、ユーザー自身が行える手順ではありません。また、問い合わせでは「新しい携帯でMFAを登録し直したい」というユーザー側の行動が求められているため、IT担当者による手順の実施が前提となるため、解決手順が完全に裏付けられていません。",
+          "missing_information": [
+            "ユーザー自身がMFAを登録し直せる手順",
+            "認証アプリの再登録に関する具体的な手順",
+            "IT担当者による本人確認の詳細",
+            "旧端末の認証登録を失効する方法",
+            "新端末の認証アプリを登録する手順",
+            "認証コードでVPNに接続する方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 494,
+            "input_hash": "5d6f17afd9defe1be213c7a6b15e543fcf93af9a7fce22e69a1401d62661baf1",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2582
+          }
+        },
+        "284e722d-acd9-59e9-b785-2593dd674ebb": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「携帯交換後のVPN追加認証について」であり、資料KB-0016は「携帯交換後のVPN MFA認証の再登録」について記載されています。この文書はMFA認証の再登録手順を説明していますが、具体的な技術的な手順や実際の操作方法は記載されていません。また、他の資料はVPNクライアントのインストールや基本接続についてのみ記載されており、MFA認証の再登録に関する解決手順を裏付ける情報が不足しています。",
+          "missing_information": [
+            "具体的な操作手順",
+            "認証アプリの再登録方法",
+            "IT担当者との連携方法",
+            "認証コードの取得方法",
+            "新端末での認証アプリのインストール手順",
+            "認証失敗時の対応方法"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 459,
+            "input_hash": "39fc7b85fb97f800ba2ee6a4b1af7c2df0071f29b1555770a74d2ac9cfbd1ae2",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2582
+          }
+        },
+        "2a64d97f-0d80-51fb-9cc8-71dc715b561d": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題であるスマートフォン交換後のMFA再登録を解決する具体的な手順を裏付けています。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "attempts": 1,
+            "eval_count": 308,
+            "input_hash": "f00fca3ab10ad50c3e60a888fe0af3de6f88c1d055bdad12a1793298e49611a6",
+            "prompt_version": "radar-coverage-v1",
+            "prompt_eval_count": 2587
+          }
+        },
+        "44994346-188d-5bf0-8f42-5f8bae77a90c": {
+          "status": "unknown",
+          "rationale": "AI・通信・形式または出典の検証に失敗しました。",
+          "missing_information": [
+            "新しい判定記録で再実行してください。"
+          ],
+          "error_code": "AI_INVALID_OUTPUT",
+          "trace": null
+        },
+        "5250aed9-66db-5519-9825-c87a734e6e1d": {
+          "status": "unknown",
+          "rationale": "AI・通信・形式または出典の検証に失敗しました。",
+          "missing_information": [
+            "新しい判定記録で再実行してください。"
+          ],
+          "error_code": "AI_UNAVAILABLE",
+          "trace": null
+        },
+        "6a7c05c3-df3b-561b-91a7-77db534bee04": {
+          "status": "uncovered",
+          "rationale": "問い合わせは「VPN導入後の端末交換認証」に関するものであり、資料中の「KB-0016」は「携帯交換後のVPN MFA認証の再登録」について記載されています。この文書はMFA認証の再登録手順を説明していますが、問い合わせは端末交換後の認証に進めない状況を報告しており、具体的な解決手順が不足しています。また、他の資料はインストール手順や基本接続についてのみ記載されており、端末交換後の認証に関する手順は見つかりません。",
+          "missing_information": [
+            "端末交換後の認証失敗の具体的なエラーメッセージ",
+            "旧端末と新端末の関連性の確認方法",
+            "IT担当者との連携手順",
+            "認証アプリの再登録に関する詳細な手順",
+            "認証コードの取得方法",
+            "認証失敗時の代替手段"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "9bf55973e6edb65e42be47749faeccbe762991a63fa5747d5d7c22acfd5997b2",
+            "attempts": 1,
+            "prompt_eval_count": 2582,
+            "eval_count": 678
+          }
+        },
+        "7cb8431b-7265-54cb-a7f5-e92779ceec65": {
+          "status": "uncovered",
+          "rationale": "問い合わせはスマートフォン交換後のVPN接続におけるMFA失敗に関するものですが、提供された資料には具体的な解決手順が含まれていますが、その手順が完全に問い合わせの状況をカバーしているとは言えません。特に、新端末での認証アプリの再登録に関する手順は明示されており、その実施に必要な詳細な条件や例外が不足しています。",
+          "missing_information": [
+            "新端末での認証アプリの再登録に必要な具体的な手順",
+            "旧端末の認証登録を失効する際の詳細な手順",
+            "本人確認の具体的な方法",
+            "認証コードの取得方法",
+            "認証コードでVPNに接続する際の詳細な手順",
+            "IT担当者への問い合わせ時の具体的な連絡手段"
+          ],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "e21e276a843d9278e9e0a30d5a5d70715484aac066640defceeca8bdf8fec3d1",
+            "attempts": 2,
+            "prompt_eval_count": 2593,
+            "eval_count": 522
+          }
+        },
+        "b49c03bb-45e1-58eb-ae84-dae5a2490769": {
+          "status": "covered",
+          "rationale": "資料中のKB-0016は、携帯交換後のVPN MFA認証の再登録に関する手順を提供しており、問い合わせの主題と直接的に一致しています。",
+          "missing_information": [],
+          "error_code": null,
+          "trace": {
+            "mode": "live",
+            "model": "qwen3:8b",
+            "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+            "prompt_version": "radar-coverage-v1",
+            "input_hash": "03d5b30cbe022e1f9fed66c11c4d78c031638c9e71faa00621ae1bd7b0ae812b",
+            "attempts": 1,
+            "prompt_eval_count": 2587,
+            "eval_count": 287
+          }
+        }
+      }
+    }
+  ],
+  "transmitted_source_audit": {
+    "uses": 105,
+    "valid": 105,
+    "invalid": [],
+    "note": "Radar累積応答内の同一coverage/ticket/chunk/quoteを重複計上しない。"
+  },
+  "input_variants": [
+    {
+      "phase": "s20_before",
+      "ticket": "0fb250de-809f-5100-a0a8-a025ccb7db67",
+      "hashes": [
+        "1b3af088b5bfe36f4cf74f39ccf8e178af505124f6ed202d51ba740f45cbf308"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_before",
+      "ticket": "15447fb6-1021-5534-8575-f49e18782f62",
+      "hashes": [
+        "52a9452722ebee2fc7e5f1a8db1e686a49017379f22afeaa7dfa21433caaceb4"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_before",
+      "ticket": "284e722d-acd9-59e9-b785-2593dd674ebb",
+      "hashes": [
+        "97037a2593a269b12fda567a65d26d36580b9885edceb96283c2f73257d18b4c"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_before",
+      "ticket": "2a64d97f-0d80-51fb-9cc8-71dc715b561d",
+      "hashes": [
+        "d441eab36f8a0e1154c64667f3be0f52257eb55952e5335910fa0d43c76552dc"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_before",
+      "ticket": "44994346-188d-5bf0-8f42-5f8bae77a90c",
+      "hashes": [
+        "5738bf8c09e5df04061b8a555ceee1e846552caa9eb5a2325e44a3ce2ec1da2b"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_before",
+      "ticket": "5250aed9-66db-5519-9825-c87a734e6e1d",
+      "hashes": [
+        "1616c89adca7603cfce7129f1cc96767cbece60c563ef2ce5e131747476ec9bc"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_before",
+      "ticket": "6a7c05c3-df3b-561b-91a7-77db534bee04",
+      "hashes": [
+        "4730e9797041adc4afb8c2527fe1659c1732c90f79427f81afd2c0c17b2c4900"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_before",
+      "ticket": "7cb8431b-7265-54cb-a7f5-e92779ceec65",
+      "hashes": [
+        "a3c325a036da04710c29bb4241404c92c86a09d2cbf31d626351b39ce89874bd"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_before",
+      "ticket": "b49c03bb-45e1-58eb-ae84-dae5a2490769",
+      "hashes": [
+        "4eb354bc168ac25193e7344989418f0a5398a8d168df99ac463193fc944d3f8b"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "0fb250de-809f-5100-a0a8-a025ccb7db67",
+      "hashes": [
+        "aa3a82ffcf7768376bd4d2857b0b1c8cb9690550bb5b38fa274c620242e9a672"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "15447fb6-1021-5534-8575-f49e18782f62",
+      "hashes": [
+        "b60372447eb47abdf31762c50982a6faa9043f3c67cdff9ded13f00612a40d81"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "284e722d-acd9-59e9-b785-2593dd674ebb",
+      "hashes": [
+        "5d04052e2735f3050d479a1edcae030a5958a845a8fe73b1b1f656b114db344b"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "2a64d97f-0d80-51fb-9cc8-71dc715b561d",
+      "hashes": [
+        "5ff725715d06dbc3dc24e12c6c8c846c9bb5c091df46f154b56e534eaca3fdf4"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "44994346-188d-5bf0-8f42-5f8bae77a90c",
+      "hashes": [
+        "fcc93d5e6ac483c5f29600a343d9bc6ad9b7d4ebe659f946ed79b9ac6dbf36c9"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "5250aed9-66db-5519-9825-c87a734e6e1d",
+      "hashes": [
+        "325c3570d172e81978211c91199063e2bb17df6f6bed5df038282451b04c608a"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "6a7c05c3-df3b-561b-91a7-77db534bee04",
+      "hashes": [
+        "e2cc7761a4a1243ed78664b9483993b0ea1d37d9d804c673896d96b11b361a50"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "7cb8431b-7265-54cb-a7f5-e92779ceec65",
+      "hashes": [
+        "0e12776731b5cf441595376300613d774543cc7f2753d652dd08716d396e7e96"
+      ],
+      "n": 1
+    },
+    {
+      "phase": "s20_after",
+      "ticket": "b49c03bb-45e1-58eb-ae84-dae5a2490769",
+      "hashes": [
+        "9c6784d203b23fda48ad2a2ef18b3133197f4364067cdb9e4a9c8b83c0ebee51"
+      ],
+      "n": 1
+    }
+  ],
+  "drafts": {
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 200,
+        "result_hash": "b784adcceffdc777bcdfa27c894e493f0acf1ce8b18c1c6399c61572993bca5b",
+        "trace": {
+          "mode": "live",
+          "model": "qwen3:8b",
+          "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+          "prompt_version": "knowledge-draft-v2",
+          "input_hash": "e4b2efe06a63ccaade6709a99919dfa941bc4f0bf844da35286143f0fa9409a1",
+          "output_hash": "6945d0eb842764a8d19e3a6a1e4ba17b7abe53eda688d9cf30df0b6cb41ca77f",
+          "prompt_eval_count": 2429,
+          "eval_count": 529,
+          "attempts": 2,
+          "request_id": "e31c72d0-40ca-4307-b700-30976c4af5c0",
+          "elapsed_ms": 9032.59
+        }
+      },
+      {
+        "repeat": 2,
+        "status": 200,
+        "result_hash": "b784adcceffdc777bcdfa27c894e493f0acf1ce8b18c1c6399c61572993bca5b",
+        "trace": {
+          "mode": "live",
+          "model": "qwen3:8b",
+          "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+          "prompt_version": "knowledge-draft-v2",
+          "input_hash": "e4b2efe06a63ccaade6709a99919dfa941bc4f0bf844da35286143f0fa9409a1",
+          "output_hash": "6945d0eb842764a8d19e3a6a1e4ba17b7abe53eda688d9cf30df0b6cb41ca77f",
+          "prompt_eval_count": 2429,
+          "eval_count": 529,
+          "attempts": 2,
+          "request_id": "bc78b8b2-3f19-40b4-accc-3421388619e8",
+          "elapsed_ms": 13599.12
+        }
+      },
+      {
+        "repeat": 3,
+        "status": 200,
+        "result_hash": "b784adcceffdc777bcdfa27c894e493f0acf1ce8b18c1c6399c61572993bca5b",
+        "trace": {
+          "mode": "live",
+          "model": "qwen3:8b",
+          "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+          "prompt_version": "knowledge-draft-v2",
+          "input_hash": "e4b2efe06a63ccaade6709a99919dfa941bc4f0bf844da35286143f0fa9409a1",
+          "output_hash": "6945d0eb842764a8d19e3a6a1e4ba17b7abe53eda688d9cf30df0b6cb41ca77f",
+          "prompt_eval_count": 2429,
+          "eval_count": 529,
+          "attempts": 2,
+          "request_id": "8dc900ce-6502-4514-870f-a80c592782d9",
+          "elapsed_ms": 8566.85
+        }
+      }
+    ],
+    "first_result_for_comparison": {
+      "title": "携帯交換後のVPN追加認証について",
+      "audience": "携帯電話を買い替えてからVPNの追加認証で止まります。以前の端末の認証アプリは使えません。新しいスマートフォンへのMFA登録の切替をお願いします。",
+      "symptoms": [
+        "携帯電話を買い替えてからVPNの追加認証で止まります。",
+        "以前の端末の認証アプリは使えません。",
+        "新しいスマートフォンへのMFA登録の切替をお願いします。",
+        "新しいスマートフォンに交換後、VPNの多要素認証を通過できません。",
+        "旧携帯の認証アプリが利用できないため、新端末で認証を再登録したいです。",
+        "スマートフォンを機種変更した後、VPNのMFA認証ができなくなりました。"
+      ],
+      "steps": [
+        "IT担当者が本人確認を実施した。",
+        "旧携帯の認証登録を無効化した。",
+        "新しい携帯向けの登録を発行した。",
+        "新端末の認証アプリを設定し、VPN接続を確認した。",
+        "本人確認後、IT担当者が旧端末の登録を失効した。",
+        "新端末の認証登録を再発行した。",
+        "新端末の認証アプリを登録し、VPNの追加認証が通ることを本人と確認した。",
+        "新端末の認証アプリを登録し、認証コードでVPNに接続できることを確認した。"
+      ],
+      "cautions": [],
+      "missing_information": [],
+      "source_ticket_ids": [
+        "0fb250de-809f-5100-a0a8-a025ccb7db67",
+        "44994346-188d-5bf0-8f42-5f8bae77a90c",
+        "5250aed9-66db-5519-9825-c87a734e6e1d"
+      ]
+    },
+    "human_review": "pending"
+  },
+  "setup_failure": "最初の診断準備は評価resetのsingleton復元漏れで停止。品質試行前。修正後に新規出力先で実行。",
+  "product_head": "044cc692df9527a0fb99c1368b5c2fd1a04dc5c3"
+}

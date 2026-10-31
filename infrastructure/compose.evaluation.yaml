@@ -1,0 +1,44 @@
+name: solveloop-evaluation
+
+services:
+  eval:
+    image: solveloop-evaluation:test
+    build:
+      context: ../backend
+      target: test
+    environment:
+      DB_HOST: eval-db
+      POSTGRES_DB: solveloop_evaluation
+      POSTGRES_USER: solveloop_evaluation
+      POSTGRES_PASSWORD: Synthetic-Evaluation-Only!
+      SOLVELOOP_EVALUATION: "s21-v1"
+      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      AUTH_ALLOWED_ORIGINS: '["http://testserver"]'
+      PYTHONPATH: /app:/evaluation
+    volumes:
+      - ../evaluations:/evaluation:ro
+      - ../.local/s21:/results
+    depends_on:
+      eval-db:
+        condition: service_healthy
+    command: ["python", "/evaluation/run.py", "--help"]
+  eval-db:
+    image: pgvector/pgvector:0.8.7-pg17-bookworm@sha256:ac08538c6f8b9904c33c8224c5e5706dbe760aca29db1d096972b4052c22a75d
+    environment:
+      POSTGRES_DB: solveloop_evaluation
+      POSTGRES_USER: solveloop_evaluation
+      POSTGRES_PASSWORD: Synthetic-Evaluation-Only!
+    volumes:
+      - evaluation_data:/var/lib/postgresql/data
+      - ./evaluation-init.sql:/docker-entrypoint-initdb.d/10-evaluation-identity.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U solveloop_evaluation -d solveloop_evaluation"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    labels:
+      local.solveloop.description: "S21 合成評価専用・原本とデモから分離"
+volumes:
+  evaluation_data:
+    labels:
+      local.solveloop.description: "S21 評価原本・Git対象外"

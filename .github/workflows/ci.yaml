@@ -31,6 +31,10 @@ jobs:
         run: |
           docker run --rm solveloop-backend-test:ci ruff check .
           docker run --rm solveloop-backend-test:ci ruff format --check .
+      - name: AI評価器の固定分母と入力分離を検証（実モデル不要）
+        run: |
+          docker run --rm --mount type=bind,src="$PWD/evaluations",dst=/evaluation,readonly --mount type=bind,src="$PWD/demo",dst=/demo,readonly solveloop-backend-test:ci ruff check --config pyproject.toml --config 'lint.isort.known-first-party=["app"]' /evaluation
+          docker run --rm --mount type=bind,src="$PWD/evaluations",dst=/evaluation,readonly --mount type=bind,src="$PWD/demo",dst=/demo,readonly solveloop-backend-test:ci pytest -q -p no:cacheprovider /evaluation/test_evaluation.py
       - name: 空のPostgreSQLでマイグレーションとAPIを検証
         run: |
           docker compose -p solveloop-ci --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --wait --wait-timeout 90 db
