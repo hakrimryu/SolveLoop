@@ -10,7 +10,7 @@
 
 問い合わせ・ナレッジ・Dashboardは実APIとPostgreSQLに接続しています。社員の問い合わせ登録から、担当者の割り当て・解決、手動ナレッジ作成・承認、社員の検索・閲覧まで保存できます。サーバーで役割・所有者・現在のセッションを検査し、古い版による更新は409で拒否します。業務変更と履歴は同じトランザクションで保存します。
 
-AI生成・意味検索・埋め込み・Knowledge Gap Radarは未実装です。Dashboardの実DB集計とRadarの未実装表示を分けています。最小シードは部門と認証用の合成アカウントだけを用意し、業務資料は0件から始まります。実際のUUID・サーバー時刻を使い、再読み込みしてもDBの資料を保持します。
+ローカルOllamaへの接続と、合成の日本語入力による生成・埋め込みのCLI検証を実装しています。業務画面のAI生成・意味検索・ベクトル保存・Knowledge Gap Radarは未実装です。Dashboardの実DB集計とRadarの未実装表示を分けています。最小シードは部門と認証用の合成アカウントだけを用意し、業務資料は0件から始まります。実際のUUID・サーバー時刻を使い、再読み込みしてもDBの資料を保持します。
 
 バックエンドはPostgreSQL 17.11 / pgvector 0.8.7を使用し、部門・利用者・セッション・アカウント監査、問い合わせ・変更履歴、ナレッジ文書・版・根拠・レビュー履歴、登録キーと適用履歴を保存します。管理権限は業務の役割と独立しています。管理権限編集・アカウント削除・既存プロフィール編集は提供しません。
 
@@ -396,6 +396,67 @@ Dockerfileは `backend/Dockerfile`、ビルドコンテキストは `backend/`�
 
 APIだけを停止する場合は `docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml stop backend` を使います。DBや画面previewの停止は別操作です。
 
+## ローカルOllamaの接続検証
+
+WindowsホストでOllamaを起動し、DB/APIは上記のComposeで実行します。検証したOllamaは **0.40.13** です。既存のOllamaが動作していれば再利用してください。ホストの `127.0.0.1:11434` から、バックエンドコンテナの `host.docker.internal:11434` へ接続できることをDocker Desktopで確認しています。Ollamaの公開バインド・ポート転送・CORSの追加は不要でした。別環境で失敗しても、先に到達範囲を調べ、無条件に `0.0.0.0` へ変更しないでください。
+
+モデルはローカル実行用です。初回ダウンロードにはネットワークが必要ですが、推論に外部AI APIは使いません。モデルの利用条件を確認してから、Windowsホストで準備します。既にある同じモデルは再ダウンロード不要です。
+
+```powershell
+ollama --version
+ollama list
+ollama pull qwen3:8b
+ollama pull embeddinggemma-2:270m-q8_0-text
+```
+
+生成は既存の [Qwen3 8B](https://ollama.com/library/qwen3:8b)、埋め込みは [EmbeddingGemma 2のテキスト専用Q8版](https://ollama.com/library/embeddinggemma-2:270m-q8_0-text) を接続検証に使用します。両モデルのライセンスはApache 2.0です（[Qwenの表示](https://ollama.com/library/qwen3:8b)、[Googleのモデルカード](https://ai.google.dev/gemma/docs/embeddinggemma/model_card_2)）。1世代目のEmbeddingGemmaとはモデル・利用条件が異なり、互換ベクトルとして混ぜられません。重みはGitやアプリのイメージに含めません。配布元の条件・表示は保持し、本プロジェクト自体のライセンスとは分けて扱います。
+
+`infrastructure/.env.example` に接続設定の例を用意しています。既存 `.env` に追記しなくてもComposeの既定値で動作します。既存DBの設定やOriginを保持してバックエンドだけを更新します。
+
+```powershell
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml build backend
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml up -d --no-deps --wait backend
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec backend python -m app.ai check
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec backend python -m app.ai generate
+docker compose -p solveloop --env-file infrastructure/.env -f infrastructure/compose.yaml exec backend python -m app.ai embed
+```
+
+`check` は接続と両モデルのローカル重み・能力を検査します。`generate` は架空のVPN問い合わせの言い換え、`embed` は架空の端末変更文の数値化を行います。`smoke` で両方を順に実行できます。CLIの入力は `backend/app/ai/__main__.py` にあり、DB・アカウント・業務資料は読み書きしません。生成結果、モデル名・digest、Ollama版、HTTP呼出しの経過ms、Ollamaの処理/ロード時間ns、GPU割当てを含む実行状態をJSONで表示します。埋め込みの全ベクトルはPythonの `OllamaClient.embed()` から取得でき、CLIには次元とL2ノルムだけを表示します。
+
+ホスト側でも同じコードを実行できます。DB環境変数は不要です。
+
+```powershell
+Set-Location backend
+uv sync --locked
+$env:OLLAMA_BASE_URL='http://127.0.0.1:11434'
+$env:PYTHONIOENCODING='utf-8'
+uv run --locked python -m app.ai smoke
+Remove-Item Env:OLLAMA_BASE_URL
+```
+
+設定は `OLLAMA_BASE_URL`、`OLLAMA_CHAT_MODEL`、`OLLAMA_EMBED_MODEL`、`OLLAMA_GENERATE_TIMEOUT_SECONDS`、`OLLAMA_EMBED_TIMEOUT_SECONDS` です。既定はホスト用ループバック、`qwen3:8b`、`embeddinggemma-2:270m-q8_0-text`、生成120秒・埋め込み120秒です。Composeは接続先だけを `host.docker.internal` に変えます。メタデータ取得は5秒、各推論は指定したsocketの通信待機時間で制限します。CLI全体の厳密な総実行時間上限ではありません。最初の埋め込みは30秒設定でtimeoutしたため、初期ロードも考慮して120秒にしました。
+
+推論は同一Pythonプロセス内で1件に制限し、実測時のOllamaも `OLLAMA_NUM_PARALLEL=1` でした。コンテキストは生成・埋め込みとも2048、生成上限128トークン・thinking無効です。入力上限2000文字は接続試験用の制限で、トークン数や文書分割の代わりではありません。埋め込みは `truncate:false` とし、超過入力を黙って切り捨てません。検索用prefix・chunk・ベクトルprofileは今後の意味検索で定義します。
+
+外部URL・cloudモデル・remote指定・ローカルGGUFでないモデルを拒否し、HTTPプロキシとredirectを使いません。自動ダウンロード・再試行・別モデルや外部供給者へのfallbackはありません。接続不能は `AI_UNAVAILABLE`、モデル不足は `AI_MODEL_NOT_FOUND`、timeoutは `AI_TIMEOUT`、混雑は `AI_BUSY`、入力拒否は `AI_INPUT_REJECTED`、不正JSON・空/未完了生成・非有限/空ベクトル・モデル名不一致は `AI_INVALID_RESPONSE` です。エラーに入力やOllamaの内部エラー本文を載せず、CLIは終了コード1、設定不正は2を返します。設定はAI利用時だけ読み、通常のAPI起動・`/health/ready` はOllamaに依存しません。現在の製品画面にAI操作はありません。
+
+### 小さい接続試験の実測
+
+2026-10-31、Windows 11 Pro build26200、RTX 5070 Ti / VRAM16303MiB、NVIDIA driver616.92、Ollama0.40.13。モデルをアンロードして再ロードしたホストの1回の測定です。OS・ファイル・CUDAのキャッシュは残っており、初回インストール直後の時間や品質評価ではありません。
+
+| 処理 | モデル・量子化 | HTTP経過 / Ollamaロード時間 | 結果 |
+| --- | --- | --- | --- |
+| 生成 | qwen3:8b / Q4_K_M | 2598.14ms / 2359.75ms | `VPNへの接続ができない状況です。`、入力46/出力11トークン |
+| 埋め込み | embeddinggemma-2:270m-q8_0-text / Q8_0 | 1237.94ms / 1068.68ms | 768次元、L2ノルム約0.99999986、入力15トークン |
+
+生成digest: `500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41`。埋め込みdigest: `c21dd30c1e38444d3b4faa091407b6fa97221447b4965d74931d43d7f09bbbfd`。タグは更新され得るため、再実行の出力でdigestも確認してください。
+
+`ollama ps` は両方を `100% GPU` と表示し、`/api/ps` の割当ては生成5282505686bytes・埋め込み380496772bytesでした。NVIDIAの250ms間隔・17標本ではGPU全体の使用メモリ2574〜8455MiB、使用率1〜32%を観測しました。他のデスクトップアプリも含む値で、瞬間的な最大値を保証しません。既にロード済みの同じモデルをバックエンドコンテナから呼んだ別の1回は、生成102.74ms・埋め込み19.58msでした。これらは小さい入力の接続測定であり、日本語検索精度・スループット・OOM耐性を保証しません。モデルの最終的な品質判断は後続の専用評価で行います。
+
+通常の `pytest` とCIは実GPU・Ollama・モデルダウンロード不要です。`backend/tests/test_ai.py` は一時ループバックHTTPサーバーで成功・接続拒否・実socket timeout・モデル不足・remote/redirect拒否・不正応答・再試行なしを検証します。実Ollama検証は上のCLIを明示的に別実行します。
+
+Ollama障害時の手動業務は、専用の検証DB/APIだけで `OLLAMA_BASE_URL=http://127.0.0.1:1` を指定して検証しました。AI CLIは実際に接続拒否となり、同じAPIのready・認証/アカウント管理・問い合わせ登録/解決・手動ナレッジ承認/検索の実HTTPテストは成功しています。共有のホストOllama自体は停止していません。
+
 ## 実装予定
 - 承認済みナレッジと過去の解決事例を使った検索・回答案の作成
 - 解決履歴に基づくAI下書き生成（手動作成・人の承認は実装済み）
@@ -413,7 +474,7 @@ APIだけを停止する場合は `docker compose -p solveloop --env-file infras
 | ローカル推論 | Ollama |
 | 実行環境・検証 | Docker Compose / pytest / Node.js内蔵test / Chrome操作検証 / GitHub Actions（定義済み） |
 
-生成と埋め込みはローカルの Ollama で実行する方針です。使用モデルと動作環境は、実装時の検証後に記載します。
+生成と埋め込みのローカルOllama接続は上記CLIで検証済みです。業務画面へのAI連携と検索品質評価は今後実施します。
 
 ## リポジトリ構成
 
