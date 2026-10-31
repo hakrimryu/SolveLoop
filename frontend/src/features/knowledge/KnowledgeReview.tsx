@@ -22,23 +22,41 @@ const sourceOf = (ticket: Ticket): Source => ({ ticket_id: ticket.id, ticket_num
 export default function KnowledgeReview(props: KnowledgeProps) {
   const { documentId, version } = useParams()
   const [params] = useSearchParams()
-  return props.role !== 'operator' ? <KnowledgeUnavailable /> : documentId ? <Existing {...props} key={`${documentId}:${version}`} documentId={documentId} version={version!} /> : <New {...props} key={params.get('source') ?? 'manual'} sourceId={params.get('source')} />
+  return props.role !== 'operator' ? <KnowledgeUnavailable /> : documentId ? <Existing {...props} key={`${documentId}:${version}`} documentId={documentId} version={version!} /> : <New {...props} key={JSON.stringify([params.getAll('source'), params.getAll('source_version')])} sourceIds={params.getAll('source')} expectedVersions={params.getAll('source_version')} />
 }
 function Existing(props: KnowledgeProps & { documentId: string; version: string }) {
   const resource = useLoad<Review>(`/knowledge/${props.documentId}/versions/${props.version}`)
   return resource.data ? <Editor {...props} initial={resource.data} /> : <><h1 tabIndex={-1}>ナレッジレビュー</h1><LoadState error={resource.error} reload={resource.reload} /></>
 }
-function New(props: KnowledgeProps & { sourceId: string | null }) {
-  const resource = useLoad<Ticket>(props.sourceId ? `/tickets/${props.sourceId}` : null)
-  if (props.sourceId && !resource.data) return <><h1 tabIndex={-1}>根拠の問い合わせを確認</h1><LoadState error={resource.error} reload={resource.reload} /></>
-  if (resource.data && resource.data.status !== 'resolved') return <><h1 tabIndex={-1}>下書きを作成できません</h1><p role="alert">根拠の問い合わせは未解決です。解決内容を確認してください。</p><Link to={`/requests/${resource.data.id}`}>問い合わせを開く</Link></>
-  return <Editor {...props} initialSource={resource.data} />
+function New(props: KnowledgeProps & { sourceIds: string[]; expectedVersions: string[] }) {
+  const call = useBusinessCall()
+  const [tickets, setTickets] = useState<Ticket[] | null>(props.sourceIds.length ? null : [])
+  const [error, setError] = useState('')
+  const [revision, setRevision] = useState(0)
+  const sourceKey = JSON.stringify(props.sourceIds)
+  const versionKey = JSON.stringify(props.expectedVersions)
+  useEffect(() => {
+    let active = true
+    const ids: string[] = JSON.parse(sourceKey)
+    const versions: string[] = JSON.parse(versionKey)
+    if (!ids.length) return
+    if (ids.length > 5 || new Set(ids).size !== ids.length || (versions.length && versions.length !== ids.length)) { setError('生成の解決根拠は重複のない1〜5件を指定してください。'); return }
+    void Promise.all(ids.map(id => call<Ticket>(`/tickets/${id}`))).then(values => {
+      if (!active) return
+      if (values.some((value, index) => value.status !== 'resolved' || !value.resolution?.trim() || !value.resolved_at || (versions.length && value.version !== Number(versions[index])))) { setError('選択後に根拠が変更されたか、有効な解決内容・日時がありません。Radarまたは原本で選び直してください。'); return }
+      setTickets(values); setError('')
+    }).catch(cause => { if (active && !isStale(cause)) setError(errorMessage(cause)) })
+    return () => { active = false }
+  }, [sourceKey, versionKey, revision, call])
+  if (!tickets) return <><h1 tabIndex={-1}>根拠の問い合わせを確認</h1><LoadState error={error} reload={() => setRevision(value => value + 1)} /><Link to="/dashboard">Radarに戻る</Link></>
+  return <Editor {...props} initialSources={tickets} />
 }
-function Editor({ initial, initialSource, departments, onDirtyChange }: KnowledgeProps & { initial?: Review; initialSource?: Ticket }) {
+function Editor({ initial, initialSources = [], departments, onDirtyChange }: KnowledgeProps & { initial?: Review; initialSources?: Ticket[] }) {
+  const initialSource = initialSources[0]
   const [saved, setSaved] = useState(initial)
   const [input, setInput] = useState<KnowledgeInput>(() => initial ? inputOf(initial) : initialSource ? { title: initialSource.title, audience: '', body: initialSource.resolution!, department_id: initialSource.department?.id ?? null } : inputOf())
-  const [sources, setSources] = useState<Source[]>(initial?.sources ?? (initialSource ? [sourceOf(initialSource)] : []))
-  const [refs, setRefs] = useState<SourceRef[]>(() => refsOf(initial?.sources ?? (initialSource ? [sourceOf(initialSource)] : [])))
+  const [sources, setSources] = useState<Source[]>(initial?.sources ?? initialSources.map(sourceOf))
+  const [refs, setRefs] = useState<SourceRef[]>(() => refsOf(initial?.sources ?? initialSources.map(sourceOf)))
   const [current, setCurrent] = useState<Record<string, Ticket>>({})
   const [sourceQuery, setSourceQuery] = useState('')
   const [sourceMatches, setSourceMatches] = useState<TicketItem[] | null>(null)

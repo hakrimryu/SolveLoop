@@ -188,10 +188,19 @@ class OllamaClient:
         )
 
     def embed(
-        self, text: str, *, context_tokens: int = 2048, expected_digest: str | None = None
+        self,
+        text: str,
+        *,
+        context_tokens: int = 2048,
+        expected_digest: str | None = None,
+        deadline: float | None = None,
     ) -> dict:
         return self._infer(
-            text, embedding=True, context_tokens=context_tokens, expected_digest=expected_digest
+            text,
+            embedding=True,
+            context_tokens=context_tokens,
+            expected_digest=expected_digest,
+            deadline=deadline,
         )
 
     def _infer(
@@ -247,7 +256,12 @@ class OllamaClient:
                 }
                 result = self._parse(
                     Embedding,
-                    self._request("/api/embed", body, self.settings.ollama_embed_timeout_seconds),
+                    self._request(
+                        "/api/embed",
+                        body,
+                        self.settings.ollama_embed_timeout_seconds,
+                        deadline=deadline,
+                    ),
                 )
                 vector = result.embeddings[0]
                 if (

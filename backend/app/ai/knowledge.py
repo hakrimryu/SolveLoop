@@ -113,13 +113,14 @@ def chunks(title: str, audience: str, body: str) -> list[Chunk]:
     return result
 
 
-def embed(client: OllamaClient, value: str) -> tuple[list[float], int]:
+def embed(client: OllamaClient, value: str, *, deadline=None) -> tuple[list[float], int]:
     if client.settings.ollama_embed_model != SPECIFICATION["model"]:
         raise OllamaError("AI_PROFILE_MISMATCH", "モデル名が検索用の規格と異なります。")
     result = client.embed(
         value,
         context_tokens=SPECIFICATION["context_tokens"],
         expected_digest=SPECIFICATION["digest"],
+        **({"deadline": deadline} if deadline is not None else {}),
     )
     model = result["local_model"]
     if model["name"] != SPECIFICATION["model"] or model["digest"] != SPECIFICATION["digest"]:

@@ -5,6 +5,7 @@ import RequestDetail from '../src/features/requests/RequestDetail'
 import RequestDialog from '../src/features/requests/RequestDialog'
 import KnowledgeReview from '../src/features/knowledge/KnowledgeReview'
 import KnowledgeList, { KnowledgeDetail } from '../src/features/knowledge/Knowledge'
+import Radar from '../src/features/dashboard/Radar'
 import { api, ApiError } from '../src/lib/api'
 import '../src/index.css'
 
@@ -442,6 +443,64 @@ await check('S17 AI反映後の編集保存に生成IDと実根拠版を渡す',
   await fill(field('本文'), 'AI案を人が修正')
   await click(button('下書きを保存'))
   assert(received.generation_id === generatedOf(ticket).generation_id && received.body === 'AI案を人が修正' && received.source_refs[0].expected_ticket_version === ticket.version, 'AI案の由来・編集・根拠版が保存されません。')
+})
+
+const radarRunOf = () => {
+  const members = Array.from({ length: 5 }, (_, index) => ({ id: `00000000-0000-0000-0000-00000000030${index + 1}`, number: `REQ-000${index + 1}`, title: `端末交換後のMFA ${index + 1}`, version: 3, status: index < 2 ? 'resolved' : 'open', can_generate: index < 2 }))
+  return { id: 'run-1', as_of: now, created_at: now, input_count: 5, input_snapshot_hash: 'fixed-input-hash', candidate_count: 1, current: true, status: 'complete', request_key: 'fixed-request', parameters: { days: 30, threshold: .92, ticket_profile_id: 'ticket-profile', group_rule: 'all-pairs' }, candidates: [{ id: 'candidate-1', ticket_ids: members.map(item => item.id), minimum_similarity: .94, overlap: true, members, pairs: [{ left: members[0].id, right: members[1].id, similarity: .96 }] }], coverages: [] }
+}
+const radarCoverageOf = run => ({ id: 'coverage-1', run_id: run.id, candidate_id: 'candidate-1', created_at: now, current: true, corpus_hash: 'corpus-v1', search_profile_id: 'public-profile', policy: { prompt_version: 'coverage-v1', top_k: 3 }, summary: { total: 5, analyzed: 3, covered: 1, uncovered: 1, unknown: 1, unanalyzed: 2, rates: { covered: .2, uncovered: .2, unknown: .2 }, coverage_on_analyzed: 1/3, gap_status: 'pending' }, judgments: { [run.candidates[0].members[0].id]: { status: 'covered', rationale: '手順の原文を確認', missing_information: [], citations: [{ id: 'chunk-1', document_id: 'doc-1', version_id: 'version-1', version_no: 1, title: 'MFA再登録', number: 'KB-0001', chunk_id: 'chunk-1', quote: '本人確認後に再登録する。', quote_start: 0, quote_end: 13, href: '/knowledge/doc-1' }], trace: { mode: 'live', model: 'qwen3:8b', prompt_version: 'coverage-v1' } }, [run.candidates[0].members[1].id]: { status: 'uncovered', rationale: '再登録手順が不足', missing_information: ['本人確認手順'], citations: [] }, [run.candidates[0].members[2].id]: { status: 'unknown', rationale: '通信失敗', missing_information: ['再実行'], citations: [], error_code: 'AI_TIMEOUT' } }, unanalyzed_ids: run.candidates[0].ticket_ids.slice(3), batches: [{ request_key: 'batch-1', ticket_ids: run.candidates[0].ticket_ids.slice(0,3), status: 'complete', processed_ids: run.candidates[0].ticket_ids.slice(0,3) }] })
+
+await check('S18 候補の実件数・重複・全対比較と明示的な解決根拠選択', async () => {
+  const run = radarRunOf()
+  const writes = []
+  await mount(Radar, '/dashboard?radar=run-1', async (path, body) => { if (body) writes.push({path,body}); return path === '/radar/runs' ? {items:[run]} : run })
+  await click(button('構成・判定を確認'))
+  const boxes = [...fixture.querySelectorAll('input[type=checkbox]')]
+  assert(boxes.length === 5 && boxes.filter(item => !item.disabled).length === 2, '未解決の問い合わせが生成根拠として選択可能です。')
+  await click(boxes[0]); await click(boxes[1])
+  const link = [...fixture.querySelectorAll('a')].find(item => item.textContent.includes('選択した解決記録2件'))
+  const url = new URL(link.href)
+  assert(url.searchParams.getAll('source').length === 2 && url.searchParams.getAll('source_version').join(',') === '3,3', '明示選択のID・版を失いました。')
+  assert(writes.length === 0 && fixture.textContent.includes('他候補と重複あり'), '選択だけでAIや保存を実行しました。')
+})
+
+await check('S19 部分分析・unknown・未分析の分母と公開原文リンクを区別', async () => {
+  const run = radarRunOf(); run.coverages = [radarCoverageOf(run)]
+  await mount(Radar, '/dashboard?radar=run-1', async path => path === '/radar/runs' ? {items:[run]} : run)
+  await click(button('構成・判定を確認'))
+  assert(fixture.textContent.includes('判断不能 1件 / 全5件') && fixture.textContent.includes('未分析 2件 / 全5件') && fixture.textContent.includes('一部未分析'), '部分判定を全体の対応可否として表示しました。')
+  const details = [...fixture.querySelectorAll('details')].find(item => item.querySelector('summary')?.textContent.includes('REQ-0001 · 対応可能'))
+  await click(details.querySelector('summary'))
+  assert(details.textContent.includes('本人確認後に再登録する。') && details.querySelector('a').getAttribute('href') === '/knowledge/doc-1', '実根拠へのリンク・引用がありません。')
+})
+
+await check('S19 古い公開根拠を隠し再分析を要求、全員への自動解決なし', async () => {
+  const run = radarRunOf(); const coverage = radarCoverageOf(run); coverage.current = false
+  coverage.judgments = Object.fromEntries(Object.entries(coverage.judgments).map(([id,value]) => [id,{ status:value.status, historical:true }]))
+  run.coverages = [coverage]
+  await mount(Radar, '/dashboard?radar=run-1', async path => path === '/radar/runs' ? {items:[run]} : run)
+  await click(button('構成・判定を確認'))
+  assert(button('次の未分析2件を明示分析').disabled && fixture.textContent.includes('理由と引用の再表示を停止'), '古い公開資料で分析を続行できます。')
+  assert(!fixture.textContent.includes('本人確認後に再登録する。'), '停止した根拠の引用を再表示しました。')
+})
+
+await check('S18 結果未確認の再送で同じ要求キー・条件を維持', async () => {
+  const received = []
+  await mount(Radar, '/dashboard', async (path, body) => { if (!body) return { items:[] }; received.push(structuredClone(body)); throw unavailable() })
+  await click(button('繰り返しを検出'))
+  assert(field('基準日時').disabled && fixture.textContent.includes('結果未確認'), '未確認要求の条件を変更できます。')
+  await click(button('同じ要求で結果を確認'))
+  assert(received.length === 2 && JSON.stringify(received[0]) === JSON.stringify(received[1]), '結果未確認の要求を別条件・別キーで実行しました。')
+})
+
+await check('S19 Radarで選んだ複数の解決根拠と版をS17で再検査', async () => {
+  const first = { ...ticketOf(), status:'resolved', resolution:'本人確認後に再登録しました。', resolved_at:now, version:3 }
+  const second = { ...first, id:'00000000-0000-0000-0000-000000000302', number:'REQ-0002' }
+  let received
+  await mount(KnowledgeReview, `/knowledge/reviews/new?source=${first.id}&source=${second.id}&source_version=3&source_version=3`, async (path, body) => { if (body) { received = body; return { ...generatedOf(first), sources:[generatedOf(first).sources[0], {...generatedOf(second).sources[0], ticket_id:second.id}] } } return path.endsWith(second.id) ? second : first })
+  await click(button('選択した根拠からAI案を生成'))
+  assert(received.source_refs.length === 2 && received.source_refs.every(item => item.expected_ticket_version === 3), '選択済み根拠を切り捨てました。')
 })
 
 globalThis.fetch = originalFetch

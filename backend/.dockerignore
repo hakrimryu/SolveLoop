@@ -7,6 +7,7 @@
 !migrations/**/*.py
 !migrations/script.py.mako
 !tests/**/*.py
+!tests/fixtures/*.json
 **/__pycache__
 **/*.pyc
 **/.env

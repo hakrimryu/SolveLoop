@@ -81,7 +81,7 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
         </div>
       </header>
       <div className={styles.mockBar}>
-        <p><strong>問い合わせ・ナレッジは実API・DBに保存</strong> 架空企業のローカルデモです。公開されるのは人が承認した版だけです。意味検索はローカルAIを使用します。担当部署・回答案はローカルAIの提案です。解決記録からAI下書き案を生成できます。Radarは未実装です。</p>
+          <p><strong>問い合わせ・ナレッジは実API・DBに保存</strong> 架空企業のローカルデモです。公開されるのは人が承認した版だけです。意味検索・部署分類・回答案・解決記録からの下書き・RadarはローカルAIを使用します。AI案と文書対応判定は人による確認が必要です。</p>
       </div>
       <div className={showNavigation ? styles.workspace : styles.authWorkspace}>
         {showNavigation && <div className={styles.navigation}>
@@ -127,7 +127,7 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
           {children}
         </main>
       </div>
-      <footer className={styles.footer}>SolveLoop · 架空企業のローカルデモ · サーバー時刻で記録 · 担当部署・回答案はローカルAIの提案です。解決記録からAI下書き案を生成できます。Radarは未実装です。</footer>
+      <footer className={styles.footer}>SolveLoop · 架空企業のローカルデモ · サーバー時刻で記録 · AI案・Radarの文書対応判定は人による確認が必要です。</footer>
     </>
   )
 }

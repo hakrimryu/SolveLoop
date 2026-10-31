@@ -409,3 +409,69 @@ class KnowledgeChunk(Base):
     content_hash: Mapped[str] = mapped_column(String(64))
     input_tokens: Mapped[int] = mapped_column(Integer)
     embedding: Mapped[list[float]] = mapped_column(Vector768())
+
+
+class TicketEmbedding(Base):
+    __tablename__ = "ticket_embeddings"
+    __table_args__ = (
+        CheckConstraint(
+            "ticket_version >= 1 AND input_tokens BETWEEN 1 AND 8192",
+            name="ck_ticket_embedding_input",
+        ),
+        CheckConstraint(
+            "vector_norm(embedding) BETWEEN 0.9999 AND 1.0001", name="ck_ticket_embedding_norm"
+        ),
+    )
+
+    ticket_id: Mapped[UUID] = mapped_column(
+        ForeignKey("tickets.id", ondelete="CASCADE"), primary_key=True
+    )
+    profile_id: Mapped[str] = mapped_column(
+        ForeignKey("embedding_profiles.id", ondelete="RESTRICT"), primary_key=True
+    )
+    ticket_version: Mapped[int] = mapped_column(Integer)
+    input_hash: Mapped[str] = mapped_column(String(64))
+    input_tokens: Mapped[int] = mapped_column(Integer)
+    embedding: Mapped[list[float]] = mapped_column(Vector768())
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RadarRun(Base):
+    __tablename__ = "radar_runs"
+    __table_args__ = (
+        UniqueConstraint("actor_id", "request_key", name="uq_radar_run_request"),
+        CheckConstraint("status IN ('running','complete','failed')", name="ck_radar_run_status"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    request_key: Mapped[UUID] = mapped_column()
+    request_hash: Mapped[str] = mapped_column(String(64))
+    as_of: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    parameters: Mapped[dict] = mapped_column(JSONB)
+    inputs: Mapped[list] = mapped_column(JSONB)
+    candidates: Mapped[list] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String(16))
+    error_code: Mapped[str | None] = mapped_column(String(64))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    lease_until: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class RadarCoverage(Base):
+    __tablename__ = "radar_coverages"
+    __table_args__ = (
+        UniqueConstraint("actor_id", "request_key", name="uq_radar_coverage_request"),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("radar_runs.id", ondelete="RESTRICT"))
+    candidate_id: Mapped[str] = mapped_column(String(64))
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    request_key: Mapped[UUID] = mapped_column()
+    corpus_hash: Mapped[str] = mapped_column(String(64))
+    search_profile_id: Mapped[str] = mapped_column(String(64))
+    policy: Mapped[dict] = mapped_column(JSONB)
+    judgments: Mapped[dict] = mapped_column(JSONB)
+    batches: Mapped[list] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
