@@ -78,3 +78,7 @@
   .sort { display: block; margin: 4px 0 0; }
   .dialog { padding: 20px; }
 }
+
+.citation { display: inline-block; margin-right: 12px; }
+.aiSources { padding-left: 22px; }
+.aiSources li { padding-block: 12px; border-bottom: 1px solid var(--border); scroll-margin-top: 24px; overflow-wrap: anywhere; }

@@ -159,6 +159,15 @@ class OllamaClient:
     def generate(self, prompt: str) -> dict:
         return self._infer(prompt, embedding=False)
 
+    def structured(self, prompt: str, schema: dict, expected_digest: str) -> dict:
+        return self._infer(
+            prompt,
+            embedding=False,
+            context_tokens=32768,
+            expected_digest=expected_digest,
+            schema=schema,
+        )
+
     def embed(
         self, text: str, *, context_tokens: int = 2048, expected_digest: str | None = None
     ) -> dict:
@@ -173,13 +182,20 @@ class OllamaClient:
         embedding: bool,
         context_tokens: int = 2048,
         expected_digest: str | None = None,
+        schema: dict | None = None,
     ) -> dict:
         if (
             not isinstance(text, str)
             or not text.strip()
-            or (len(text.encode("utf-8")) > 32768 if embedding else len(text) > 2000)
+            or (
+                len(text.encode("utf-8")) > 24576
+                if schema
+                else len(text.encode("utf-8")) > 32768
+                if embedding
+                else len(text) > 2000
+            )
             or type(context_tokens) is not int
-            or not 1 <= context_tokens <= 8192
+            or not 1 <= context_tokens <= (32768 if schema else 8192)
         ):
             raise OllamaError(
                 "AI_INVALID_INPUT", "入力サイズとコンテキスト上限を確認してください。"
@@ -230,6 +246,14 @@ class OllamaClient:
                     "keep_alive": "5m",
                     "options": {"num_ctx": 2048, "num_predict": 128, "temperature": 0},
                 }
+                if schema:
+                    # UTF-8 byte数を保守的な上限とし、本文・根拠を黙って切り捨てない。
+                    body.update(format=schema, truncate=False, shift=False)
+                    body["options"] = {
+                        "num_ctx": context_tokens,
+                        "num_predict": 1536,
+                        "temperature": 0,
+                    }
                 result = self._parse(
                     Generation,
                     self._request(
@@ -238,10 +262,19 @@ class OllamaClient:
                 )
                 if not result.done or not result.response.strip():
                     raise OllamaError("AI_INVALID_RESPONSE", "生成応答が空です。")
+                if schema and (
+                    not 0 < result.prompt_eval_count < context_tokens - 1536
+                    or result.eval_count > 1536
+                ):
+                    raise OllamaError("AI_INVALID_RESPONSE", "生成のトークン数が不正です。")
                 output = result.model_dump()
             if result.model != name:
                 raise OllamaError("AI_INVALID_RESPONSE", "応答のモデル名が要求と一致しません。")
-            if expected_digest and self.local_model(name, "embedding")["digest"] != expected_digest:
+            if (
+                expected_digest
+                and self.local_model(name, "embedding" if embedding else "completion")["digest"]
+                != expected_digest
+            ):
                 raise OllamaError("AI_PROFILE_MISMATCH", "処理中にモデルのdigestが変わりました。")
             return {
                 **output,

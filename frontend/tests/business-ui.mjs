@@ -305,6 +305,74 @@ await check('停止の競合では成功表示せず、最新確認まで操作�
   assert(!button('公開を停止…').disabled, '明示確認後も操作を再開できません。')
 })
 
+
+const aiClassification = () => ({ ticket_version: 1, generated_at: now, generation: { model: 'qwen3:8b', attempts: 1 }, result: { department_code: 'IT', department: dept, reason: '認証の問い合わせです。', needs_review: true }, sources: [] })
+const aiAnswer = () => ({ ticket_version: 1, generated_at: now, generation: { model: 'qwen3:8b', attempts: 1 }, result: { status: 'answered', summary: '認証の登録を確認します。', steps: [{ text: '本人確認後に登録を更新してください。', citation_ids: ['chunk-fixture'] }], missing_information: ['端末の状況'] }, sources: [{ id: 'chunk-fixture', kind: 'knowledge', number: 'KB-0001', title: '認証の手順', version_no: 1, version_id: 'version-fixture', text: '本人確認後に登録を更新します。', href: '/knowledge/document-fixture?match_version=1&start=0&end=16#search-passage' }] })
+
+await check('S16 分類は提案だけ・担当入力と解決入力を保持', async () => {
+  const saved = ticketOf(), writes = []
+  await mount(RequestDetail, `/requests/${saved.id}`, async (path, body) => {
+    if (body) { writes.push({ path, body }); return aiClassification() }
+    return saved
+  })
+  await fill(field('解決内容'), '消さない解決入力')
+  await fill(field('担当者を割り当てる'), other.id)
+  await click(button('担当部署を提案'))
+  assert(fixture.textContent.includes('担当部署の提案：IT'), '実APIの分類結果を表示しません。')
+  assert(field('担当者を割り当てる').value === other.id && field('解決内容').value === '消さない解決入力', '提案で入力を変更しました。')
+  assert(writes.length === 1 && writes[0].path.endsWith('/analysis') && writes[0].body.task === 'classification' && writes[0].body.expected_version === 1, '契約外の書込みを行いました。')
+})
+
+await check('S16 回答案に段階別の実根拠IDと原文リンク', async () => {
+  const saved = ticketOf()
+  await mount(RequestDetail, `/requests/${saved.id}`, async (path, body) => body ? aiAnswer() : saved)
+  await click(button('根拠付き回答案を生成'))
+  assert(fixture.textContent.includes('回答案（未確認）') && fixture.textContent.includes('chunk-fixture'), '回答・根拠IDがありません。')
+  assert(fixture.querySelector('a[href="/knowledge/document-fixture?match_version=1&start=0&end=16#search-passage"]'), 'サーバーの原文リンクがありません。')
+  assert(!fixture.querySelector('button').textContent.includes('自動反映'), '自動処理を追加しました。')
+})
+
+await check('S16 根拠不足を回答成功と区別', async () => {
+  const saved = ticketOf()
+  await mount(RequestDetail, `/requests/${saved.id}`, async (path, body) => body ? { ...aiAnswer(), generation: null, result: { status: 'insufficient_evidence', summary: '根拠となる情報が不足しています。', steps: [], missing_information: ['参照できる手順が必要です。'] }, sources: [] } : saved)
+  await click(button('根拠付き回答案を生成'))
+  assert(fixture.textContent.includes('根拠不足・回答案は作成していません') && fixture.textContent.includes('検索のみ・文章生成なし') && !fixture.textContent.includes('回答案（未確認）'), '不足を成功と表示しました。')
+})
+
+await check('S16 AI障害中も入力と手動業務を保持・自動再送なし', async () => {
+  const saved = ticketOf(); let calls = 0
+  await mount(RequestDetail, `/requests/${saved.id}`, async (path, body) => {
+    if (body) { calls++; throw new ApiError(504, 'AI_TIMEOUT', 'Ollamaの応答が制限時間内に届きませんでした。') }
+    return saved
+  })
+  await fill(field('解決内容'), '障害でも消さない')
+  await click(button('根拠付き回答案を生成'))
+  assert(fixture.querySelector('[role="alert"]').textContent.includes('制限時間') && calls === 1, '障害を隠したか自動再送しました。')
+  assert(field('解決内容').value === '障害でも消さない' && !button('解決内容を記録して解決').disabled, 'AI障害で手動業務を止めました。')
+})
+
+await check('S16 本文保存中の旧提案を破棄・未保存本文では実行しない', async () => {
+  let saved = ticketOf(), release
+  await mount(RequestDetail, `/requests/${saved.id}`, async (path, body) => {
+    if (path.endsWith('/analysis')) return new Promise(resolve => { release = () => resolve(aiClassification()) })
+    if (body) saved = { ...saved, body: body.body, version: 2 }
+    return structuredClone(saved)
+  })
+  await click(button('担当部署を提案'))
+  await click(button('内容を編集'))
+  assert(button('根拠付き回答案を生成').disabled, '未保存の本文で生成できます。')
+  await fill(field('内容'), '変更後の本文')
+  await click(button('内容を保存'))
+  await act(async () => release())
+  assert(!fixture.textContent.includes('担当部署の提案：IT') && fixture.textContent.includes('古い提案を破棄'), '更新前の提案を表示しました。')
+})
+
+await check('S16 社員にはAI操作と解決事例を表示しない', async () => {
+  const saved = ticketOf()
+  await mount(RequestDetail, `/requests/${saved.id}`, async () => saved, 'employee')
+  assert(!fixture.textContent.includes('AI提案・担当者') && !fixture.textContent.includes('根拠付き回答案を生成'), '社員に担当者のAI操作を表示しました。')
+})
+
 globalThis.fetch = originalFetch
 results.textContent += `\n${cases.filter(item => item.startsWith('PASS')).length}/${cases.length} 通過`
 document.title = cases.some(item => item.startsWith('FAIL')) ? 'FAIL 業務画面の回帰検証' : 'PASS 業務画面の回帰検証'

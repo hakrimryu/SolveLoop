@@ -262,7 +262,6 @@ class SearchInput(Input):
 def search(
     data: SearchInput, request: Request, auth: FullAuthenticated, session: DbSession, client: Client
 ):
-    from app.knowledge import public_item
     from app.tickets import reference_filter
 
     require_csrf(request, auth, request.headers.get("X-CSRF-Token"))
@@ -287,6 +286,17 @@ def search(
             409, "SEARCH_PROFILE_CHANGED", "検索用の規格が変わりました。再検索してください。"
         )
     supported_profile(session, state.active_profile_id)
+    return {
+        "items": retrieve_public_chunks(session, vector, state, data.top_k, data.department_id),
+        "top_k": data.top_k,
+        "profile_id": PROFILE_ID,
+        "as_of": datetime.now(UTC),
+    }
+
+
+def retrieve_public_chunks(session, vector, state, top_k, department_id=None, chunk_ids=None):
+    from app.knowledge import public_item
+
     distance = KnowledgeChunk.embedding.op("<=>", return_type=Float)(
         # bindparamの型を固定し、ユーザー入力をSQL文字列へ組み込まない。
         # [ko] bindparam 타입을 고정해 사용자 입력을 SQL 문자열에 넣지 않는다.
@@ -314,10 +324,12 @@ def search(
             KnowledgePreparation.indexed_row_version == KnowledgeVersion.row_version,
         )
     )
-    if data.department_id:
-        stmt = stmt.where(KnowledgeVersion.department_id == data.department_id)
+    if department_id:
+        stmt = stmt.where(KnowledgeVersion.department_id == department_id)
+    if chunk_ids is not None:
+        stmt = stmt.where(KnowledgeChunk.id.in_(chunk_ids))
     rows = session.execute(
-        stmt.order_by(distance, KnowledgeDocument.id, KnowledgeChunk.ordinal).limit(data.top_k)
+        stmt.order_by(distance, KnowledgeDocument.id, KnowledgeChunk.ordinal).limit(top_k)
     ).all()
     items = []
     for doc, version, dept, prepared, chunk, score in rows:
@@ -342,12 +354,7 @@ def search(
                 "cosine_distance": score,
             }
         )
-    return {
-        "items": items,
-        "top_k": data.top_k,
-        "profile_id": PROFILE_ID,
-        "as_of": datetime.now(UTC),
-    }
+    return items
 
 
 @router.post(
