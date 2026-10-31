@@ -7,7 +7,7 @@ import { LoadState } from '../../components/BusinessState'
 import styles from './Dashboard.module.css'
 import Radar from './Radar'
 
-export default function Dashboard({ role }: { role: Role }) {
+export default function Dashboard({ role, onDirtyChange }: { role: Role; onDirtyChange: (dirty: boolean) => void }) {
   const resource = useLoad<DashboardData>('/dashboard')
   const data = resource.data
   const operator = role === 'operator'
@@ -18,7 +18,7 @@ export default function Dashboard({ role }: { role: Role }) {
       {operator && <div className={styles.shortcuts}><Link to="/requests?assignee=unassigned">未割り当て <strong>{data.unassigned_count}件</strong></Link><Link to="/requests?assignee=me&status=unresolved">自分の担当（未解決） <strong>{data.own_unresolved_count}件</strong></Link><Link to="/knowledge/reviews?status=draft">確認待ち <strong>{data.review_pending_count}件</strong></Link></div>}
       <section className={styles.section} aria-labelledby="recent-heading"><div className={styles.sectionHeading}><h2 id="recent-heading">{operator ? '自分の担当問い合わせ' : '最近の自分の問い合わせ'}</h2><Link to={operator ? '/requests?assignee=me' : '/requests'}>すべて表示 →</Link></div><p className={styles.scrollHint}>表は横にスクロールできます。</p><div className={styles.tableScroll} role="region" aria-label="最近の問い合わせ・横にスクロールできます" tabIndex={0}><table><caption className="srOnly">更新が新しい問い合わせ（最大5件）</caption><thead><tr><th scope="col">番号</th><th scope="col">件名</th><th scope="col">状態</th><th scope="col">担当部署</th><th scope="col">更新日時</th></tr></thead><tbody>{data.recent_tickets.length ? data.recent_tickets.map(item => <tr key={item.id}><th scope="row" className={styles.number}>{item.number}</th><td className={styles.subject}><Link to={`/requests/${item.id}`}>{item.title}</Link></td><td><span className={`status ${item.status}`}>{statusLabels[item.status]}</span></td><td>{item.department?.name ?? '未定'}</td><td className={styles.date}>{formatDate(item.updated_at)} JST</td></tr>) : <tr><td colSpan={5} className={styles.empty}>{operator ? '担当する問い合わせはありません。' : '問い合わせはまだありません。'} <Link to={operator ? '/requests?assignee=unassigned' : '/requests?new=1'}>{operator ? '未割り当てを確認' : '問い合わせを登録'}</Link></td></tr>}</tbody></table></div></section>
       {operator ? <div className={styles.workQueue}><section className={styles.section}><div className={styles.sectionHeading}><h2>確認待ちの下書き <span className={styles.smallCount}>{data.review_pending_count}件</span></h2><Link to="/knowledge/reviews?status=draft">レビューへ →</Link></div>{data.reviews?.length ? <ul className={styles.reviewList}>{data.reviews.map(item => <li key={item.version_id}><div><Link to={reviewUrl(item)}>{item.title}</Link><p className="muted">{item.number} · 下書き v{item.version_no}</p></div><span className="status open">未承認</span><time className={styles.date}>{formatDate(item.updated_at)}</time></li>)}</ul> : <p className={styles.empty}>確認待ちの下書きはありません。</p>}</section></div> : <section className={styles.section}><h2>問い合わせの前に</h2><p>承認済みの手順から解決方法を探せます。</p><div className={styles.entryLinks}><Link className="button buttonPrimary" to="/knowledge">承認済みナレッジを探す</Link><Link to="/requests?new=1">問い合わせを登録 →</Link></div></section>}
-      {operator && <Radar />}
+      {operator && <Radar onDirtyChange={onDirtyChange} />}
     </>}
   </div></div>
 }

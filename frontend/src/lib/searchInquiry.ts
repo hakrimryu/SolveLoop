@@ -3,13 +3,15 @@ export type SearchDocument = { number: string; title: string; version_no: number
 
 let pending: { id: string; input: InquiryInput } | undefined
 
-export function prepareSearchInquiry(query: string, document?: SearchDocument) {
+export function prepareSearchInquiry(query: string, document?: SearchDocument | SearchDocument[]) {
+  const documents = document ? (Array.isArray(document) ? document : [document]) : []
+  const first = documents[0]
   const question = query.trim()
-  const title = Array.from(question || (document ? `${document.title}について` : '')).slice(0, 120).join('')
-  const body = question || document ? [
+  const title = Array.from(question || (first ? `${first.title}について` : '')).slice(0, 120).join('')
+  const body = question || first ? [
     `質問・困っていること\n${question}`,
     '試したこと・補足\n',
-    ...(document ? [`参考文書（問い合わせ作成時の表示）\n${document.number} ${document.title} / v${document.version_no}\n${document.url}`] : []),
+    ...documents.map(item => `参考文書（問い合わせ作成時の表示）\n${item.number} ${item.title} / v${item.version_no}\n${item.url}`),
   ].join('\n\n') : ''
   const id = crypto.randomUUID()
   pending = { id, input: { title, body, department_id: '' } }

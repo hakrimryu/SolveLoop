@@ -6,6 +6,7 @@ import RequestDialog from '../src/features/requests/RequestDialog'
 import KnowledgeReview from '../src/features/knowledge/KnowledgeReview'
 import KnowledgeList, { KnowledgeDetail } from '../src/features/knowledge/Knowledge'
 import Radar from '../src/features/dashboard/Radar'
+import EmployeeGuidance from '../src/features/knowledge/EmployeeGuidance'
 import { api, ApiError } from '../src/lib/api'
 import '../src/index.css'
 
@@ -447,7 +448,7 @@ await check('S17 AI反映後の編集保存に生成IDと実根拠版を渡す',
 
 const radarRunOf = () => {
   const members = Array.from({ length: 5 }, (_, index) => ({ id: `00000000-0000-0000-0000-00000000030${index + 1}`, number: `REQ-000${index + 1}`, title: `端末交換後のMFA ${index + 1}`, version: 3, status: index < 2 ? 'resolved' : 'open', can_generate: index < 2 }))
-  return { id: 'run-1', as_of: now, created_at: now, input_count: 5, input_snapshot_hash: 'fixed-input-hash', candidate_count: 1, current: true, status: 'complete', request_key: 'fixed-request', parameters: { days: 30, threshold: .92, ticket_profile_id: 'ticket-profile', group_rule: 'all-pairs' }, candidates: [{ id: 'candidate-1', ticket_ids: members.map(item => item.id), minimum_similarity: .94, overlap: true, members, pairs: [{ left: members[0].id, right: members[1].id, similarity: .96 }] }], coverages: [] }
+  return { id: 'run-1', as_of: now, created_at: now, input_count: 5, input_snapshot_hash: 'fixed-input-hash', candidate_count: 1, current: true, status: 'complete', request_key: 'fixed-request', parameters: { days: 30, threshold: .92, ticket_profile_id: 'ticket-profile', group_rule: 'all-pairs' }, candidates: [{ id: 'candidate-1', ticket_ids: members.map(item => item.id), minimum_similarity: .94, overlap: true, members, pairs: [{ left: members[0].id, right: members[1].id, similarity: .96 }] }], coverages: [], reviews: [], review_context: { hash: 'a'.repeat(64), documents: [{ document_id: 'doc-1', version_id: 'version-1', version_no: 1, number: 'KB-0001', title: 'MFA再登録', href: '/knowledge/doc-1', content_hash: 'b'.repeat(64) }] } }
 }
 const radarCoverageOf = run => ({ id: 'coverage-1', run_id: run.id, candidate_id: 'candidate-1', created_at: now, current: true, corpus_hash: 'corpus-v1', search_profile_id: 'public-profile', policy: { prompt_version: 'coverage-v1', top_k: 3 }, summary: { total: 5, analyzed: 3, covered: 1, uncovered: 1, unknown: 1, unanalyzed: 2, rates: { covered: .2, uncovered: .2, unknown: .2 }, coverage_on_analyzed: 1/3, gap_status: 'pending' }, judgments: { [run.candidates[0].members[0].id]: { status: 'covered', rationale: '手順の原文を確認', missing_information: [], citations: [{ id: 'chunk-1', document_id: 'doc-1', version_id: 'version-1', version_no: 1, title: 'MFA再登録', number: 'KB-0001', chunk_id: 'chunk-1', quote: '本人確認後に再登録する。', quote_start: 0, quote_end: 13, href: '/knowledge/doc-1' }], trace: { mode: 'live', model: 'qwen3:8b', prompt_version: 'coverage-v1' } }, [run.candidates[0].members[1].id]: { status: 'uncovered', rationale: '再登録手順が不足', missing_information: ['本人確認手順'], citations: [] }, [run.candidates[0].members[2].id]: { status: 'unknown', rationale: '通信失敗', missing_information: ['再実行'], citations: [], error_code: 'AI_TIMEOUT' } }, unanalyzed_ids: run.candidates[0].ticket_ids.slice(3), batches: [{ request_key: 'batch-1', ticket_ids: run.candidates[0].ticket_ids.slice(0,3), status: 'complete', processed_ids: run.candidates[0].ticket_ids.slice(0,3) }] })
 
@@ -456,7 +457,7 @@ await check('S18 候補の実件数・重複・全対比較と明示的な解決
   const writes = []
   await mount(Radar, '/dashboard?radar=run-1', async (path, body) => { if (body) writes.push({path,body}); return path === '/radar/runs' ? {items:[run]} : run })
   await click(button('構成・判定を確認'))
-  const boxes = [...fixture.querySelectorAll('input[type=checkbox]')]
+  const boxes = [...fixture.querySelectorAll('ul input[type=checkbox]')]
   assert(boxes.length === 5 && boxes.filter(item => !item.disabled).length === 2, '未解決の問い合わせが生成根拠として選択可能です。')
   await click(boxes[0]); await click(boxes[1])
   const link = [...fixture.querySelectorAll('a')].find(item => item.textContent.includes('選択した解決記録2件'))
@@ -501,6 +502,48 @@ await check('S19 Radarで選んだ複数の解決根拠と版をS17で再検査'
   await mount(KnowledgeReview, `/knowledge/reviews/new?source=${first.id}&source=${second.id}&source_version=3&source_version=3`, async (path, body) => { if (body) { received = body; return { ...generatedOf(first), sources:[generatedOf(first).sources[0], {...generatedOf(second).sources[0], ticket_id:second.id}] } } return path.endsWith(second.id) ? second : first })
   await click(button('選択した根拠からAI案を生成'))
   assert(received.source_refs.length === 2 && received.source_refs.every(item => item.expected_ticket_version === 3), '選択済み根拠を切り捨てました。')
+})
+
+await check('F02 正常な根拠不足と生成障害を区別し、質問・手動問い合わせを保持', async () => {
+  let failure = false
+  await mount(EmployeeGuidance, '/knowledge?mode=guidance', async () => {
+    if (failure) throw new ApiError(503, 'AI_INVALID_OUTPUT', '出力を検証できません。', 'fixed')
+    return { query:'未知の質問', generated_at:now, prompt_version:'employee-guidance-v1', request_id:'fixed', sources:[], result:{status:'insufficient_evidence',summary:'根拠となる情報が不足しています。',steps:[],missing_information:['担当者へ確認']} }
+  })
+  await fill(field('質問・困っていること'), '未知の質問')
+  await act(async () => button('公開文書からAI案内を作成').form.requestSubmit())
+  assert(fixture.textContent.includes('根拠となる情報が不足しています') && button('担当者に問い合わせ'), '根拠不足・手動経路がありません。')
+  failure = true
+  await act(async () => button('公開文書からAI案内を作成').form.requestSubmit())
+  assert(fixture.textContent.includes('正常な「根拠不足」とは異なります') && field('質問・困っていること').value === '未知の質問', '障害を根拠不足に置換したか入力を失いました。')
+})
+
+await check('F02 原文へ移動しても質問と表示版を問い合わせへ引き継ぐ', async () => {
+  const source = {id:'chunk',document_id:'doc-1',version_no:2,number:'KB-0001',title:'公開手順',audience:'社員',text:'手順',href:'/knowledge/doc-1?match_version=2&start=0&end=2#search-passage'}
+  await mount(EmployeeGuidance, '/knowledge?mode=guidance', async () => ({query:'元の質問',generated_at:now,prompt_version:'employee-guidance-v1',request_id:'fixed',sources:[source],result:{status:'answered',summary:'案内',steps:[{text:'手順',citation_ids:['chunk']}],missing_information:[]}}))
+  await fill(field('質問・困っていること'), '元の質問')
+  await act(async () => button('公開文書からAI案内を作成').form.requestSubmit())
+  const link = [...fixture.querySelectorAll('a')].find(item => item.textContent.includes('v2 の原文'))
+  const url = new URL(link.href)
+  assert(url.searchParams.get('q') === '元の質問' && url.searchParams.get('match_version') === '2' && url.hash === '#search-passage', '原文リンクで質問か表示位置を失いました。')
+})
+
+await check('F03 全原本の確認・文書版・理由を保存しAI判定を変えない、編集中の切替を保護', async () => {
+  const run = radarRunOf(); let received
+  await mount(Radar, '/dashboard?radar=run-1', async (path, body) => {
+    if (body) { received = structuredClone(body); return {id:'review-1'} }
+    return path === '/radar/runs' ? {items:[run]} : run
+  })
+  await click(button('構成・判定を確認'))
+  const area = fixture.querySelector('section[aria-label="担当者による文書検討"]')
+  assert(button('人の確認記録を保存').disabled, '未確認のまま保存可能です。')
+  for (const box of area.querySelectorAll('input[type=checkbox]')) await click(box)
+  await fill(field('適用条件・不足・判断理由'), '対象と手順を原文で照合')
+  await fill(field('人による判断'), 'linked')
+  assert(dirty && button('繰り返しを検出').disabled && button('構成・判定を確認').disabled, '検討入力を切替から保護していません。')
+  await act(async () => button('人の確認記録を保存').form.requestSubmit())
+  assert(received.ticket_ids.length === 5 && received.documents[0].version_id === 'version-1' && received.decision === 'linked' && !('status' in received), '人の検討とAI出力が混ざりました。')
+  assert(!dirty && fixture.textContent.includes('AIの判定・件数は変更していません'), '保存後も未保存扱いです。')
 })
 
 globalThis.fetch = originalFetch

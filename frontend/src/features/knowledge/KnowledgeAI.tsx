@@ -53,7 +53,7 @@ export default function KnowledgeAI({ refs, disabled, applied, onApply, onBusy }
     <p className={common.help}>現在の選択：{refs.length}件。全文が入力上限を超える場合はエラーになります。生成案の保存期限は生成後1時間・同じログイン中です。</p>
     <button type="button" className="button" disabled={disabled || busy || refs.length < 1 || refs.length > 5} onClick={() => { void generate() }}>{busy ? '知識案を生成中…' : proposal ? '選択した根拠から再生成' : '選択した根拠からAI案を生成'}</button>
     {busy && <button type="button" className="button" onClick={() => { pending.current?.abort(); setMessage('結果の受け取りを中止しました。入力は保持しています。サーバー側の推論停止は保証しません。') }}>生成結果の受け取りを中止</button>}
-    {message && <p role="status">{message}</p>}{error && <p role="alert" className={common.error}>{error}</p>}
+    {message && <p role="status">{proposal && applied === proposal.generation_id && !busy && !error ? '生成案を編集欄へ反映しました。内容を確認・編集して保存してください。検索準備と承認は別操作です。' : message}</p>}{error && <p role="alert" className={common.error}>{error}</p>}
     {proposal && <div>
       <h3>未確認の生成案：{proposal.draft.title}</h3><p>適用対象：{proposal.draft.audience}</p>
       <p className={common.body}>{proposal.draft.body}</p>

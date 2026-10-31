@@ -9,6 +9,7 @@ import styles from './Knowledge.module.css'
 import KnowledgeManagement from './KnowledgeManagement'
 import KnowledgeSearch, { SearchMode } from './KnowledgeSearch'
 import SearchInquiry from '../../components/SearchInquiry'
+import EmployeeGuidance from './EmployeeGuidance'
 
 export type KnowledgeProps = BusinessProps
 let listPosition: { url: string; y: number; id: string } | undefined
@@ -21,7 +22,7 @@ export function KnowledgeBody({ input, match }: { input: Pick<KnowledgeInput, 'a
 
 export default function KnowledgeList(props: KnowledgeProps & { review?: boolean }) {
   const [params] = useSearchParams()
-  return props.review && props.role !== 'operator' ? <KnowledgeUnavailable /> : !props.review && params.get('mode') === 'semantic' ? <KnowledgeSearch {...props} /> : <List {...props} key={props.review ? 'reviews' : 'published'} />
+  return props.review && props.role !== 'operator' ? <KnowledgeUnavailable /> : !props.review && params.get('mode') === 'guidance' ? <EmployeeGuidance /> : !props.review && params.get('mode') === 'semantic' ? <KnowledgeSearch {...props} /> : <List {...props} key={props.review ? 'reviews' : 'published'} />
 }
 function List({ role, departments, review = false }: KnowledgeProps & { review?: boolean }) {
   const [params, setParams] = useSearchParams()

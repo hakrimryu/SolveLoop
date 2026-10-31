@@ -12,7 +12,9 @@ export function SearchMode({ semantic = false }: { semantic?: boolean }) {
   const next = new URLSearchParams()
   for (const key of ['q', 'department_id']) if (params.has(key)) next.set(key, params.get(key)!)
   if (!semantic) next.set('mode', 'semantic')
-  return <p className={common.help}>{semantic ? '意味検索' : 'キーワード検索'}を使用中 · <Link to={`/knowledge?${next}`}>{semantic ? 'キーワード検索へ' : '意味検索へ'}</Link></p>
+  const guidance = new URLSearchParams({ mode: 'guidance' })
+  if (params.has('q')) guidance.set('q', params.get('q')!)
+  return <p className={common.help}>{semantic ? '意味検索' : 'キーワード検索'}を使用中 · <Link to={`/knowledge?${next}`}>{semantic ? 'キーワード検索へ' : '意味検索へ'}</Link> · <Link to={`/knowledge?${guidance}`}>公開文書からAI案内</Link></p>
 }
 
 export default function KnowledgeSearch({ departments }: BusinessProps) {

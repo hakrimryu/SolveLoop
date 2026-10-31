@@ -138,7 +138,7 @@ function Workspace({ state }: { state: SessionState }) {
           catch (error) { return { form: errorMessage(error, true) } }
         }} />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard role={role} />} />
+        <Route path="/dashboard" element={<Dashboard role={role} onDirtyChange={onDirtyChange} />} />
         <Route path="/requests" element={<Requests {...requestProps} />} />
         <Route path="/requests/:requestId" element={<RequestDetail {...requestProps} />} />
         <Route path="/settings/accounts" element={<Accounts user={session!} departments={references.departments} onDirtyChange={onDirtyChange} />} />

@@ -475,3 +475,29 @@ class RadarCoverage(Base):
     judgments: Mapped[dict] = mapped_column(JSONB)
     batches: Mapped[list] = mapped_column(JSONB)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class RadarReview(Base):
+    __tablename__ = "radar_reviews"
+    __table_args__ = (
+        UniqueConstraint("actor_id", "request_key", name="uq_radar_review_request"),
+        CheckConstraint(
+            "decision IN ('linked','needs_supplement')", name="ck_radar_review_decision"
+        ),
+    )
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    run_id: Mapped[UUID] = mapped_column(ForeignKey("radar_runs.id", ondelete="RESTRICT"))
+    candidate_id: Mapped[str] = mapped_column(String(64))
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    request_key: Mapped[UUID] = mapped_column()
+    request_hash: Mapped[str] = mapped_column(String(64))
+    context_hash: Mapped[str] = mapped_column(String(64))
+    decision: Mapped[str] = mapped_column(String(24))
+    reason: Mapped[str] = mapped_column(Text)
+    ticket_ids: Mapped[list] = mapped_column(JSONB)
+    documents: Mapped[list] = mapped_column(JSONB)
+    coverage_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("radar_coverages.id", ondelete="RESTRICT")
+    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

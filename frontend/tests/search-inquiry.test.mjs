@@ -2,6 +2,15 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { clearSearchInquiry, prepareSearchInquiry, readSearchInquiry } from '../src/lib/searchInquiry.ts'
 
+test('AI案内で参照した複数文書の表示版を確認可能な本文へ引き継ぐ', () => {
+  const refs = [1, 2].map(number => ({ number: `KB-${number}`, title: `公開文書${number}`, version_no: number, url: `http://127.0.0.1:5174/knowledge/${number}` }))
+  const input = readSearchInquiry(prepareSearchInquiry('質問', refs))
+  assert.ok(input.body.includes('KB-1 公開文書1 / v1'))
+  assert.ok(input.body.includes('KB-2 公開文書2 / v2'))
+  assert.equal(input.department_id, '')
+  clearSearchInquiry()
+})
+
 test('長い検索内容を本文へ保持し、件名だけをUnicode文字単位で短くする', () => {
   const query = '😀'.repeat(500)
   const id = prepareSearchInquiry(query)

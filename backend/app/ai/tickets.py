@@ -7,6 +7,7 @@ from app.ai.knowledge import fingerprint
 from app.ai.ollama import OllamaError
 
 PROMPT_VERSION = "ticket-proposal-v1"
+GUIDANCE_PROMPT_VERSION = "employee-guidance-v1"
 CHAT_MODEL = "qwen3:8b"
 CHAT_DIGEST = "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41"
 Text = Annotated[str, Field(min_length=1, max_length=600, pattern=r"\S")]
@@ -79,6 +80,15 @@ def propose(client, task, ticket, departments, sources):
             "根拠不足ならstatus=insufficient_evidence、steps=[]、missing_informationに"
             "必要な確認事項を示す。異なる対象・条件の事例をそのまま適用しない。"
         )
+        if task == "guidance":
+            instruction += (
+                "社員本人への短い案内です。sourcesは現在公開中の承認文書だけです。"
+                "問い合わせの解決事例・内部メモ・未承認資料は参照できません。"
+                "文書にない操作・連絡先・社内規則を補わない。一般手順と個別案件の実行を区別し、"
+                "対象が合う文書の一般手順は案内できるが、条件不一致なら不足として問い合わせを案内する。"
+                "注意・例外を省いて危険な操作を勧めない。回答は最大3手順にまとめる。"
+            )
+            schema["properties"]["steps"]["maxItems"] = 3
     payload = {"ticket": ticket, "departments": departments, "sources": sources}
     prompt = (
         "あなたは社内問い合わせの担当者を補助します。分類・回答は人が確認する提案です。"
@@ -91,7 +101,8 @@ def propose(client, task, ticket, departments, sources):
         + "\n資料JSON:\n"
         + json.dumps(payload, ensure_ascii=False)
     )
-    input_hash = fingerprint({"prompt_version": PROMPT_VERSION, "task": task, "payload": payload})
+    prompt_version = GUIDANCE_PROMPT_VERSION if task == "guidance" else PROMPT_VERSION
+    input_hash = fingerprint({"prompt_version": prompt_version, "task": task, "payload": payload})
     for attempt in range(2):
         result = client.structured(
             prompt
@@ -111,6 +122,8 @@ def propose(client, task, ticket, departments, sources):
                 if value.department_code is not None and value.department_code not in codes:
                     raise ValueError
             else:
+                if task == "guidance" and len(value.steps) > 3:
+                    raise ValueError
                 for step in value.steps:
                     if len(step.citation_ids) != len(set(step.citation_ids)) or not set(
                         step.citation_ids

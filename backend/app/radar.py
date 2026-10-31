@@ -350,6 +350,9 @@ def list_runs(auth: FullAuthenticated, session: DbSession):
     "/runs/{run_id}", dependencies=[Depends(require_operator), Depends(no_body), Depends(no_query)]
 )
 def get_run(run_id: UUID, auth: FullAuthenticated, session: DbSession):
+    from app.models import RadarReview
+    from app.radar_review import review_context, review_dto
+
     run = find_run(session, run_id)
     result = run_dto(session, run)
     result["coverages"] = [
@@ -358,6 +361,16 @@ def get_run(run_id: UUID, auth: FullAuthenticated, session: DbSession):
             select(RadarCoverage)
             .where(RadarCoverage.run_id == run.id)
             .order_by(RadarCoverage.created_at, RadarCoverage.id)
+        )
+    ]
+    context = review_context(session)
+    result["review_context"] = context
+    result["reviews"] = [
+        review_dto(session, row, run, context)
+        for row in session.scalars(
+            select(RadarReview)
+            .where(RadarReview.run_id == run.id)
+            .order_by(RadarReview.created_at, RadarReview.id)
         )
     ]
     return result

@@ -20,7 +20,7 @@ TICKET_SPEC = {
 }
 TICKET_PROFILE = fingerprint(TICKET_SPEC)
 GROUP_RULE = "sorted-seed-all-pairs-v1"
-PROMPT_VERSION = "radar-coverage-v1"
+PROMPT_VERSION = "radar-coverage-v2"
 MAX_TICKETS = 100
 MIN_GROUP = 5
 DETECTION_SECONDS = 240
@@ -117,6 +117,10 @@ def judge(client, ticket, sources, deadline):
         "例えば一般VPN接続手順だけでは、スマートフォン交換後のMFA再登録を解決できません。"
         "coveredは解決手順を原文で裏付ける場合だけ。uncoveredは検索した範囲に必要な手順や条件が不足。"
         "判断が曖昧ならunknown。missing_informationには不足手順・条件または判断不能の理由を記載。"
+        "uncovered/unknownではcitations=[]とし、不足理由をmissing_informationに記載します。"
+        "coveredの引用は根拠のtextにある連続した一文をそのままコピーします。見出しと文を"
+        "連結したり、改行を空白に置換したり、要約した文字列をquoteへ入れないでください。"
+        "引用内の改行が必要ならJSONの\\nで原文の改行を保持します。"
         "citationsは提供されたchunk_idと、そのtext内の連続した原文quoteだけ。IDやURLを創作しません。"
         "引用の存在だけで意味的に正しいと断定しません。指定スキーマのJSONだけを返してください。\n"
         "出力スキーマ:\n"

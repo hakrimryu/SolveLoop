@@ -22,5 +22,10 @@
 .radar blockquote { margin: 12px 0; padding: 12px 16px; border-left: 3px solid #99a9bf; background: #f5f7fa; white-space: pre-wrap; }
 .radar dd { margin: 4px 0 12px; font-size: .8125rem; }
 .radar button + button { margin-left: 8px; }
+.reviewForm label { display: flex; align-items: flex-start; gap: 8px; margin-block: 12px; }
+.reviewForm label:has(select), .reviewForm label:has(textarea) { display: grid; gap: 6px; }
+.reviewForm textarea { width: 100%; }
+.reviewForm select { width: 100%; min-height: 40px; border: 1px solid var(--border); background: white; }
+.reviewForm legend { font-weight: 600; }
 @media (max-width: 1000px) { .conditions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 @media (max-width: 600px) { .radar { padding: 16px; } .conditions { grid-template-columns: minmax(0, 1fr); } }
