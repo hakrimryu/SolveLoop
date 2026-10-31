@@ -20,6 +20,7 @@ from app.dashboard import router as dashboard_router
 from app.database import build_engine, get_session
 from app.errors import error_response, register_error_handlers
 from app.knowledge import router as knowledge_router
+from app.knowledge_generation import router as knowledge_generation_router
 from app.knowledge_search import router as knowledge_search_router
 from app.ticket_analysis import router as ticket_analysis_router
 from app.tickets import router as tickets_router
@@ -48,6 +49,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(tickets_router)
     app.include_router(ticket_analysis_router)
     app.include_router(knowledge_router)
+    app.include_router(knowledge_generation_router)
     app.include_router(knowledge_search_router)
     app.include_router(dashboard_router)
 

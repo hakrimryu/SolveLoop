@@ -373,6 +373,77 @@ await check('S16 社員にはAI操作と解決事例を表示しない', async (
   assert(!fixture.textContent.includes('AI提案・担当者') && !fixture.textContent.includes('根拠付き回答案を生成'), '社員に担当者のAI操作を表示しました。')
 })
 
+const generatedOf = ticket => ({
+  generation_id: '00000000-0000-0000-0000-000000000777', generated_at: now, expires_at: now,
+  draft: { title: '生成された接続手順', audience: '対象は要確認', body: '症状\n接続不可\n\n解決手順\n登録を確認' },
+  result: { symptoms: ['接続不可'], steps: ['登録を確認'], cautions: [], missing_information: ['端末の範囲'], source_ticket_ids: [ticket.id] },
+  sources: [{ ticket_id: ticket.id, ticket_number: ticket.number, ticket_version: ticket.version, title: ticket.title, body: ticket.body, resolution: ticket.resolution, department: dept, resolved_at: now, updated_at: now, content_hash: 'a'.repeat(64) }],
+  trace: { model: 'qwen3:8b', digest: 'a'.repeat(64), prompt_version: 'knowledge-draft-v1', request_id: 'synthetic-generation' },
+})
+
+await check('S17 生成・再生成は入力を保持し、反映は明示確認・保存は別操作', async () => {
+  const ticket = { ...ticketOf(), status: 'resolved', resolution: '登録を更新', resolved_at: now }
+  const writes = []
+  await mount(KnowledgeReview, `/knowledge/reviews/new?source=${ticket.id}`, async (path, body) => {
+    if (body) { writes.push({ path, body: structuredClone(body) }); return generatedOf(ticket) }
+    return ticket
+  })
+  await fill(field('適用対象'), '途中の対象')
+  await fill(field('本文'), '人が書いた未保存本文')
+  await click(button('選択した根拠からAI案を生成'))
+  assert(field('本文').value === '人が書いた未保存本文' && writes.length === 1, '生成が入力を上書き・保存しました。')
+  assert(Object.keys(writes[0].body).join() === 'source_refs', '生成に未保存本文を送信しました。')
+  await click(button('生成案を確認して編集欄へ反映'))
+  assert(document.activeElement.textContent === '入力を保持して戻る', '反映確認の初期焦点が取消ではありません。')
+  await click(button('入力を保持して戻る'))
+  assert(field('適用対象').value === '途中の対象', '反映取消で入力が変わりました。')
+  await click(button('生成案を確認して編集欄へ反映'))
+  await click(button('置き換えて編集を続ける'))
+  assert(field('件名').value === '生成された接続手順' && field('本文').value.startsWith('症状'), '明示反映ができません。')
+  await fill(field('本文'), '人が修正した本文')
+  await click(button('選択した根拠から再生成'))
+  assert(field('本文').value === '人が修正した本文' && writes.length === 2 && !writes.some(w => w.path === '/knowledge/drafts'), '再生成が編集を上書き・保存しました。')
+})
+
+await check('S17 生成失敗後も手動本文を保持して保存可能', async () => {
+  const ticket = { ...ticketOf(), status: 'resolved', resolution: '登録を更新', resolved_at: now }
+  let attempts = 0
+  await mount(KnowledgeReview, `/knowledge/reviews/new?source=${ticket.id}`, async (path, body) => {
+    if (body) { attempts++; throw new ApiError(504, 'AI_TIMEOUT', '生成の時間切れ', 'synthetic') }
+    return ticket
+  })
+  await fill(field('本文'), '障害時にも残る本文')
+  await click(button('選択した根拠からAI案を生成'))
+  assert(attempts === 1 && field('本文').value === '障害時にも残る本文' && !button('下書きを保存').disabled && fixture.textContent.includes('生成の時間切れ'), '障害時の入力・手動保存境界が違います。')
+})
+
+await check('S17 受取中止後の遅延結果を破棄し入力を保持', async () => {
+  const ticket = { ...ticketOf(), status: 'resolved', resolution: '登録を更新', resolved_at: now }
+  let release
+  await mount(KnowledgeReview, `/knowledge/reviews/new?source=${ticket.id}`, async (path, body) => body ? new Promise(resolve => { release = () => resolve(generatedOf(ticket)) }) : ticket)
+  await fill(field('本文'), '中止時に保持する本文')
+  await click(button('選択した根拠からAI案を生成'))
+  await click(button('生成結果の受け取りを中止'))
+  await act(async () => release())
+  assert(field('本文').value === '中止時に保持する本文' && !fixture.textContent.includes('未確認の生成案：'), '中止後の結果を反映しました。')
+})
+
+await check('S17 AI反映後の編集保存に生成IDと実根拠版を渡す', async () => {
+  const saved = reviewOf(), ticket = { ...ticketOf(), status: 'resolved', resolution: '登録を更新', resolved_at: now }
+  saved.sources = generatedOf(ticket).sources
+  let received
+  await mount(KnowledgeReview, `/knowledge/reviews/${saved.document_id}/versions/1`, async (path, body) => {
+    if (path === '/knowledge/generations') return generatedOf(ticket)
+    if (body) { received = structuredClone(body); return { ...saved, ...body, row_version: 2 } }
+    return saved
+  })
+  await click(button('選択した根拠からAI案を生成'))
+  await click(button('生成案を確認して編集欄へ反映')); await click(button('置き換えて編集を続ける'))
+  await fill(field('本文'), 'AI案を人が修正')
+  await click(button('下書きを保存'))
+  assert(received.generation_id === generatedOf(ticket).generation_id && received.body === 'AI案を人が修正' && received.source_refs[0].expected_ticket_version === ticket.version, 'AI案の由来・編集・根拠版が保存されません。')
+})
+
 globalThis.fetch = originalFetch
 results.textContent += `\n${cases.filter(item => item.startsWith('PASS')).length}/${cases.length} 通過`
 document.title = cases.some(item => item.startsWith('FAIL')) ? 'FAIL 業務画面の回帰検証' : 'PASS 業務画面の回帰検証'

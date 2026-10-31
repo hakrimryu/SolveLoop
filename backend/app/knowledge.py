@@ -73,6 +73,8 @@ class DraftInput(Input):
     body: KnowledgeBody
     department_id: UUID | None
     source_refs: Sources
+    # 既存の手動登録キーの内容ハッシュを維持する。
+    generation_id: UUID | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class DraftEdit(Input):
@@ -82,6 +84,7 @@ class DraftEdit(Input):
     body: KnowledgeBody | None = None
     department_id: UUID | None = None
     source_refs: Sources | None = None
+    generation_id: UUID | None = None
 
     @model_validator(mode="after")
     def fields(self):
@@ -352,7 +355,12 @@ def capture_sources(
         ticket = tickets.get(ref.ticket_id)
         if ticket is None:
             invalid("根拠の問い合わせが見つかりません。")
-        if ticket.status != "resolved":
+        if (
+            ticket.status != "resolved"
+            or not ticket.resolution
+            or not ticket.resolution.strip()
+            or not ticket.resolved_at
+        ):
             raise ApiError(
                 409, "SOURCE_NOT_RESOLVED", "未解決の問い合わせを根拠には使用できません。"
             )
@@ -558,7 +566,18 @@ def create_draft(
     session.add(version)
     session.flush()
     session.add_all(capture_sources(session, version, data.source_refs, tickets))
-    record(session, version, actor, "draft_created", {"base_version_no": None})
+    from app.knowledge_generation import consume_generation
+
+    trace = consume_generation(
+        session, request, actor, data.generation_id, data.source_refs, tickets, version
+    )
+    record(
+        session,
+        version,
+        actor,
+        "draft_created",
+        {"base_version_no": None, **({"generation": trace} if trace else {})},
+    )
     result = review_detail(session, doc, version)
     response.headers["Location"] = f"/api/v1/knowledge/{doc.id}/versions/1"
     return finish_create(request, session, actor, key, digest, result, doc.id)
@@ -671,7 +690,7 @@ def edit_draft(
     if version.status != "draft":
         invalid_state()
     changed = []
-    for key in data.model_fields_set - {"expected_version", "source_refs"}:
+    for key in data.model_fields_set - {"expected_version", "source_refs", "generation_id"}:
         value = getattr(data, key)
         if key == "department_id" and value != version.department_id:
             department(session, value)
@@ -703,7 +722,14 @@ def edit_draft(
             payload.update(
                 changed_fields=sorted(changed), before_sources=before, after_sources=after
             )
-    if changed:
+    from app.knowledge_generation import consume_generation
+
+    trace = consume_generation(
+        session, request, actor, data.generation_id, data.source_refs, tickets, version
+    )
+    if trace:
+        payload["generation"] = trace
+    if changed or trace:
         version.row_version += 1
         version.updated_at = datetime.now(UTC)
         record(

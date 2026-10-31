@@ -34,6 +34,10 @@ export function apiQuery(params: URLSearchParams, allowed: string[]) { const res
 export function eventText(event: BusinessEvent) {
   const labels: Record<string, string> = { created: '問い合わせを登録', body_updated: '問い合わせ内容を変更', assignment_changed: '担当部署・担当者を変更', started: '対応を開始', resolved: '解決内容を記録して解決', reopened: '問い合わせを再開', draft_created: '下書きを作成', saved: '下書きを保存', sources_refreshed: '根拠を再確認して保存', approved: '承認', publication_stopped: '公開を停止', publication_resumed: '再公開', rejected: '理由を記録して差し戻し' }
   const p = event.payload
+  if (p.generation) {
+    const generation = p.generation as { model: string; prompt_version: string; generation_id: string; edited: boolean }
+    return `${labels[event.event_type]}：ローカルAI案を人が確認して保存${generation.edited ? '（生成後に編集あり）' : ''}\n${generation.model} / ${generation.prompt_version} / 生成ID ${generation.generation_id}`
+  }
   if (event.event_type === 'assignment_changed') {
     const before = p.before as { department?: Department; assignee?: UserRef }
     const after = p.after as { department?: Department; assignee?: UserRef }

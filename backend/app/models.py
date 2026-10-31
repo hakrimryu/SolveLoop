@@ -311,6 +311,23 @@ class KnowledgeEvent(Base):
     occurred_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 
 
+class KnowledgeGeneration(Base):
+    __tablename__ = "knowledge_generations"
+    __table_args__ = (CheckConstraint("expires_at > created_at", name="ck_generation_expiry"),)
+
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    session_id: Mapped[UUID] = mapped_column()
+    sources: Mapped[list] = mapped_column(JSONB)
+    trace: Mapped[dict] = mapped_column(JSONB)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    saved_version_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("knowledge_versions.id", ondelete="SET NULL")
+    )
+
+
 class EmbeddingProfile(Base):
     __tablename__ = "embedding_profiles"
     __table_args__ = (CheckConstraint("length(id) = 64", name="ck_embedding_profile_id"),)

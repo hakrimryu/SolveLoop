@@ -291,6 +291,7 @@ def test_postgresql_foundation_and_migrations() -> None:
                     "knowledge_versions",
                     "knowledge_sources",
                     "knowledge_events",
+                    "knowledge_generations",
                     "embedding_profiles",
                     "knowledge_search_state",
                     "knowledge_preparations",
@@ -304,7 +305,7 @@ def test_postgresql_foundation_and_migrations() -> None:
             assert client.get("/health/ready").status_code == 503
             with engine.begin() as connection:
                 connection.execute(
-                    text("UPDATE alembic_version SET version_num = '0006_publication_control'")
+                    text("UPDATE alembic_version SET version_num = '0007_knowledge_generations'")
                 )
             assert client.get("/health/ready").status_code == 200
             assert app.state.engine.pool.checkedout() == 0

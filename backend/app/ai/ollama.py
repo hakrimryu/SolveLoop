@@ -2,7 +2,7 @@ import json
 import math
 from http.client import HTTPException
 from threading import Lock
-from time import perf_counter
+from time import monotonic, perf_counter
 from typing import Literal
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, ProxyHandler, Request, build_opener
@@ -79,7 +79,19 @@ class OllamaClient:
         # [en] Disable proxy forwarding, redirects, and automatic retries.
         self.opener = build_opener(ProxyHandler({}), NoRedirect())
 
-    def _request(self, path: str, body: dict | None = None, timeout: float = 5) -> dict:
+    def _request(
+        self,
+        path: str,
+        body: dict | None = None,
+        timeout: float = 5,
+        *,
+        deadline: float | None = None,
+    ) -> dict:
+        if deadline is not None:
+            remaining = deadline - monotonic()
+            if remaining <= 0:
+                raise OllamaError("AI_TIMEOUT", "生成要求の制限時間を超えました。")
+            timeout = min(timeout, remaining)
         request = Request(
             self.settings.ollama_base_url + path,
             data=json.dumps(body, ensure_ascii=False).encode("utf-8") if body is not None else None,
@@ -88,6 +100,8 @@ class OllamaClient:
         try:
             with self.opener.open(request, timeout=timeout) as response:
                 raw = response.read(MAX_RESPONSE_BYTES + 1)
+                if deadline is not None and monotonic() >= deadline:
+                    raise OllamaError("AI_TIMEOUT", "生成要求の制限時間を超えました。")
                 if len(raw) > MAX_RESPONSE_BYTES:
                     raise OllamaError(
                         "AI_INVALID_RESPONSE", "Ollamaの応答サイズが上限を超えました。"
@@ -134,12 +148,14 @@ class OllamaClient:
     def version(self) -> str:
         return self._parse(Version, self._request("/api/version")).version
 
-    def local_model(self, name: str, capability: str) -> dict:
-        models = self._parse(Models, self._request("/api/tags"))
+    def local_model(self, name: str, capability: str, *, deadline: float | None = None) -> dict:
+        models = self._parse(Models, self._request("/api/tags", deadline=deadline))
         model = next((model for model in models.models if model.name == name), None)
         if model is None:
             raise OllamaError("AI_MODEL_NOT_FOUND", "ローカルモデルが見つかりません。")
-        info = self._parse(ModelInfo, self._request("/api/show", {"model": name}))
+        info = self._parse(
+            ModelInfo, self._request("/api/show", {"model": name}, deadline=deadline)
+        )
         # ローカルAPIにもcloudモデルが登録できるため、重みの存在を別途検査する。
         # [ko] 로컬 API에도 cloud 모델을 등록할 수 있어 가중치 존재를 별도로 확인한다.
         # [en] A local API can register cloud models, so verify local weights separately.
@@ -159,13 +175,16 @@ class OllamaClient:
     def generate(self, prompt: str) -> dict:
         return self._infer(prompt, embedding=False)
 
-    def structured(self, prompt: str, schema: dict, expected_digest: str) -> dict:
+    def structured(
+        self, prompt: str, schema: dict, expected_digest: str, *, deadline: float | None = None
+    ) -> dict:
         return self._infer(
             prompt,
             embedding=False,
             context_tokens=32768,
             expected_digest=expected_digest,
             schema=schema,
+            deadline=deadline,
         )
 
     def embed(
@@ -183,6 +202,7 @@ class OllamaClient:
         context_tokens: int = 2048,
         expected_digest: str | None = None,
         schema: dict | None = None,
+        deadline: float | None = None,
     ) -> dict:
         if (
             not isinstance(text, str)
@@ -206,7 +226,9 @@ class OllamaClient:
             name = (
                 self.settings.ollama_embed_model if embedding else self.settings.ollama_chat_model
             )
-            model = self.local_model(name, "embedding" if embedding else "completion")
+            model = self.local_model(
+                name, "embedding" if embedding else "completion", deadline=deadline
+            )
             if expected_digest and model["digest"] != expected_digest:
                 raise OllamaError(
                     "AI_PROFILE_MISMATCH", "モデルのdigestが検索用の規格と異なります。"
@@ -257,7 +279,10 @@ class OllamaClient:
                 result = self._parse(
                     Generation,
                     self._request(
-                        "/api/generate", body, self.settings.ollama_generate_timeout_seconds
+                        "/api/generate",
+                        body,
+                        self.settings.ollama_generate_timeout_seconds,
+                        deadline=deadline,
                     ),
                 )
                 if not result.done or not result.response.strip():
@@ -272,7 +297,9 @@ class OllamaClient:
                 raise OllamaError("AI_INVALID_RESPONSE", "応答のモデル名が要求と一致しません。")
             if (
                 expected_digest
-                and self.local_model(name, "embedding" if embedding else "completion")["digest"]
+                and self.local_model(
+                    name, "embedding" if embedding else "completion", deadline=deadline
+                )["digest"]
                 != expected_digest
             ):
                 raise OllamaError("AI_PROFILE_MISMATCH", "処理中にモデルのdigestが変わりました。")

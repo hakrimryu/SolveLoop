@@ -43,3 +43,6 @@
 .confirmationField label { display: block; font-size: .8125rem; font-weight: 600; }
 .confirmationField input { display: block; width: 100%; margin-top: 8px; }
 .searchExcerpt { max-height: 12rem; overflow-y: auto; }
+.generation { margin-bottom: 20px; overflow-wrap: anywhere; }
+.generation > p, .generation h3 { margin: 12px 0; }
+.generation > div { margin-top: 20px; border-top: 1px solid var(--border); padding-top: 16px; }
