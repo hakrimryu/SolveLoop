@@ -1,4 +1,5 @@
 import json
+import re
 from time import monotonic
 from typing import Annotated
 
@@ -10,6 +11,7 @@ from app.ai.tickets import CHAT_DIGEST, CHAT_MODEL, Output, Text, unique_object
 
 PROMPT_VERSION = "knowledge-draft-v2"
 REQUEST_SECONDS = 240
+RENDERING_VERSION = "source-retention-v1"
 UNKNOWN_AUDIENCE = "適用対象は未確認です。原本と照合してください。"
 
 
@@ -29,7 +31,21 @@ class DraftProposal(Output):
         return self
 
 
-def draft_fields(value):
+def retained_resolution(value, sources):
+    excerpts = [*value["steps"], *value["cautions"], *value["missing_information"]]
+    seen, retained = set(), []
+    for source in sources:
+        for unit in re.split(r"(?<=[。！？])|\n", source["snapshot"]["resolution"]):
+            unit = unit.strip()
+            content = unit.rstrip("。！？").strip()
+            if not content or unit in seen or any(content in text for text in excerpts):
+                continue
+            seen.add(unit)
+            retained.append(f"{source.get('ticket_number', source['ticket_id'])}: {unit}")
+    return retained
+
+
+def draft_fields(value, sources=()):
     sections = [
         ("症状", value["symptoms"]),
         (
@@ -48,6 +64,18 @@ def draft_fields(value):
             or ["追加の不足情報は提示されていません。人による確認が必要です。"],
         ),
     ]
+    # 抽出の存在確認だけでは欠落を防げないため、未反映の原文を確認用に残す。
+    retained = retained_resolution(value, sources)
+    if retained:
+        sections.append(
+            (
+                "原文から未反映の解決記録（要確認）",
+                [
+                    "以下は生成案への反映を確認できない原文です。注意・条件・重複を照合し、公開前に編集してください。",
+                    *retained,
+                ],
+            )
+        )
     return {
         "title": value["title"].strip(),
         "audience": value["audience"].strip(),
@@ -128,8 +156,8 @@ def propose_draft(client, sources, deadline):
                     for excerpt in excerpts
                 ):
                     raise ValueError
-            fields = draft_fields(value.model_dump())
-            if any("\x00" in text for text in fields.values()):
+            fields = draft_fields(value.model_dump(), sources)
+            if any("\x00" in text for text in fields.values()) or len(fields["body"]) > 20000:
                 raise ValueError
             return (
                 value.model_dump(),
@@ -139,6 +167,7 @@ def propose_draft(client, sources, deadline):
                     "model": result["local_model"]["name"],
                     "digest": result["local_model"]["digest"],
                     "prompt_version": PROMPT_VERSION,
+                    "rendering_version": RENDERING_VERSION,
                     "input_hash": input_hash,
                     "output_hash": fingerprint(fields),
                     "prompt_eval_count": result["prompt_eval_count"],

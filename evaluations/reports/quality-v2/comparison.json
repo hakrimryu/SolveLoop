@@ -1,0 +1,116 @@
+{
+  "same_input": {
+    "corpus_hash": "970a2693bb91c62424e2bbe6283490ac4976c0e58ced9fca2b34d45d279e956c",
+    "ticket_hash": "db7c620aa9cbb6634bfcd19678cd977ba0a2c2882b55120333ba631719048ef8",
+    "dataset_hash": "465394cad941a368326c3f22ba37c445af5db7f824a61b2ee12ba026cafe9e9e"
+  },
+  "baseline": {
+    "radar_counts": {
+      "total": 90,
+      "covered": 15,
+      "uncovered": 73,
+      "unknown": 2,
+      "unanalyzed": 0
+    },
+    "gap": {
+      "tp": 8,
+      "predicted": 17,
+      "gold": 9,
+      "precision": 0.47058823529411764,
+      "recall": 0.8888888888888888
+    },
+    "drafts": {
+      "planned": 30,
+      "success": 28,
+      "failure_or_missing": 2,
+      "caution_atoms": {
+        "correct": 7,
+        "n": 51
+      },
+      "step_atoms": {
+        "correct": 47,
+        "n": 51
+      },
+      "body_source_retention": {
+        "correct": 76,
+        "n": 114
+      },
+      "human_review": "pending"
+    },
+    "caution_precision": {
+      "correct": 7,
+      "n": 7,
+      "precision": 1.0,
+      "extra_cautions": []
+    },
+    "successful_body_retention": {
+      "correct": 76,
+      "n": 104
+    },
+    "errors": {
+      "AI_UNAVAILABLE": 2
+    },
+    "source_audit": {
+      "uses": 126,
+      "valid": 126,
+      "invalid": [],
+      "note": "Radar累積応答内の同一coverage/ticket/chunk/quoteを重複計上しない。"
+    }
+  },
+  "quality": {
+    "radar_counts": {
+      "total": 90,
+      "covered": 31,
+      "uncovered": 56,
+      "unknown": 3,
+      "unanalyzed": 0
+    },
+    "gap": {
+      "tp": 7,
+      "predicted": 10,
+      "gold": 9,
+      "precision": 0.7,
+      "recall": 0.7777777777777778
+    },
+    "drafts": {
+      "planned": 30,
+      "success": 0,
+      "failure_or_missing": 30,
+      "caution_atoms": {
+        "correct": 0,
+        "n": 51
+      },
+      "step_atoms": {
+        "correct": 0,
+        "n": 51
+      },
+      "body_source_retention": {
+        "correct": 0,
+        "n": 114
+      },
+      "human_review": "pending"
+    },
+    "caution_precision": {
+      "correct": 0,
+      "n": 0,
+      "precision": null,
+      "extra_cautions": []
+    },
+    "successful_body_retention": {
+      "correct": 0,
+      "n": 0
+    },
+    "errors": {
+      "AI_INVALID_OUTPUT": 32,
+      "AI_UNAVAILABLE": 1
+    },
+    "source_audit": {
+      "uses": 103,
+      "valid": 103,
+      "invalid": [],
+      "note": "Radar累積応答内の同一coverage/ticket/chunk/quoteを重複計上しない。"
+    }
+  },
+  "human_review": "pending",
+  "note": "注意欄のprecisionは指定原文との一致。意味的正確性・人による品質承認ではない。失敗を除いた原文保全と全試行分母を別表示。"
+}

@@ -464,3 +464,22 @@ def test_failed_result_commit_does_not_save_partial_judgments(clients, ai, busin
     with Session(business_engine) as session:
         row = session.get(RadarCoverage, UUID(coverage["id"]))
         assert row.judgments == {} and row.batches[-1]["status"] == "failed"
+
+
+def test_numbered_quotes_are_not_normalized_and_can_be_corrected_once():
+    client = RadarAI()
+    original = client.structured
+    source = {"id": "real", "text": "1. 書類を提出する。\n2. 承認を待つ。", "body_start": 0}
+
+    def output(*args, **kwargs):
+        value = original(*args, **kwargs)
+        result = json.loads(value["response"])
+        result["citations"][0]["quote"] = (
+            "書類を提出する。\n承認を待つ。" if client.generations == 1 else "1. 書類を提出する。"
+        )
+        return {**value, "response": json.dumps(result)}
+
+    client.structured = output
+    result = judge(client, {"id": "ticket", "body": "承認前の申請方法"}, [source], monotonic() + 10)
+    assert result["trace"]["attempts"] == 2
+    assert result["citations"][0]["quote"] == "1. 書類を提出する。"

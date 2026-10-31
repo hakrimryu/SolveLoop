@@ -1,0 +1,122 @@
+{
+  "corpus_hash": "970a2693bb91c62424e2bbe6283490ac4976c0e58ced9fca2b34d45d279e956c",
+  "ticket_hash": "db7c620aa9cbb6634bfcd19678cd977ba0a2c2882b55120333ba631719048ef8",
+  "label": "baseline",
+  "split": "holdout",
+  "started_at": "2026-10-31T09:38:07.633918+00:00",
+  "product_parent_head": "ad49f2437977f4726a6bea40f4639cbbd820afc9",
+  "product_files": {
+    "app/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "app/accounts.py": "bddfb40083977aa11cc9982c37545d28b62cdebe049141cb3e054b2896b70a84",
+    "app/ai/__init__.py": "3b61347d7f1dd56169dafe78240218075e521cac76bc2f3a8b345b7c30675f6d",
+    "app/ai/__main__.py": "d7a7052cfaacdd04f67393356da9d4e2b74c2dfc1669286075d116dd46f03f6a",
+    "app/ai/config.py": "5de59d7e38f515414a35314fc8f9a0deb23091bcaa08987d237382a604c414e5",
+    "app/ai/drafts.py": "0799b47bfd072ccc67eb99af5152f18f20c72e6f0bc6485fce3b66fb96735c53",
+    "app/ai/knowledge.py": "0fdc176ba7be4c4c54aa2c0869615ca5e1e89ef6d91757df3840c751d33974cd",
+    "app/ai/ollama.py": "9dd851c6110188bef79220d874aaf8e20a2ca9c82aeee11217dd617cf3e0f3d9",
+    "app/ai/radar.py": "df92a07f5123443505b56c91296b6063ff2ff88cb78d7def3160dc307720e580",
+    "app/ai/tickets.py": "11a0dd1ad096d2895eb511db0bb1fb2d71c0ae8fdaad5c420bfb3a3155f0d9cc",
+    "app/auth.py": "2bd56307bf50edd0b48b819776f046d630f4229c0094162f88a7aa1cc9e9ba71",
+    "app/business.py": "e397787b4a580632610ed629f46739aa10ec898f71039b4cd8b3d80d1858c634",
+    "app/config.py": "975880b9f1d0d37ce35fd21e41ef8574fff9d247a0cfcbe7b54ac415ba31f691",
+    "app/dashboard.py": "51acc8f2d473f8bf0a01de002005b2563b2a038ed8041df2dfbb049338aa5c65",
+    "app/database.py": "de0d509d84ec092cd01b9526d7b992dbbc178b62e70710c05e266c39c4b59f66",
+    "app/demo.py": "118a7209e23f7435901ded06abb8ecdcb3380635aef8c153bc672053cf13e9bb",
+    "app/demo_data.py": "6ea54954c1c1d4fb3ebf0d4185315a43b1e1b1e59f33a00fc5204e518f2e49d5",
+    "app/errors.py": "7aad18670b482432eab64663d27707730e51cda9007d4e2a9556a21531b5de54",
+    "app/knowledge.py": "29386871dee6041757dffd26d89dd1773b47b9a318309c56bcb61312c5ffcb6e",
+    "app/knowledge_generation.py": "4c34d3ecde5e834913e22203b82f8d16dc86cee35a6ae40de4ea99e7e8093702",
+    "app/knowledge_search.py": "f11c6ccd0d2687b490c9006ac869dee4b3379922467e3fade9ec4641a40d962a",
+    "app/main.py": "330bb5e66bc574025641979ff14a1404020f2b1b81eef149fc91e903f6377efc",
+    "app/models.py": "78d3727753d97dad19e954734f329cc254d1564856e4054287c17ede50202789",
+    "app/radar.py": "2bf6edf924d2a251b106edd371884709a93be74e284ec89f0b49bfea4ae5787b",
+    "app/seed.py": "32dcc12d8fe1971272b60fa2b83d405967f2389f3c8a197a65d446f7501901a8",
+    "app/ticket_analysis.py": "e8c8c23151cd3ee90e8ffda9dd42dc0355ff324c5940e6c34fdce5f33df37c82",
+    "app/tickets.py": "dd316ed338e4b842719226a9502189f609f3f60ef27e5775d1ef485072ea39f6",
+    "app/vector.py": "854366da5be083c82976841f4ce6ca4fb53a37d541ee1d32e8c4091d2c21db35"
+  },
+  "dataset_hash": "465394cad941a368326c3f22ba37c445af5db7f824a61b2ee12ba026cafe9e9e",
+  "draft_prompt": "knowledge-draft-v2",
+  "radar_prompt": "radar-coverage-v1",
+  "repeats": 3,
+  "threshold": 0.92,
+  "transport": "ASGI + real PostgreSQL + real Ollama HTTP",
+  "models": {
+    "models": [
+      {
+        "name": "embeddinggemma-2:270m-q8_0-text",
+        "model": "embeddinggemma-2:270m-q8_0-text",
+        "modified_at": "2026-10-31T11:51:33.2055608+09:00",
+        "size": 303957438,
+        "digest": "c21dd30c1e38444d3b4faa091407b6fa97221447b4965d74931d43d7f09bbbfd",
+        "details": {
+          "parent_model": "sha256-111e84992a0406bacb70d11dddd8874001c783cc56b82c462ec82a2f5b8d08b1",
+          "format": "gguf",
+          "family": "gemma-embedding2",
+          "families": [
+            "gemma-embedding2"
+          ],
+          "parameter_size": "271.00M",
+          "quantization_level": "Q8_0",
+          "context_length": 262144,
+          "embedding_length": 512,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "embedding"
+        ]
+      },
+      {
+        "name": "interview-ko:latest",
+        "model": "interview-ko:latest",
+        "modified_at": "2026-10-28T14:26:11.2467674+09:00",
+        "size": 5225387871,
+        "digest": "de2ed9b7bcf164d5e368661de901f375d2eaefdc9959fc685c72668956ca5292",
+        "details": {
+          "parent_model": "qwen3:8b",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "runner": "llamacpp"
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      },
+      {
+        "name": "qwen3:8b",
+        "model": "qwen3:8b",
+        "modified_at": "2026-10-28T13:45:38.5113397+09:00",
+        "size": 5225388164,
+        "digest": "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41",
+        "details": {
+          "parent_model": "",
+          "format": "gguf",
+          "family": "qwen3",
+          "families": [
+            "qwen3"
+          ],
+          "parameter_size": "8.2B",
+          "quantization_level": "Q4_K_M",
+          "context_length": 40960,
+          "embedding_length": 4096,
+          "runner": "ggml"
+        },
+        "capabilities": [
+          "completion",
+          "tools",
+          "thinking"
+        ]
+      }
+    ]
+  },
+  "human_review": "pending"
+}

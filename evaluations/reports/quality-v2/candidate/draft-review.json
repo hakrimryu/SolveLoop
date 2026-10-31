@@ -1,0 +1,612 @@
+[
+  {
+    "id": "QH01",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH01S1",
+        "department": "HR",
+        "title": "産業医相談の予約",
+        "body": "対象: 通常の健康相談を希望する社員。\n産業医面談の申込先が分からなかった。",
+        "resolution": "人事の健康相談フォームへ希望日を二つと連絡先を入力した。\n人事から日時の通知を受け予約を確定した。\n相談内容の詳細は予約フォームへ書かない。\n緊急の症状はこの予約を待たず医療機関へ相談する。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 4,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 4,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 4,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH02",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH02S1",
+        "department": "GENERAL",
+        "title": "HDMI投影の切替",
+        "body": "対象: 会議室の備付けプロジェクターを使う社員。\nHDMI接続したPCの画面が投影されなかった。",
+        "resolution": "リモコンでHDMI入力を選んだ。\nPCの画面複製を選んで投影を確認した。\n天吊金具や本体カバーは社員が外さない。"
+      },
+      {
+        "id": "QH02S2",
+        "department": "GENERAL",
+        "title": "HDMI投影の切替の別受付",
+        "body": "対象: 会議室の備付けプロジェクターを使う社員。\nHDMI接続したPCの画面が投影されなかった。別の日にも発生した。",
+        "resolution": "リモコンでHDMI入力を選択した。\nPCの画面複製を選んで投影を確かめた。\n天吊金具や本体カバーは社員が外さない。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH03",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH03S1",
+        "department": "ACCOUNTING",
+        "title": "支払口座の変更確認",
+        "body": "対象: 口座変更通知を受けた社員。\n取引先の振込先が変更されたという通知が届いた。",
+        "resolution": "変更通知と取引先番号を経理へ提出した。\n経理が登録済み連絡先で確認した後に口座を更新した。\n確認完了までは新口座へ振り込まない。\n通知メールの連絡先だけで本人確認を済ませない。"
+      },
+      {
+        "id": "QH03S2",
+        "department": "ACCOUNTING",
+        "title": "支払口座の変更確認の別受付",
+        "body": "対象: 口座変更通知を受けた社員。\n取引先の振込先が変更されたという通知が届いた。別の日にも発生した。",
+        "resolution": "変更通知と取引先番号を経理へ送付した。\n経理が登録済み連絡先で確認した後に口座を更新した。\n確認完了までは新口座へ振り込まない。\n通知メールの連絡先だけで本人確認を済ませない。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH04",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH04S1",
+        "department": "IT",
+        "title": "無線LAN証明書の連絡",
+        "body": "対象: 会社管理PCの利用者。\n社内SSIDへの接続で証明書期限切れが表示された。",
+        "resolution": "エラー画面と端末番号をITへ社内問い合わせで連絡した。\n配付済みの認証設定以外は使わない。\n証明書の再発行はIT担当者が行う。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH05",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH05S1",
+        "department": "GENERAL",
+        "title": "来訪業者の工事受付",
+        "body": "対象: 設備工事を申請する部署担当者。\n会議室の耐震金具工事を依頼する必要があった。",
+        "resolution": "工事希望日と対象室を総務へ伝えた。\n許可された業者の入館予定を受付に登録した。\n社員だけで天井金具を外さない。\n工事日の会議室は利用停止にする。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 4,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 4,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 4,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH06",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH06S1",
+        "department": "ACCOUNTING",
+        "title": "支払予定日の照会",
+        "body": "対象: 経理へ照会する社員。\n取引先への支払予定日を回答できなかった。",
+        "resolution": "取引先番号と請求月を経理へ伝えた。\n経理が確認した支払予定日を取引先へ案内した。\n未確認の振込日を確定日として回答しない。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH07",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH07S1",
+        "department": "HR",
+        "title": "健康情報の提出方法",
+        "body": "対象: 健診結果を提出する社員。\n健診結果を提出する経路が分からなかった。",
+        "resolution": "人事指定の個別提出欄へ健診結果を送付した。\n部署共有フォルダーへ健康情報を置かない。\n閲覧できるのは指定された人事担当者に限る。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH08",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH08S1",
+        "department": "IT",
+        "title": "端末の時刻同期",
+        "body": "対象: 会社管理端末の利用者。\n端末の時計がずれて認証で時刻エラーが発生した。",
+        "resolution": "会社指定の同期先で時刻同期を実行した。\n認証の再試行でエラーが消えたことを確認した。\n会社指定以外の時刻サーバーへ変更しない。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH09",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH09S1",
+        "department": "GENERAL",
+        "title": "プロジェクターの異臭連絡",
+        "body": "対象: 備付けプロジェクターを利用する社員。\n投影中に本体から異臭が発生した。",
+        "resolution": "利用を中止し安全に電源を切った。\n部屋番号と発生時刻を総務へ連絡した。\n本体を分解しない。\n復旧の連絡を受けるまで再通電しない。"
+      },
+      {
+        "id": "QH09S2",
+        "department": "GENERAL",
+        "title": "プロジェクターの異臭連絡の別受付",
+        "body": "対象: 備付けプロジェクターを利用する社員。\n投影中に本体から異臭が発生した。別の日にも発生した。",
+        "resolution": "利用を中止し安全に電源を切った。\n部屋番号と発生時刻を総務へ報告した。\n本体を分解しない。\n復旧の連絡を受けるまで再通電しない。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 5,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QH10",
+    "scope": "holdout",
+    "sources": [
+      {
+        "id": "QH10S1",
+        "department": "ACCOUNTING",
+        "title": "口座通知の差戻し",
+        "body": "対象: 未確認の口座通知を受けた社員。\n口座変更通知の発信元を確認できなかった。",
+        "resolution": "経理へ未確認の通知として照会した。\n登録済み連絡先で確認が取れた場合に限り変更する。\n確認が取れない間は支払先を変更しない。"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 3,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  },
+  {
+    "id": "QREG-MFA",
+    "scope": "regression",
+    "sources": [
+      {
+        "id": "QREGMFA1",
+        "department": "IT",
+        "title": "携帯交換後のVPN追加認証について",
+        "body": "スマートフォンを機種変更した後、VPNのMFA認証ができなくなりました。旧端末の認証アプリを使えず、新端末で追加認証を登録し直す方法を知りたいです。",
+        "resolution": "対象は携帯電話を交換してVPNのMFA認証ができない社員です。IT担当者が本人確認を行った。旧端末の認証登録を失効した。新端末用の認証登録を再発行した。新端末の認証アプリを登録し、認証コードでVPNに接続できることを確認した。本人確認が完了するまでは登録を再発行しない。",
+        "original_ticket_id": "5250aed9-66db-5519-9825-c87a734e6e1d"
+      },
+      {
+        "id": "QREGMFA2",
+        "department": "IT",
+        "title": "携帯交換後のVPN追加認証について",
+        "body": "携帯電話を買い替えてからVPNの追加認証で止まります。以前の端末の認証アプリは使えません。新しいスマートフォンへのMFA登録の切替をお願いします。",
+        "resolution": "対象は機種変更後にVPNの追加認証ができない社員です。IT担当者が本人確認を実施した。旧携帯の認証登録を無効化した。新しい携帯向けの登録を発行した。新端末の認証アプリを設定し、VPN接続を確認した。本人確認前の認証登録再発行は行わない。",
+        "original_ticket_id": "0fb250de-809f-5100-a0a8-a025ccb7db67"
+      },
+      {
+        "id": "QREGMFA3",
+        "department": "IT",
+        "title": "携帯交換後のVPN追加認証について",
+        "body": "新しいスマートフォンに交換後、VPNの多要素認証を通過できません。旧携帯の認証アプリが利用できないため、新端末で認証を再登録したいです。",
+        "resolution": "対象はスマートフォン交換後にVPNの多要素認証ができない社員です。本人確認後、IT担当者が旧端末の登録を失効した。新端末の認証登録を再発行した。新端末の認証アプリを登録し、VPNの追加認証が通ることを本人と確認した。本人確認が済むまでは再登録を進めない。",
+        "original_ticket_id": "44994346-188d-5bf0-8f42-5f8bae77a90c"
+      }
+    ],
+    "attempts": [
+      {
+        "repeat": 1,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 17,
+        "retained_units": 0
+      },
+      {
+        "repeat": 2,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 17,
+        "retained_units": 0
+      },
+      {
+        "repeat": 3,
+        "status": 503,
+        "error_code": null,
+        "result": null,
+        "draft": null,
+        "trace": null,
+        "source_units": 17,
+        "retained_units": 0
+      }
+    ],
+    "human_review": {
+      "status": "pending",
+      "reviewer": null,
+      "procedure": null,
+      "conditions": null,
+      "revision_required": null
+    }
+  }
+]

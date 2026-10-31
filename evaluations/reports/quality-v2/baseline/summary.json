@@ -1,0 +1,1245 @@
+{
+  "label": "baseline",
+  "split": "holdout",
+  "radar": [
+    {
+      "split": "holdout",
+      "repeat": 1,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 40,
+      "detection_error": null,
+      "pairs": {
+        "tp": 60,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 60,
+        "gold": 60,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 6,
+        "predicted": 6,
+        "gold": 6,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 30,
+        "uncovered": 23,
+        "covered": 5,
+        "unknown": 2,
+        "unanalyzed": 0,
+        "unknown_errors": {
+          "AI_UNAVAILABLE": 2
+        }
+      },
+      "gap": {
+        "tp": 2,
+        "predicted": 5,
+        "gold": 3,
+        "precision": 0.4,
+        "recall": 0.6666666666666666
+      },
+      "group_decisions": [
+        {
+          "group": "HDOCTOR",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 1,
+            "uncovered": 4,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.2,
+              "uncovered": 0.8,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.2,
+            "gap_status": "gap"
+          },
+          "candidate": "fcca6694d2c87139bc20f2712a8428fe874b313b452b3107f142ef964b8ea744"
+        },
+        {
+          "group": "HPROJ",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "69efe2d9963c1b845740fb14d0aae483bcebc7b7c9dfd8a1d037db9e0f420641"
+        },
+        {
+          "group": "HBANK",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "aa0a5e8eabdc938b090a9835c85bc7e7b9e9e92d21e14b33fe10da7de4a0ebad"
+        },
+        {
+          "group": "HCERT",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "091cd2faec6c6a76bc52060b38048159600d37de48eed4d56bdcbe97f6dc7c18"
+        },
+        {
+          "group": "HOVER",
+          "gold": "gap",
+          "predicted": "unknown",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 3,
+            "unknown": 2,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 0.6,
+              "unknown": 0.4
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "unknown"
+          },
+          "candidate": "49ffbe27c5f2a5de1c12cc44527b6ae597d1d17984734a3a8e62bcc634c40aad"
+        },
+        {
+          "group": "HMOUNT",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "4f741efb6e3bb5511984b355e0b03718d5d376c56ce2ff968a29c18cd7602045"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 30,
+        "correct": 18,
+        "counts": {
+          "covered": 5,
+          "uncovered": 23,
+          "unknown": 2
+        },
+        "decisions": [
+          {
+            "ticket": "2aa60bc9-89c2-57d8-9c5b-4a60cb59e424",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "97593154-f0d7-509f-b820-5f51f5beeb46",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9eb17066-97f8-5d92-9eaa-c00fdb4a7a89",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "b7c324fb-e732-5ccf-8e0d-64265b82e53f",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cf20705a-481e-510c-8741-036ddb2e5aae",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "03725130-3cd9-552f-95f6-c78c6c28b9f0",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "31badb5b-8df5-585f-964a-2ebe7ca5ce74",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "68717eb9-83da-571d-b6cf-8b0741de4349",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9761785b-ea8b-59da-830f-8e7e2dd55126",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d1cf2dc7-554c-5efb-9ea2-9a5f41a7a999",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "5a97780c-c8b9-53ee-9e69-09693b50ced6",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "6fc1947c-eed4-5b6d-bcb1-e5d241ccc6cf",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "7afa42cc-cab7-5284-9459-86566b8e199d",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bbb7a59e-e446-581b-a25c-52d7c0b45a03",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ed22e778-6fd1-540e-8393-4a35d1fe02c9",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "38c38fef-2a56-57fd-ae7c-c2456d2bb408",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "4ecc5fdb-642f-523f-9a04-132bf85d63de",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "6c544230-c0a6-5c64-937f-28e22361dd8c",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "82c020ce-b89d-5589-b5b6-89f0d7853bc7",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ffc750e4-0121-5c62-a718-e1bf0ef489a7",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2a19008b-adaf-59a9-ac34-7c39e42e26b0",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "3bb474b3-f473-5b15-b770-f609ffc595f7",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "unknown",
+            "error_code": "AI_UNAVAILABLE"
+          },
+          {
+            "ticket": "8057f972-b429-5cf5-b907-a7bd8f9b5ab5",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9ab605c4-b9d4-5330-aa6b-26265776e4d0",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d0ada9de-1809-5d72-864c-3ee1678bc5da",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "08358556-894f-5d7d-a3ef-7369a1bf3d9d",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1722e49b-7eb5-5fdb-b692-11ccc565246f",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "7262cb9f-5e5a-5be4-9919-801bf0623abf",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bf630459-f637-5dbb-98ab-b8302150c581",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "e8953baf-b5ee-5803-9e07-c94c6d2adf0f",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "split": "holdout",
+      "repeat": 2,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 40,
+      "detection_error": null,
+      "pairs": {
+        "tp": 60,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 60,
+        "gold": 60,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 6,
+        "predicted": 6,
+        "gold": 6,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 30,
+        "uncovered": 25,
+        "covered": 5,
+        "unanalyzed": 0,
+        "unknown_errors": {}
+      },
+      "gap": {
+        "tp": 3,
+        "predicted": 6,
+        "gold": 3,
+        "precision": 0.5,
+        "recall": 1.0
+      },
+      "group_decisions": [
+        {
+          "group": "HDOCTOR",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 1,
+            "uncovered": 4,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.2,
+              "uncovered": 0.8,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.2,
+            "gap_status": "gap"
+          },
+          "candidate": "fcca6694d2c87139bc20f2712a8428fe874b313b452b3107f142ef964b8ea744"
+        },
+        {
+          "group": "HPROJ",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "69efe2d9963c1b845740fb14d0aae483bcebc7b7c9dfd8a1d037db9e0f420641"
+        },
+        {
+          "group": "HBANK",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "aa0a5e8eabdc938b090a9835c85bc7e7b9e9e92d21e14b33fe10da7de4a0ebad"
+        },
+        {
+          "group": "HCERT",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "091cd2faec6c6a76bc52060b38048159600d37de48eed4d56bdcbe97f6dc7c18"
+        },
+        {
+          "group": "HOVER",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "49ffbe27c5f2a5de1c12cc44527b6ae597d1d17984734a3a8e62bcc634c40aad"
+        },
+        {
+          "group": "HMOUNT",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "4f741efb6e3bb5511984b355e0b03718d5d376c56ce2ff968a29c18cd7602045"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 30,
+        "correct": 20,
+        "counts": {
+          "covered": 5,
+          "uncovered": 25
+        },
+        "decisions": [
+          {
+            "ticket": "2aa60bc9-89c2-57d8-9c5b-4a60cb59e424",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "97593154-f0d7-509f-b820-5f51f5beeb46",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9eb17066-97f8-5d92-9eaa-c00fdb4a7a89",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "b7c324fb-e732-5ccf-8e0d-64265b82e53f",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cf20705a-481e-510c-8741-036ddb2e5aae",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "03725130-3cd9-552f-95f6-c78c6c28b9f0",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "31badb5b-8df5-585f-964a-2ebe7ca5ce74",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "68717eb9-83da-571d-b6cf-8b0741de4349",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9761785b-ea8b-59da-830f-8e7e2dd55126",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d1cf2dc7-554c-5efb-9ea2-9a5f41a7a999",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "5a97780c-c8b9-53ee-9e69-09693b50ced6",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "6fc1947c-eed4-5b6d-bcb1-e5d241ccc6cf",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "7afa42cc-cab7-5284-9459-86566b8e199d",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bbb7a59e-e446-581b-a25c-52d7c0b45a03",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ed22e778-6fd1-540e-8393-4a35d1fe02c9",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "38c38fef-2a56-57fd-ae7c-c2456d2bb408",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "4ecc5fdb-642f-523f-9a04-132bf85d63de",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "6c544230-c0a6-5c64-937f-28e22361dd8c",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "82c020ce-b89d-5589-b5b6-89f0d7853bc7",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ffc750e4-0121-5c62-a718-e1bf0ef489a7",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2a19008b-adaf-59a9-ac34-7c39e42e26b0",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "3bb474b3-f473-5b15-b770-f609ffc595f7",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "8057f972-b429-5cf5-b907-a7bd8f9b5ab5",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9ab605c4-b9d4-5330-aa6b-26265776e4d0",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d0ada9de-1809-5d72-864c-3ee1678bc5da",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "08358556-894f-5d7d-a3ef-7369a1bf3d9d",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1722e49b-7eb5-5fdb-b692-11ccc565246f",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "7262cb9f-5e5a-5be4-9919-801bf0623abf",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bf630459-f637-5dbb-98ab-b8302150c581",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "e8953baf-b5ee-5803-9e07-c94c6d2adf0f",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    },
+    {
+      "split": "holdout",
+      "repeat": 3,
+      "phase": "baseline",
+      "gold_status": "synthetic_author_label_not_independently_reviewed",
+      "input_count": 40,
+      "detection_error": null,
+      "pairs": {
+        "tp": 60,
+        "fp": 0,
+        "fn": 0,
+        "predicted": 60,
+        "gold": 60,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "problem_groups": {
+        "matched": 6,
+        "predicted": 6,
+        "gold": 6,
+        "precision": 1.0,
+        "recall": 1.0
+      },
+      "coverage_occurrences": {
+        "total": 30,
+        "uncovered": 25,
+        "covered": 5,
+        "unanalyzed": 0,
+        "unknown_errors": {}
+      },
+      "gap": {
+        "tp": 3,
+        "predicted": 6,
+        "gold": 3,
+        "precision": 0.5,
+        "recall": 1.0
+      },
+      "group_decisions": [
+        {
+          "group": "HDOCTOR",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 1,
+            "uncovered": 4,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.2,
+              "uncovered": 0.8,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.2,
+            "gap_status": "gap"
+          },
+          "candidate": "fcca6694d2c87139bc20f2712a8428fe874b313b452b3107f142ef964b8ea744"
+        },
+        {
+          "group": "HPROJ",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "69efe2d9963c1b845740fb14d0aae483bcebc7b7c9dfd8a1d037db9e0f420641"
+        },
+        {
+          "group": "HBANK",
+          "gold": "covered",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 2,
+            "uncovered": 3,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.4,
+              "uncovered": 0.6,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.4,
+            "gap_status": "gap"
+          },
+          "candidate": "aa0a5e8eabdc938b090a9835c85bc7e7b9e9e92d21e14b33fe10da7de4a0ebad"
+        },
+        {
+          "group": "HCERT",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "091cd2faec6c6a76bc52060b38048159600d37de48eed4d56bdcbe97f6dc7c18"
+        },
+        {
+          "group": "HOVER",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "49ffbe27c5f2a5de1c12cc44527b6ae597d1d17984734a3a8e62bcc634c40aad"
+        },
+        {
+          "group": "HMOUNT",
+          "gold": "gap",
+          "predicted": "gap",
+          "summary": {
+            "total": 5,
+            "analyzed": 5,
+            "covered": 0,
+            "uncovered": 5,
+            "unknown": 0,
+            "unanalyzed": 0,
+            "rates": {
+              "covered": 0.0,
+              "uncovered": 1.0,
+              "unknown": 0.0
+            },
+            "coverage_on_analyzed": 0.0,
+            "gap_status": "gap"
+          },
+          "candidate": "4f741efb6e3bb5511984b355e0b03718d5d376c56ce2ff968a29c18cd7602045"
+        }
+      ],
+      "gold_ticket_coverage": {
+        "n": 30,
+        "correct": 20,
+        "counts": {
+          "covered": 5,
+          "uncovered": 25
+        },
+        "decisions": [
+          {
+            "ticket": "2aa60bc9-89c2-57d8-9c5b-4a60cb59e424",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "97593154-f0d7-509f-b820-5f51f5beeb46",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9eb17066-97f8-5d92-9eaa-c00fdb4a7a89",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "b7c324fb-e732-5ccf-8e0d-64265b82e53f",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "cf20705a-481e-510c-8741-036ddb2e5aae",
+            "group": "HDOCTOR",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "03725130-3cd9-552f-95f6-c78c6c28b9f0",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "31badb5b-8df5-585f-964a-2ebe7ca5ce74",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "68717eb9-83da-571d-b6cf-8b0741de4349",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9761785b-ea8b-59da-830f-8e7e2dd55126",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d1cf2dc7-554c-5efb-9ea2-9a5f41a7a999",
+            "group": "HPROJ",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "5a97780c-c8b9-53ee-9e69-09693b50ced6",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "6fc1947c-eed4-5b6d-bcb1-e5d241ccc6cf",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "7afa42cc-cab7-5284-9459-86566b8e199d",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bbb7a59e-e446-581b-a25c-52d7c0b45a03",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ed22e778-6fd1-540e-8393-4a35d1fe02c9",
+            "group": "HBANK",
+            "gold": "covered",
+            "predicted": "covered",
+            "error_code": null
+          },
+          {
+            "ticket": "38c38fef-2a56-57fd-ae7c-c2456d2bb408",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "4ecc5fdb-642f-523f-9a04-132bf85d63de",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "6c544230-c0a6-5c64-937f-28e22361dd8c",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "82c020ce-b89d-5589-b5b6-89f0d7853bc7",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "ffc750e4-0121-5c62-a718-e1bf0ef489a7",
+            "group": "HCERT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "2a19008b-adaf-59a9-ac34-7c39e42e26b0",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "3bb474b3-f473-5b15-b770-f609ffc595f7",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "8057f972-b429-5cf5-b907-a7bd8f9b5ab5",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "9ab605c4-b9d4-5330-aa6b-26265776e4d0",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "d0ada9de-1809-5d72-864c-3ee1678bc5da",
+            "group": "HOVER",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "08358556-894f-5d7d-a3ef-7369a1bf3d9d",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "1722e49b-7eb5-5fdb-b692-11ccc565246f",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "7262cb9f-5e5a-5be4-9919-801bf0623abf",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "bf630459-f637-5dbb-98ab-b8302150c581",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          },
+          {
+            "ticket": "e8953baf-b5ee-5803-9e07-c94c6d2adf0f",
+            "group": "HMOUNT",
+            "gold": "uncovered",
+            "predicted": "uncovered",
+            "error_code": null
+          }
+        ]
+      }
+    }
+  ],
+  "drafts": {
+    "planned": 30,
+    "success": 28,
+    "failure_or_missing": 2,
+    "caution_atoms": {
+      "correct": 7,
+      "n": 51
+    },
+    "step_atoms": {
+      "correct": 47,
+      "n": 51
+    },
+    "body_source_retention": {
+      "correct": 76,
+      "n": 114
+    },
+    "human_review": "pending"
+  },
+  "errors": {
+    "AI_UNAVAILABLE": 2
+  },
+  "source_audit": {
+    "uses": 126,
+    "valid": 126,
+    "invalid": [],
+    "note": "Radar累積応答内の同一coverage/ticket/chunk/quoteを重複計上しない。"
+  },
+  "operational_failures": [
+    {
+      "context": {
+        "case": "49ffbe27c5f2a5de1c12cc44527b6ae597d1d17984734a3a8e62bcc634c40aad",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 1,
+        "phase": "baseline"
+      },
+      "path": "/api/tags",
+      "elapsed_ms": 5012.793,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "49ffbe27c5f2a5de1c12cc44527b6ae597d1d17984734a3a8e62bcc634c40aad",
+        "split": "holdout",
+        "task": "coverage_batch",
+        "repeat": 1,
+        "phase": "baseline"
+      },
+      "path": "/api/tags",
+      "elapsed_ms": 5007.947,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "QH03",
+        "split": "holdout",
+        "task": "draft",
+        "repeat": 1,
+        "phase": "baseline"
+      },
+      "path": "/api/tags",
+      "elapsed_ms": 5005.156,
+      "error_code": "AI_UNAVAILABLE"
+    },
+    {
+      "context": {
+        "case": "QH09",
+        "split": "holdout",
+        "task": "draft",
+        "repeat": 2,
+        "phase": "baseline"
+      },
+      "path": "/api/show",
+      "elapsed_ms": 5020.307,
+      "error_code": "AI_UNAVAILABLE"
+    }
+  ]
+}

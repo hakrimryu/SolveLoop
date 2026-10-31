@@ -1,0 +1,5 @@
+services:
+  eval:
+    image: ${SOLVELOOP_QUALITY_IMAGE:-solveloop-evaluation:quality}
+    volumes:
+      - ../.local/s21-quality:/results

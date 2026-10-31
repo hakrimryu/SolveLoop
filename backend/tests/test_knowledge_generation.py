@@ -14,7 +14,13 @@ from test_business import business_engine as business_engine
 from test_business import clients as clients
 from test_ticket_analysis import FixtureAI
 
-from app.ai.drafts import PROMPT_VERSION, UNKNOWN_AUDIENCE, DraftProposal, propose_draft
+from app.ai.drafts import (
+    PROMPT_VERSION,
+    UNKNOWN_AUDIENCE,
+    DraftProposal,
+    draft_fields,
+    propose_draft,
+)
 from app.ai.ollama import OllamaError
 from app.ai.tickets import CHAT_DIGEST
 from app.knowledge import DraftInput
@@ -413,3 +419,71 @@ def test_competing_saves_create_one_document_and_deletion_keeps_consumed_marker(
         assert row.consumed_at and row.saved_version_id is None
         assert session.scalar(select(func.count()).select_from(KnowledgeDocument)) == 0
     assert post(op, "/knowledge/drafts", body).json()["code"] == "AI_GENERATION_USED"
+
+
+def test_omitted_resolution_is_retained_for_review_without_inventing_a_caution():
+    fake = DraftAI()
+    original = fake.structured
+
+    def omit(*args, **kwargs):
+        result = original(*args, **kwargs)
+        value = json.loads(result["response"])
+        value["steps"] = ["端末の設定を確認した。"]
+        value["missing_information"] = []
+        return {**result, "response": json.dumps(value)}
+
+    fake.structured = omit
+    sources = [
+        {
+            "ticket_id": "source",
+            "ticket_number": "REQ-TEST",
+            "snapshot": {
+                "title": "設定の確認",
+                "body": "設定が反映されない。",
+                "resolution": "端末の設定を確認した。\n権限確認前に保護機能を解除しない。",
+            },
+        }
+    ]
+    value, fields, _ = propose_draft(fake, sources, monotonic() + 10)
+    assert value["cautions"] == []
+    assert "原文から未反映の解決記録（要確認）" in fields["body"]
+    assert "REQ-TEST: 権限確認前に保護機能を解除しない。" in fields["body"]
+    assert fields["body"].count("端末の設定を確認した。") == 1
+
+
+def test_retained_resolution_deduplicates_sources_and_accepts_punctuationless_excerpts():
+    value = {
+        "title": "題",
+        "audience": "社員",
+        "symptoms": ["症状"],
+        "steps": ["設定を確認した"],
+        "cautions": [],
+        "missing_information": [],
+    }
+    sources = [
+        {
+            "ticket_id": str(i),
+            "snapshot": {"resolution": "設定を確認した。\n承認が済むまでは変更しない。"},
+        }
+        for i in range(2)
+    ]
+    body = draft_fields(value, sources)["body"]
+    assert body.count("承認が済むまでは変更しない。") == 1
+    assert "原文から未反映の解決記録（要確認）" in body
+    assert "0: 設定を確認した" not in body
+
+
+def test_retained_resolution_never_returns_an_unsaveable_oversize_draft():
+    fake = DraftAI()
+    fake.calls = []
+    sources = [
+        {
+            "ticket_id": str(i),
+            "snapshot": {"title": "題", "body": "症状", "resolution": str(i) * 5000},
+        }
+        for i in range(5)
+    ]
+    with pytest.raises(OllamaError) as error:
+        propose_draft(fake, sources, monotonic() + 10)
+    assert error.value.code == "AI_INVALID_OUTPUT"
+    assert len(fake.calls) == 2

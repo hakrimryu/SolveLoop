@@ -58,3 +58,5 @@ python -m pytest -q -p no:cacheprovider evaluations/test_evaluation.py
 `reports/`は秘密を含まない派生結果。全モデル入出力・API応答原本・dump・cookie・個人環境は`.local/s21/`に保存しGit対象外。派生結果はモデルの出力再生や製品の分岐には使わない。生成された下書きの利用者レビューは別工程であり、実行器の文書承認を品質承認として記録しない。
 
 実行条件はOllama公式の[generate API](https://docs.ollama.com/api/generate)の`keep_alive`と時間/token項目、[running models API](https://docs.ollama.com/api/ps)のresident確認を参考にした。rolling文書を2026-10-31確認。新しいコード・モデルのコピーはない。
+
+S21後続の比較・不採用候補・原文保全の回帰結果は[別報告](reports/quality-v2/report.md)。初回基準線は保存し、Radarの改善達成やユーザーレビュー完了とは扱わない。
