@@ -7,13 +7,15 @@ import { useBusinessCall } from '../../lib/useBusiness'
 import type { RequestProps } from './Requests'
 import styles from './Requests.module.css'
 import DiscardDialog, { trapDialogFocus } from '../../components/DiscardDialog'
+import { clearSearchInquiry, readSearchInquiry } from '../../lib/searchInquiry'
 
 export default function RequestDialog({ departments, onDirtyChange, onClose }: RequestProps & { onClose: () => void }) {
+  const location = useLocation()
   const dialog = useRef<HTMLDialogElement>(null)
   const form = useRef<HTMLFormElement>(null)
   const title = useRef<HTMLInputElement>(null)
   const key = useRef(crypto.randomUUID())
-  const [input, setInput] = useState({ title: '', body: '', department_id: '' })
+  const [input, setInput] = useState(() => readSearchInquiry(location.state?.searchInquiryId) ?? { title: '', body: '', department_id: '' })
   const [errors, setErrors] = useState({ title: '', body: '' })
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
@@ -23,9 +25,8 @@ export default function RequestDialog({ departments, onDirtyChange, onClose }: R
   const [confirm, setConfirm] = useState(false)
   const call = useBusinessCall()
   const navigate = useNavigate()
-  const location = useLocation()
   const dirty = !!(input.title || input.body || input.department_id)
-  useLayoutEffect(() => { dialog.current!.showModal(); title.current?.focus(); return () => dialog.current?.close() }, [])
+  useLayoutEffect(() => { dialog.current!.showModal(); title.current?.focus(); return () => { dialog.current?.close(); clearSearchInquiry() } }, [])
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
   function close() { if (!busy) { if (dirty) setConfirm(true); else onClose() } }
   // 結果不明時も入力と登録キーを固定し、人の確認後だけ同じ登録を再試行する。

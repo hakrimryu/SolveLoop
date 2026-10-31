@@ -11,6 +11,7 @@ import KnowledgeList, { clearKnowledgePosition, KnowledgeDetail } from './featur
 import KnowledgeReview from './features/knowledge/KnowledgeReview'
 import AuthScreen from './features/auth/AuthScreen'
 import Accounts, { TemporaryPasswordDialog } from './features/accounts/Accounts'
+import { clearSearchInquiry } from './lib/searchInquiry'
 
 function subscribeSession(listener: () => void) {
   let generation = api.snapshot().identityGeneration
@@ -18,6 +19,7 @@ function subscribeSession(listener: () => void) {
     if (generation !== api.snapshot().identityGeneration) {
       clearRequestPosition()
       clearKnowledgePosition()
+      clearSearchInquiry()
       document.title = 'SolveLoop'
       generation = api.snapshot().identityGeneration
     }
@@ -32,6 +34,7 @@ export default function App() {
     document.title = 'SolveLoop'
     clearRequestPosition()
     clearKnowledgePosition()
+    clearSearchInquiry()
     // 別の認証世代へ、前の画面の復帰メッセージを渡さない。
     // [ko] 다른 인증 세대로 이전 화면의 복귀 메시지를 넘기지 않는다.
     // [en] Do not carry previous navigation messages into a different auth generation.

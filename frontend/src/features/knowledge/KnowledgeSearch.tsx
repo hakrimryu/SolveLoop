@@ -5,6 +5,7 @@ import type { BusinessProps, SemanticResult } from '../../lib/business'
 import { useBusinessCall } from '../../lib/useBusiness'
 import common from '../requests/Requests.module.css'
 import styles from './Knowledge.module.css'
+import SearchInquiry from '../../components/SearchInquiry'
 
 export function SearchMode({ semantic = false }: { semantic?: boolean }) {
   const [params] = useSearchParams()
@@ -48,10 +49,11 @@ export default function KnowledgeSearch({ departments }: BusinessProps) {
       {busy && <p role="status">ローカルAIで質問を変換し、承認版を検索しています…</p>}
       {error && <div ref={errorRef} tabIndex={-1} role="alert" className={common.errorBanner}><p>{error}</p><p>意味検索は完了していません。入力は保持しています。</p><button className="button" disabled={busy} onClick={() => setRevision(value => value + 1)}>同じ条件で再検索</button><p><Link to="/knowledge">キーワード検索を利用する</Link></p></div>}
       {!busy && !error && !submitted && <p>探したい内容を入力してください。意味検索にはローカルOllamaを使用します。</p>}
-      {result && <><p role="status">「{submitted}」：<strong>{result.items.length}箇所</strong>を取得 · 距離が小さい順</p>{!result.items.length ? <div className={common.empty}><h2>検索対象の承認文書はありません</h2><p>担当部署の条件を確認してください。不明点は問い合わせを登録できます。</p><Link to="/requests?new=1">問い合わせを登録</Link></div> : <ol className={styles.searchResults}>{result.items.map(item => {
+      {result && <><p role="status">「{submitted}」：<strong>{result.items.length}箇所</strong>を取得 · 距離が小さい順</p>{!result.items.length ? <div className={common.empty}><h2>検索対象の承認文書はありません</h2><p>担当部署の条件を確認してください。不明点は担当者に問い合わせできます。</p></div> : <ol className={styles.searchResults}>{result.items.map(item => {
         const target = new URLSearchParams(params)
         target.set('match_version', String(item.version_no)); target.set('start', String(item.body_start)); target.set('end', String(item.body_end))
         return <li key={item.chunk_id}><h2><Link to={`/knowledge/${item.document_id}?${target}#search-passage`}>{item.title}</Link></h2><p className={common.meta}>{item.number} / 承認済み v{item.version_no} · 本文 {item.line_start}〜{item.line_end}行 · 距離 {item.cosine_distance.toFixed(4)}</p><p className={common.help}>適用対象：{item.audience}{item.context ? ` · ${item.context}` : ''}</p><p tabIndex={0} role="region" aria-label="検索箇所の抜粋・スクロールできます" className={`${common.body} ${styles.searchExcerpt}`}>{item.text}</p><Link to={`/knowledge/${item.document_id}?${target}#search-passage`}>全文で該当箇所を確認</Link></li>
       })}</ol>}</>}
+      <SearchInquiry query={query} />
     </section></>
 }
