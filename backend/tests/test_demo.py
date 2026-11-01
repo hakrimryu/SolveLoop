@@ -3,9 +3,11 @@ import json
 import os
 import shutil
 from pathlib import Path
+from unittest.mock import Mock
 from uuid import UUID
 
 import pytest
+from alembic.script import ScriptDirectory
 from sqlalchemy import event, select, text
 from sqlalchemy.orm import Session
 
@@ -14,15 +16,17 @@ from app.config import load_settings
 from app.database import build_engine
 from app.demo import (
     CONFIRMATION,
+    DELETE_ORDER,
     INSTANCE,
     apply_dataset,
     business_hash,
     environment_guard,
     inspect_database,
+    schema_guard,
     target_guard,
 )
 from app.demo_data import Dataset, DemoError
-from app.models import Department, User
+from app.models import Base, Department, User
 from app.seed import DEMO_PASSWORD, seed_auth
 
 
@@ -118,6 +122,41 @@ def test_environment_requires_all_independent_guards(monkeypatch):
     monkeypatch.delenv("SOLVELOOP_DEMO")
     with pytest.raises(DemoError):
         environment_guard(settings, CONFIRMATION)
+
+
+@pytest.mark.parametrize("kind", ["current", "old_revision", "missing_table", "extra_table"])
+def test_schema_guard_accepts_only_current_complete_schema(kind):
+    migrations = ScriptDirectory(str(Path(__file__).resolve().parents[1] / "migrations"))
+    revision = migrations.get_current_head() if kind != "old_revision" else "0009_radar_reviews"
+    tables = set(Base.metadata.tables) | {"alembic_version"}
+    if kind == "missing_table":
+        tables.remove("ticket_messages")
+    elif kind == "extra_table":
+        tables.add("unexpected_table")
+    session = Mock()
+    session.scalars.return_value = tables
+    session.scalar.return_value = revision
+    if kind == "current":
+        schema_guard(session)
+    else:
+        with pytest.raises(DemoError):
+            schema_guard(session)
+
+
+def test_reset_covers_all_tables_in_foreign_key_order():
+    assert len(DELETE_ORDER) == len(set(DELETE_ORDER))
+    assert set(DELETE_ORDER) == set(Base.metadata.tables)
+    positions = {name: index for index, name in enumerate(DELETE_ORDER)}
+    for name, table in Base.metadata.tables.items():
+        for foreign_key in table.foreign_keys:
+            parent = foreign_key.column.table.name
+            if (
+                foreign_key.ondelete in {"CASCADE", "SET NULL"}
+                or parent == name
+                or (name, parent) == ("knowledge_documents", "knowledge_versions")
+            ):
+                continue
+            assert positions[name] < positions[parent], (name, parent)
 
 
 @pytest.mark.integration

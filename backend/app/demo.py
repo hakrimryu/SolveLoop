@@ -44,6 +44,9 @@ BUSINESS_TABLES = (
     "knowledge_events",
 )
 DELETE_ORDER = (
+    "guidance_sessions",
+    "ticket_reads",
+    "ticket_messages",
     "radar_reviews",
     "radar_coverages",
     "radar_runs",
@@ -124,7 +127,7 @@ def schema_guard(session):
     )
     require(
         tables == set(Base.metadata.tables) | {"alembic_version"}
-        and session.scalar(text("SELECT version_num FROM alembic_version")) == "0009_radar_reviews",
+        and session.scalar(text("SELECT version_num FROM alembic_version")) == "0010_self_service",
         "スキーマが対応範囲外です。デモ環境のmigrationと実装を確認してください。",
     )
 

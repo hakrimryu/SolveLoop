@@ -1,74 +1,40 @@
-# ローカルAI評価
+[日本語](README.md) · [한국어](README.ko.md) · [English](README.en.md)
 
-## 社員向けAI案内の追加評価
+# 評価要約
 
-[社員向け案内の測定・内容照合・制約](reports/employee-guidance-v1/report.md)は、公開合成文書3件で8質問と同時2要求を確認した小規模回帰です。S21の保留評価とは別に扱い、利用者の解決や時間削減効果を主張しません。同時要求の成功とAI_UNAVAILABLEの両方を保存しています。
+[プロジェクト紹介](../README.md)
 
-この追加実行器だけは、指定したローカルの原本APIへ合成社員で接続し、合成公開文書KB-0003/0004/0005を使用します。問い合わせ・公開文書は作成/更新しませんが、ログインセッションと30日間のAI質問履歴は保存されます。既存結果を上書きせず、新しい出力先を指定します。実行にはPython標準ライブラリだけを使用します。
+実API・PostgreSQL・ローカルOllamaを接続し、業務フローとAIの動作を確認しました。以下の数値は各報告の固定合成入力・測定時点に基づきます。実企業での問い合わせ削減や時間削減効果を測定したものではありません。
 
-```powershell
-python -X utf8 evaluations/employee_guidance.py --output .local/employee-guidance-new-run
-```
+## 確認したこと
 
-以下のS21専用DB・リセット手順と混同しないでください。
+社員の質問→未解決の引き継ぎ→担当者の応対・解決→下書き・人の承認→再検索を確認しました。権限、古い版の更新拒否、重複登録防止、公開文書だけを検索する境界も検査しています。固定応答の検査と実モデルの評価は区別しました。
 
-全て架空企業の合成資料。S21の評価入力・正解・実行器・集計と、派生した測定報告を保存する。目標値と測定値は[評価規約](protocol.md)・結果報告で区別する。保留結果を見たprompt・threshold調整は行っていない。
+## 主な結果
 
-事前の0.80目標はRadarの反復検出precision/recallに適用し、知識不足判定は別の参考指標として扱う。追加文書承認後の正解ラベルは対象条件の一致を仮定した未確認ラベルであり、正式な正解率や改善達成の根拠にしない。下書き10種の利用者レビューは完了0/10・確認待ち10/10。構造検査・分析者の所見・隔離DBでの文書承認を利用者の品質承認へ読み替えない。
+| 評価 | 入力と結果 | 読み取れる範囲 |
+| --- | --- | --- |
+| 検索基準線 | 正解文書がある20問×3回、Recall@5 **60/60** | 文書の検索結果であり、回答内容の正しさとは別 |
+| Radar | 反復群 **4/4** を毎回検出（3回）、知識不足判定precision **5/8** | 反復検出と文書で対応できるかの判断は別の問題 |
+| 社員向けAI案内 | 合成公開文書3件・質問8件、単一要求 **1.152〜2.838秒** | API処理時間であり、社員の解決時間ではない |
 
-コミット準備時にこの説明とMarkdown報告の表記のみを訂正した。評価規約・入力・正解・実行器・集計器・結果JSON・測定原本は基準線のまま保存し、再実行はしていない。
+検索・Radar基準線は2026-10-31、社員向け案内は2026-11-01の測定です。同じ入力の反復を独立標本として合算しません。
 
-必要条件は既存のDocker環境と、製品が指定するdigestのローカルOllamaモデル。追加のモデル・外部API・パッケージは使わない。原本`solveloop`とS20`solveloop-demo`には接続しない。評価専用DBはポートを公開せず、別volume・role・cluster標識を検査する。
+## 残る課題
 
-リポジトリルートからPowerShellまたは同等のシェルで実行する。
+- 後続の同時社員質問2件では、1件が `AI_UNAVAILABLE` で失敗しました。同時処理の安定性は追加検証が必要です。
+- 適用条件の解釈と下書きの注意事項抽出には誤りが残ります。構造・引用検査の成功だけでは内容の十分さを保証できず、実利用者による下書き品質レビューも未完了です。
 
-```powershell
-New-Item -ItemType Directory -Force .local/s21
-docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml build eval
-docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml up -d --wait eval-db
-docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml run --rm eval alembic upgrade head
-docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml run --rm -e EVALUATION_HEAD=044cc692df9527a0fb99c1368b5c2fd1a04dc5c3 eval python /evaluation/run.py run --output /results/baseline-v1
-python evaluations/score.py .local/s21/baseline-v1 --output .local/s21/derived
-python evaluations/review.py .local/s21/baseline-v1 --output .local/s21/derived
-```
+## 評価データと再実行
 
-今回の測定では、基準線完了後の最初のunloadで非resident確認が早すぎて実行器が停止した。基準線を再実行せず、入力・製品hashと時間測定未開始を確認する`finish`で続行した。修正後の新規`run`には不在確認の待機が含まれる。今回の続行コマンドは次の通り。
+- [固定入力](datasets/)・[基準線の集計](reports/baseline-v1/summary.json)・[社員向け案内の実測](reports/employee-guidance-v1/records.jsonl)・[同時要求](reports/employee-guidance-v1/concurrency.json)
+- [不採用候補の比較](reports/quality-v2/comparison.json)・[候補patch](quality-v2-candidate.patch)・[固定hash](quality-v2-manifest.json)
+- 評価時の固定規約原文: [v1](frozen/protocol-v1.txt)・[v2](frozen/protocol-v2.txt)。内部識別子を含む原資料です。
 
-```powershell
-docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml run --rm eval python /evaluation/run.py finish --output /results/baseline-v1
-```
-
-`EVALUATION_HEAD`は今回測定した製品ソースのコミット。別の製品版を評価する場合は実際の版に置き換える。実際のPythonファイルhashも記録し、この文字列だけで版の一致を判断しない。既存結果の上書きと既存DBへの追加実行は拒否する。再実行は別の結果ディレクトリを指定し、他の評価接続を閉じて次の明示リセットを行う。
+実モデルの再実行は[infrastructure/compose.evaluation.yaml](../infrastructure/compose.evaluation.yaml)の専用DBに限定します。[実行器](run.py)・[比較実行器](quality.py)・[集計器](score.py)に引数があります。新しい評価では合成資料の準備とDBへの書き込みが発生するため、既存結果はバックアップし、通常利用中のDBでは実行しません。引数だけ確認する例:
 
 ```powershell
-docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml run --rm eval python /evaluation/run.py reset --confirm solveloop-evaluation/solveloop_evaluation
+docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml run --build --rm --no-deps eval python /evaluation/run.py --help
 ```
 
-モデル非resident開始の測定では両モデルをunloadする。実行中に同じOllamaを他の処理で使用しない。これはモデル・DB内容の変更ではないが、同時利用すると応答時間を比較できない。TestClientの認証済みAPI経路から実DB/実Ollamaを呼び、ブラウザとTCP APIサーバーの時間は含めない。
-
-S20診断は本評価と分離し、評価DBの明示reset後に実行する。S20の入力をコピーして使用し、保留正解や成功率には含めない。
-
-```powershell
-docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml run --rm --volume ${PWD}/demo:/demo:ro eval python /evaluation/diagnose_s20.py
-python evaluations/summarize_s20.py .local/s21/s20-diagnostic-v1 --output .local/s21/s20-derived
-```
-
-今回のS20診断ではresetの初期検索状態復元を修正した後、`--output /results/s20-diagnostic-v2`へ実行した。最初の準備失敗は品質試行前で、失敗記録もローカルに保存した。
-
-S21の公開境界だけを確認する場合は、基準線の評価DBをresetする前に次を実行する。S22の全体検証・利用者手動確認の代わりにはしない。
-
-```powershell
-docker compose -p solveloop-evaluation -f infrastructure/compose.evaluation.yaml run --rm eval python /evaluation/check_boundaries.py
-```
-
-採点器だけの確認（GPU・DB不要）:
-
-```powershell
-python -m pytest -q -p no:cacheprovider evaluations/test_evaluation.py
-```
-
-`reports/`は秘密を含まない派生結果。全モデル入出力・API応答原本・dump・cookie・個人環境は`.local/s21/`に保存しGit対象外。派生結果はモデルの出力再生や製品の分岐には使わない。生成された下書きの利用者レビューは別工程であり、実行器の文書承認を品質承認として記録しない。
-
-実行条件はOllama公式の[generate API](https://docs.ollama.com/api/generate)の`keep_alive`と時間/token項目、[running models API](https://docs.ollama.com/api/ps)のresident確認を参考にした。rolling文書を2026-10-31確認。新しいコード・モデルのコピーはない。
-
-S21後続の比較・不採用候補・原文保全の回帰結果は[別報告](reports/quality-v2/report.md)。初回基準線は保存し、Radarの改善達成やユーザーレビュー完了とは扱わない。
+固定入力・分母の検査は[test_evaluation.py](test_evaluation.py)・[test_quality.py](test_quality.py)にあります。過去の比較対象は `ad49f2437977f4726a6bea40f4639cbbd820afc9` と保存patchで復元します。現在コードの再実行を過去と同じ測定とは扱いません。

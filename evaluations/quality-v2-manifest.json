@@ -1,7 +1,7 @@
 {
   "files": {
     "datasets/quality-v2.json": "465394cad941a368326c3f22ba37c445af5db7f824a61b2ee12ba026cafe9e9e",
-    "quality-v2-protocol.md": "f0a957d7eeea473718f885076f3358d028880044c14a37d186c14d274d7805de",
+    "frozen/protocol-v2.txt": "f0a957d7eeea473718f885076f3358d028880044c14a37d186c14d274d7805de",
     "quality-v2-candidate.patch": "f368f22eff6364a2a5898a71a9a8381f8bffa8d4621a2a67f3557c30f211f5c1"
   },
   "quality_product_files": {

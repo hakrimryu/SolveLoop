@@ -33,7 +33,8 @@ htmlcov/
 
 # 実行時データ・個人用ファイル
 /.local/
-/demo/videos/
+/demo/videos/*
+!/demo/videos/solveloop-portfolio.mp4
 *.log
 *.sqlite3
 .DS_Store

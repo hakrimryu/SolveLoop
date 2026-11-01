@@ -545,7 +545,9 @@ class Evaluation:
             "schema_version": 1,
             "started_at": datetime.now(UTC).isoformat(),
             "dataset_hashes": files,
-            "protocol_hash": hashlib.sha256((ROOT / "protocol.md").read_bytes()).hexdigest(),
+            "protocol_hash": hashlib.sha256(
+                (ROOT / "frozen/protocol-v1.txt").read_bytes()
+            ).hexdigest(),
             "product_files": product,
             "product_head": os.getenv("EVALUATION_HEAD"),
             "models": observer._request("/api/tags"),
