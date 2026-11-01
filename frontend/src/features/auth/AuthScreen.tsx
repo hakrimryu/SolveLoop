@@ -88,7 +88,7 @@ export default function AuthScreen({ changePassword = false, requiredChange = fa
       {changePassword && <p id="password-help" className={styles.help}>15〜256文字。現在と同じ値、公開デモ用の値、空白だけの値、改行などの制御文字は使えません。Unicode・空白は変換しません。確認欄にも同じ新しい値を入力します。</p>}
       <label className={styles.visibility}><input type="checkbox" checked={showPasswords} onChange={event => setShowPasswords(event.target.checked)} />パスワードを表示</label>
       <div className={styles.actions}><button type="submit" disabled={pending} className="button buttonPrimary">{pending ? '送信中…' : changePassword ? '変更して再ログインへ' : 'ログイン'}</button>
-        {changePassword && !requiredChange && <Link to="/dashboard">変更せずに戻る</Link>}
+        {changePassword && !requiredChange && <Link to="/">変更せずに戻る</Link>}
       </div>
     </form>
 

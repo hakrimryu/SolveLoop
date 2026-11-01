@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useParams } from 'react-router'
 import { api, ApiError, errorMessage, isStale } from '../../lib/api'
 import { eventText, formatDate, statusLabels, validateText } from '../../lib/business'
@@ -8,16 +8,17 @@ import { LoadState } from '../../components/BusinessState'
 import type { RequestProps } from './Requests'
 import DiscardDialog from '../../components/DiscardDialog'
 import RequestAI from './RequestAI'
+import RequestConversation from './RequestConversation'
 import styles from './Requests.module.css'
 
 export default function RequestDetail(props: RequestProps) {
   const { requestId } = useParams()
-  const resource = useLoad<Ticket>(`/tickets/${requestId}`)
+  const resource = useLoad<Ticket>(`/tickets/${requestId}${props.personal ? '?scope=mine' : ''}`)
   const location = useLocation()
-  return resource.data ? <Detail key={requestId} {...props} initial={resource.data} /> : <><Link to={`/requests${location.search}`}>← 問い合わせ一覧へ戻る</Link><h1 tabIndex={-1}>問い合わせ詳細</h1><LoadState error={resource.error} reload={resource.reload} /></>
+  return resource.data ? <Detail key={`${props.personal ? 'mine' : 'all'}-${requestId}`} {...props} initial={resource.data} /> : <><Link to={`${props.personal ? '/my/requests' : '/requests'}${location.search}`}>← 問い合わせ一覧へ戻る</Link><h1 tabIndex={-1}>問い合わせ詳細</h1><LoadState error={resource.error} reload={resource.reload} /></>
 }
 
-function Detail({ role, departments, operators, onDirtyChange, initial }: RequestProps & { initial: Ticket }) {
+function Detail({ role, departments, operators, onDirtyChange, initial, personal = false }: RequestProps & { initial: Ticket }) {
   const [saved, setSaved] = useState(initial)
   const [body, setBody] = useState(initial.body)
   const [editing, setEditing] = useState(false)
@@ -30,15 +31,20 @@ function Detail({ role, departments, operators, onDirtyChange, initial }: Reques
   const [blocked, setBlocked] = useState(false)
   const [latest, setLatest] = useState<Ticket | null>(null)
   const [discard, setDiscard] = useState(false)
+  const [replyDirty, setReplyDirty] = useState(false)
+  const onReplyDirty = useCallback((dirty: boolean) => setReplyDirty(dirty), [])
+  const [proposal, setProposal] = useState<{ text: string; sequence: number }>()
   const call = useBusinessCall()
   const location = useLocation()
   const heading = useRef<HTMLHeadingElement>(null)
   const errorRef = useRef<HTMLParagraphElement>(null)
   const formBody = useRef<HTMLTextAreaElement>(null)
-  const isOperator = role === 'operator'
+  const isOperator = role === 'operator' && !personal
+  const detailApi = `/tickets/${saved.id}${personal ? '?scope=mine' : ''}`
+  const basePath = personal ? '/my/requests' : '/requests'
   const assignmentDirty = assignee !== (saved.assignee?.id ?? '') || dept !== (saved.department?.id ?? '')
   const bodyDirty = editing && body !== saved.body
-  const dirty = bodyDirty || assignmentDirty || !!resolution
+  const dirty = bodyDirty || assignmentDirty || !!resolution || replyDirty
   useEffect(() => { onDirtyChange(dirty); return () => onDirtyChange(false) }, [dirty, onDirtyChange])
   useEffect(() => { if (editing) formBody.current?.focus() }, [editing])
   function showError(value: string) { setError(value); requestAnimationFrame(() => errorRef.current?.focus()) }
@@ -46,7 +52,7 @@ function Detail({ role, departments, operators, onDirtyChange, initial }: Reques
     if (busy) return
     setBusy(true)
     try {
-      const result = await call<Ticket>(`/tickets/${saved.id}`)
+      const result = await call<Ticket>(detailApi)
       // 最新の保存内容は別に表示し、比較・確認前に編集中の値を置き換えない。
       // [ko] 최신 저장 내용은 별도로 표시하고 비교·확인 전에 편집 중인 값을 교체하지 않는다.
       // [en] Show the latest saved record separately; do not replace edits before explicit review.
@@ -81,7 +87,7 @@ function Detail({ role, departments, operators, onDirtyChange, initial }: Reques
       api.assertCurrent(generation)
       accept(result)
       setMessage('変更を保存しました。')
-      const current = await call<Ticket>(`/tickets/${saved.id}`)
+      const current = await call<Ticket>(detailApi)
       api.assertCurrent(generation)
       accept(current)
       heading.current?.focus()
@@ -89,8 +95,13 @@ function Detail({ role, departments, operators, onDirtyChange, initial }: Reques
     finally { setBusy(false) }
   }
   const back = new URLSearchParams(location.search); back.delete('new')
+  function acceptConversation(value: Ticket) {
+    setSaved(value)
+    if (!bodyDirty) setBody(value.body)
+    if (!assignmentDirty) { setAssignee(value.assignee?.id ?? ''); setDept(value.department?.id ?? '') }
+  }
   return <>
-    <Link className={styles.back} to={`/requests${back.size ? `?${back}` : ''}`}>← 問い合わせ一覧へ戻る（条件を保持）</Link>
+    <Link className={styles.back} to={`${basePath}${back.size ? `?${back}` : ''}`}>← 問い合わせ一覧へ戻る（条件を保持）</Link>
     <div className={styles.heading}><div><p className="eyebrow">{saved.number} · 保存版 {saved.version}</p><h1 ref={heading} tabIndex={-1}>{saved.title}</h1><span className={`status ${saved.status}`}>{statusLabels[saved.status]}</span></div><button className="button" disabled={busy} onClick={() => { void refresh() }}>最新の保存内容を取得</button></div>
     {message && <p role="status" className={styles.success}>{message}</p>}{error && <p ref={errorRef} tabIndex={-1} role="alert" className={styles.errorBanner}>{error}</p>}
     {blocked && <section className="notice" aria-label="保存内容の再確認"><h2>入力を保持しています</h2><p>自動再送はしません。最新の保存内容・状態・履歴を確認してください。</p><button className="button" disabled={busy} onClick={() => { void refresh() }}>最新の保存内容を取得</button>{latest && <><p>保存版 {latest.version} · {statusLabels[latest.status]} · {formatDate(latest.updated_at)} JST</p><p className={styles.body}>{latest.body}</p><p className={styles.body}>{latest.resolution}</p><button className="button" onClick={() => { setSaved(latest); setBlocked(false); setLatest(null); setError(''); setMessage('最新の版を確認しました。保持した入力を見直し、必要な操作を明示的に行ってください。') }}>最新の版を確認済み・保持した入力で編集を続ける</button></>}</section>}
@@ -99,8 +110,10 @@ function Detail({ role, departments, operators, onDirtyChange, initial }: Reques
         {editing ? <form onSubmit={e => { e.preventDefault(); void apply('edit') }} onKeyDown={e => { if (e.key === 'Enter' && e.nativeEvent.isComposing) e.preventDefault() }}><label className={styles.field}>内容 <span className={styles.required}>必須</span><textarea ref={formBody} value={body} maxLength={5000} disabled={busy} onChange={e => setBody(e.target.value)} /></label><div className={styles.actions}><button type="button" className="button" disabled={busy} onClick={() => { if (body !== saved.body) setDiscard(true); else setEditing(false) }}>編集をキャンセル</button><button className="button buttonPrimary" disabled={busy || blocked}>内容を保存</button></div></form> : <p className={styles.body}>{saved.body}</p>}
       </section>
       {saved.status === 'resolved' && <section className={styles.section}><h2>解決内容</h2><p className={styles.meta}>解決 {formatDate(saved.resolved_at!)} JST</p><p className={styles.body}>{saved.resolution}</p>{isOperator && <div className={styles.nextStep}><h3>解決記録をナレッジへ</h3><p>保存済みの解決記録を根拠として、手動入力またはローカルAI案から下書きを作成します。</p><Link className="button" to={`/knowledge/reviews/new?source=${saved.id}`}>ナレッジの下書きを作成</Link></div>}</section>}
-      {isOperator && <RequestAI ticket={saved} disabled={busy || blocked || editing} />}
-      <section className={styles.section}><h2>変更履歴</h2><p className={styles.help}>古い順 · サーバーに保存された業務記録です。</p><ol className={styles.history}>{saved.events.map(event => <li key={event.id}><div><strong>{event.actor.display_name}</strong><time dateTime={event.occurred_at}>{formatDate(event.occurred_at)} JST</time></div><p className={styles.body}>{eventText(event)}</p></li>)}</ol></section>
+      {saved.guidance_context && <details className={styles.disclosure}><summary>問い合わせ前のAI案内・引き継ぎ内容</summary><p className={styles.help}>{formatDate(saved.guidance_context.created_at)} JST 時点の記録です。現在の公開状態は原文で確認してください。</p><p className={styles.body}>質問：{saved.guidance_context.query}</p><p className={styles.body}>{saved.guidance_context.response?.result.summary ?? (saved.guidance_context.response_restricted ? '根拠文書が更新・公開停止されたため、以前の案内は表示していません。' : '案内を作成できませんでした。')}</p><ol>{saved.guidance_context.response?.result.steps.map((step, index) => <li key={index}>{step.text}</li>)}</ol><p className={styles.body}>引き継ぎ理由：{saved.guidance_context.handoff_reason ?? saved.guidance_context.feedback ?? '未記入'}</p><details><summary>参照した根拠を確認</summary>{saved.guidance_context.response?.sources.map(source => <p key={source.id}><Link target="_blank" rel="noopener noreferrer" to={source.href}>{source.number} {source.title} v{source.version_no}（別タブ）</Link></p>)}</details></details>}
+      {isOperator && <details className={styles.disclosure}><summary>AIで担当部署・回答案を確認</summary><RequestAI ticket={saved} disabled={busy || blocked || editing} onUseDraft={text => { setProposal(previous => ({ text, sequence: (previous?.sequence ?? 0) + 1 })); requestAnimationFrame(() => document.getElementById('conversation-heading')?.scrollIntoView({ block: 'start' })) }} /></details>}
+      <RequestConversation ticket={saved} operator={isOperator && saved.requester.id !== api.snapshot().user?.id} personal={personal} proposal={proposal} disabled={busy || blocked || editing} onSaved={acceptConversation} onDirtyChange={onReplyDirty} />
+      <details className={styles.disclosure}><summary>変更履歴</summary><p className={styles.help}>古い順 · サーバーに保存された業務記録です。</p><ol className={styles.history}>{saved.events.map(event => <li key={event.id}><div><strong>{event.actor.display_name}</strong><time dateTime={event.occurred_at}>{formatDate(event.occurred_at)} JST</time></div><p className={styles.body}>{eventText(event)}</p></li>)}</ol></details>
     </div><aside className={styles.side} aria-label="問い合わせの属性と操作"><section className={styles.section}><h2>問い合わせ情報</h2><dl className={styles.metadata}><dt>申請者</dt><dd>{saved.requester.display_name}</dd><dt>担当部署</dt><dd>{saved.department?.name ?? '未定'}</dd><dt>担当者</dt><dd>{saved.assignee?.display_name ?? '未割り当て'}</dd><dt>状態</dt><dd>{statusLabels[saved.status]}</dd><dt>更新日時</dt><dd>{formatDate(saved.updated_at)} JST</dd></dl></section>
       {isOperator && <section className={styles.section}><h2>担当者の操作</h2><fieldset disabled={busy || blocked}>
         {saved.status !== 'resolved' && <label className={styles.field}>担当部署<select value={dept} onChange={e => setDept(e.target.value)}><option value="">未定</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}{saved.department && !departments.some(d => d.id === saved.department!.id) && <option value={saved.department.id}>{saved.department.name}（現在の記録）</option>}</select></label>}

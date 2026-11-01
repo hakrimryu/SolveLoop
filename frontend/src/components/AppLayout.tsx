@@ -13,8 +13,11 @@ type Props = {
   children: ReactNode
 }
 
-function MenuIcon({ kind }: { kind: 'dashboard' | 'requests' | 'knowledge' | 'review' | 'accounts' }) {
+function MenuIcon({ kind }: { kind: 'home' | 'dashboard' | 'requests' | 'knowledge' | 'review' | 'accounts' | 'ask' | 'radar' }) {
   const paths = {
+    home: 'M2 10l9-8 9 8 M4 8v12h5v-7h4v7h5V8',
+    ask: 'M4 3h14v12H9l-5 4V3z M8 7h6 M8 11h4',
+    radar: 'M11 2a9 9 0 1 0 9 9 M11 6a5 5 0 1 0 5 5 M11 11l7-7 M15 3h4v4',
     dashboard: 'M3 3h6v6H3z M13 3h6v6h-6z M3 13h6v6H3z M13 13h6v6h-6z',
     requests: 'M4 4h14v14H4z M4 12h4l2 3h2l2-3h4 M8 8h6',
     knowledge: 'M11 5C8 3 5 3 2 4v14c3-1 6-1 9 1m0-14c3-2 6-2 9-1v14c-3-1-6-1-9 1V5z',
@@ -58,76 +61,71 @@ export default function AppLayout({ session, notice, onSessionEnd, busy, unverif
     }
   }
 
-  return (
-    <>
-      <a className={styles.skipLink} href="#main-content">本文へ移動</a>
-      <header className={styles.header}>
-        <Link to={showNavigation ? '/dashboard' : session ? '/password/change' : '/login'} className={styles.brand}>
-          <span className={styles.brandMark} aria-hidden="true">S</span>
-          <span className={styles.brandText}>SolveLoop<small>株式会社 柳</small></span>
-        </Link>
-        <span className={styles.demoLabel}>架空企業・デモデータ</span>
-        <div className={styles.account}>
-          {user ? <><span>{user.display_name}<span className={styles.role}>{user.role === 'operator' ? '担当者' : '社員'}{user.can_manage_accounts ? '・アカウント管理権限あり' : ''}</span></span>
-          <details className={styles.demoSettings} onBlur={handleAccountBlur}>
-            <summary>アカウント</summary>
-            <div className={styles.settingsBody}>
-              <p>サーバーで認証されたアカウントです。</p>
-              {showNavigation && <Link to="/password/change">本人のパスワードを変更</Link>}
-              <button type="button" className="button" disabled={busy} onClick={onSessionEnd}>ログアウト</button>
-            </div>
-          </details>
-          </> : <span className={styles.role}>{unverified ? '接続状態は未確認' : '未ログイン'}</span>}
+  const home = showNavigation ? '/home' : session ? '/password/change' : '/login'
+  const section = location.pathname === '/home' ? 'ホーム'
+    : location.pathname.startsWith('/knowledge/reviews') ? '文書レビュー'
+    : location.pathname.startsWith('/knowledge') ? '社内文書'
+    : location.pathname.startsWith('/my/requests') ? '自分の問い合わせ'
+    : location.pathname.startsWith('/requests') ? session?.role === 'operator' ? '問い合わせ対応' : '自分の問い合わせ'
+    : location.pathname.startsWith('/improvements') ? 'ナレッジ改善'
+    : location.pathname.startsWith('/settings') ? 'アカウント管理'
+    : location.pathname.startsWith('/password') ? 'パスワード変更'
+    : location.pathname.startsWith('/dashboard') ? '管理ダッシュボード' : 'AIに質問'
+  const brand = <><span className={styles.brandMark} aria-hidden="true">S</span><span className={styles.brandText}>SolveLoop<small>株式会社 柳</small></span></>
+  const account = user && <details className={styles.account} onBlur={handleAccountBlur} onKeyDown={event => {
+    if (event.key === 'Escape') { event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus() }
+  }}>
+    <summary aria-label={`アカウント：${user.display_name}`}><span className={styles.avatar} aria-hidden="true">{Array.from(user.display_name)[0]}</span><span className={styles.identity}>{user.display_name}<span className={styles.role}>{user.role === 'operator' ? '担当者' : '社員'}</span></span></summary>
+    <div className={styles.settingsBody}>
+      {user.can_manage_accounts && <p>アカウント管理権限あり</p>}
+      {showNavigation && <Link to="/password/change" onClick={closeMenu}>本人のパスワードを変更</Link>}
+      <button type="button" className="button" disabled={busy} onClick={onSessionEnd}>ログアウト</button>
+    </div>
+  </details>
+
+  return <>
+    <a className={styles.skipLink} href="#main-content">本文へ移動</a>
+    <div className={showNavigation ? styles.shell : styles.authShell}>
+      {showNavigation && <aside id="workspace-navigation" className={`${styles.navigation} ${menuOpen ? styles.navigationOpen : ''}`} onKeyDown={event => {
+        if (event.key === 'Escape' && menuOpen) { setMenuOpen(false); document.getElementById('menu-toggle')?.focus() }
+      }}>
+        {account}
+        <nav aria-label="メインメニュー" className={styles.menu}>
+          <NavLink to="/home" onClick={closeMenu}><MenuIcon kind="home" />ホーム</NavLink>
+          <p className={styles.navLabel}>社内サポート</p>
+          <NavLink to="/ask" onClick={closeMenu}><MenuIcon kind="ask" />AIに質問</NavLink>
+          <NavLink to="/my/requests" onClick={closeMenu}><MenuIcon kind="requests" />自分の問い合わせ</NavLink>
+          <NavLink to="/knowledge" end={location.pathname.startsWith('/knowledge/reviews')} onClick={closeMenu}><MenuIcon kind="knowledge" />社内文書</NavLink>
+          {(session.role === 'operator' || session.can_manage_accounts) && <p className={styles.navLabel}>管理</p>}
+          {session.role === 'operator' && <>
+            <NavLink to="/dashboard" onClick={closeMenu}><MenuIcon kind="dashboard" />管理ダッシュボード</NavLink>
+            <NavLink to="/requests" onClick={closeMenu}><MenuIcon kind="requests" />問い合わせ対応</NavLink>
+            <NavLink to="/improvements" onClick={closeMenu}><MenuIcon kind="radar" />ナレッジ改善</NavLink>
+            <NavLink to="/knowledge/reviews" onClick={closeMenu}><MenuIcon kind="review" />文書レビュー</NavLink>
+          </>}
+          {session.can_manage_accounts && <NavLink to="/settings/accounts" onClick={closeMenu}><MenuIcon kind="accounts" />アカウント管理</NavLink>}
+        </nav>
+        <div className={styles.sidebarBottom}>
+          <Link to={home} className={styles.brand}>{brand}</Link>
         </div>
-      </header>
-      <div className={styles.mockBar}>
-          <p><strong>問い合わせ・ナレッジは実API・DBに保存</strong> 架空企業のローカルデモです。公開されるのは人が承認した版だけです。意味検索・部署分類・回答案・解決記録からの下書き・RadarはローカルAIを使用します。AI案と文書対応判定は人による確認が必要です。</p>
-      </div>
-      <div className={showNavigation ? styles.workspace : styles.authWorkspace}>
-        {showNavigation && <div className={styles.navigation}>
-          <button
-            className={styles.menuToggle}
-            type="button"
-            aria-expanded={menuOpen}
-            aria-controls="main-navigation"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            メニュー {menuOpen ? 'を閉じる' : 'を開く'}
-          </button>
-          <nav
-            id="main-navigation"
-            aria-label="メインメニュー"
-            className={menuOpen ? styles.menuOpen : styles.menu}
-          >
-            <p className={styles.navLabel}>業務メニュー</p>
-            <NavLink to="/dashboard" onClick={closeMenu}>
-              <MenuIcon kind="dashboard" />ダッシュボード
-            </NavLink>
-            <NavLink to="/requests" onClick={closeMenu}>
-              <MenuIcon kind="requests" />問い合わせ
-            </NavLink>
-            <NavLink
-              to="/knowledge"
-              end={location.pathname.startsWith('/knowledge/reviews')}
-              onClick={closeMenu}
-            >
-              <MenuIcon kind="knowledge" />ナレッジ
-            </NavLink>
-            {session?.role === 'operator' && (
-              <NavLink to="/knowledge/reviews" onClick={closeMenu}>
-                <MenuIcon kind="review" />ナレッジレビュー
-              </NavLink>
-            )}
-            {session?.can_manage_accounts && <NavLink to="/settings/accounts" onClick={closeMenu}><MenuIcon kind="accounts" />アカウント管理</NavLink>}
-            <p className={styles.navNote}><span>ローカルデモ</span>業務操作はDBに保存されます。</p>
-          </nav>
-        </div>}
+      </aside>}
+      <div className={styles.content}>
+        <header className={styles.header}>
+          <Link to={home} className={`${styles.brand} ${showNavigation ? styles.mobileBrand : ''}`}>{brand}</Link>
+          {showNavigation && <>
+            <button id="menu-toggle" type="button" className={styles.menuToggle} aria-expanded={menuOpen} aria-controls="workspace-navigation" onClick={() => setMenuOpen(!menuOpen)}>メニュー</button>
+            <div className={styles.breadcrumb}><Link to={home}>ワークスペース</Link><span aria-hidden="true">/</span><strong>{section}</strong></div>
+          </>}
+          <details className={styles.demoInfo} onBlur={handleAccountBlur} onKeyDown={event => {
+            if (event.key === 'Escape') { event.currentTarget.open = false; event.currentTarget.querySelector('summary')?.focus() }
+          }}><summary>架空企業・合成データ</summary><div className={styles.demoBody}><p>架空企業のローカルデモです。AIは承認・公開された文書をもとに案内します。</p><p>AI案とRadarの判定は人による確認が必要です。業務時刻は日本時間で表示します。</p></div></details>
+          {!showNavigation && (account || <span className={styles.role}>{unverified ? '接続状態は未確認' : '未ログイン'}</span>)}
+        </header>
         <main id="main-content" tabIndex={-1} ref={mainRef} className={styles.main}>
           {notice && <p role="status" className={styles.authNotice}>{notice}</p>}
           {children}
         </main>
       </div>
-      <footer className={styles.footer}>SolveLoop · 架空企業のローカルデモ · サーバー時刻で記録 · AI案・Radarの文書対応判定は人による確認が必要です。</footer>
-    </>
-  )
+    </div>
+  </>
 }

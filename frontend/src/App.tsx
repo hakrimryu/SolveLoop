@@ -2,6 +2,7 @@ import { Activity, useCallback, useEffect, useLayoutEffect, useRef, useState, us
 import { Link, Navigate, Outlet, Route, Routes, useBeforeUnload, useBlocker, useLocation } from 'react-router'
 import AppLayout from './components/AppLayout'
 import Dashboard from './features/dashboard/Dashboard'
+import EmployeeHome from './features/dashboard/EmployeeHome'
 import { api, errorMessage, isStale, watchSession } from './lib/api'
 import type { ReferenceData, SessionState } from './lib/api'
 import Requests, { clearRequestPosition } from './features/requests/Requests'
@@ -12,6 +13,9 @@ import KnowledgeReview from './features/knowledge/KnowledgeReview'
 import AuthScreen from './features/auth/AuthScreen'
 import Accounts, { TemporaryPasswordDialog } from './features/accounts/Accounts'
 import { clearSearchInquiry } from './lib/searchInquiry'
+import EmployeeGuidance from './features/knowledge/EmployeeGuidance'
+import Improvements from './features/dashboard/Improvements'
+import { clearGuidance } from './lib/guidanceState'
 
 function subscribeSession(listener: () => void) {
   let generation = api.snapshot().identityGeneration
@@ -20,6 +24,7 @@ function subscribeSession(listener: () => void) {
       clearRequestPosition()
       clearKnowledgePosition()
       clearSearchInquiry()
+      clearGuidance()
       document.title = 'SolveLoop'
       generation = api.snapshot().identityGeneration
     }
@@ -35,6 +40,7 @@ export default function App() {
     clearRequestPosition()
     clearKnowledgePosition()
     clearSearchInquiry()
+    clearGuidance()
     // 別の認証世代へ、前の画面の復帰メッセージを渡さない。
     // [ko] 다른 인증 세대로 이전 화면의 복귀 메시지를 넘기지 않는다.
     // [en] Do not carry previous navigation messages into a different auth generation.
@@ -66,6 +72,7 @@ function Workspace({ state }: { state: SessionState }) {
   const location = useLocation()
   const session = state.user
   const role = session?.role ?? 'employee'
+  const home = '/home'
   const [references, setReferences] = useState<ReferenceData>({ departments: [] })
   const [checkedPath, setCheckedPath] = useState('')
   const [checkError, setCheckError] = useState('')
@@ -128,7 +135,7 @@ function Workspace({ state }: { state: SessionState }) {
   return <AppLayout session={session} notice={state.notice} onSessionEnd={() => { void logout() }} busy={loggingOut}>
     {logoutError && <p role="alert">{logoutError}</p>}
     <Routes>
-      <Route path="/login" element={session ? <Navigate to={session.must_change_password ? '/password/change' : '/dashboard'} replace state={null} /> : <AuthScreen onDirtyChange={onDirtyChange} onSubmit={async values => {
+      <Route path="/login" element={session ? <Navigate to={session.must_change_password ? '/password/change' : home} replace state={null} /> : <AuthScreen onDirtyChange={onDirtyChange} onSubmit={async values => {
         try { await api.login(values.loginId, values.password); return {} }
         catch (error) { return { form: errorMessage(error, true) } }
       }} />} />
@@ -137,10 +144,15 @@ function Workspace({ state }: { state: SessionState }) {
           try { await api.end('/auth/password/change', { current_password: values.currentPassword, new_password: values.newPassword }); return {} }
           catch (error) { return { form: errorMessage(error, true) } }
         }} />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="/dashboard" element={<Dashboard role={role} onDirtyChange={onDirtyChange} />} />
-        <Route path="/requests" element={<Requests {...requestProps} />} />
-        <Route path="/requests/:requestId" element={<RequestDetail {...requestProps} />} />
+        <Route path="/" element={<Navigate to={home} replace />} />
+        <Route path="/home" element={<EmployeeHome user={session!} />} />
+        <Route path="/ask" element={<EmployeeGuidance />} />
+        <Route path="/dashboard" element={role === 'employee' ? <Navigate to="/home" replace /> : <Dashboard />} />
+        <Route path="/improvements" element={role === 'operator' ? <Improvements onDirtyChange={onDirtyChange} /> : <Navigate to="/home" replace />} />
+        <Route path="/requests" element={role === 'employee' ? <Navigate to={`/my${location.pathname}${location.search}`} replace state={location.state} /> : <Requests {...requestProps} />} />
+        <Route path="/requests/:requestId" element={role === 'employee' ? <Navigate to={`/my${location.pathname}${location.search}`} replace state={location.state} /> : <RequestDetail {...requestProps} />} />
+        <Route path="/my/requests" element={<Requests {...requestProps} personal />} />
+        <Route path="/my/requests/:requestId" element={<RequestDetail {...requestProps} personal />} />
         <Route path="/settings/accounts" element={<Accounts user={session!} departments={references.departments} onDirtyChange={onDirtyChange} />} />
         <Route path="/knowledge/reviews" element={<KnowledgeList {...businessProps} review />} />
         <Route path="/knowledge/reviews/new" element={<KnowledgeReview {...businessProps} />} />
@@ -148,7 +160,7 @@ function Workspace({ state }: { state: SessionState }) {
         <Route path="/knowledge/reviews/*" element={<KnowledgeList {...businessProps} review />} />
         <Route path="/knowledge" element={<KnowledgeList {...businessProps} />} />
         <Route path="/knowledge/:documentId" element={<KnowledgeDetail key={location.pathname} {...businessProps} />} />
-        <Route path="*" element={<><h1 tabIndex={-1}>ページが見つかりません</h1><Link to="/dashboard">ダッシュボードに戻る</Link></>} />
+        <Route path="*" element={<><h1 tabIndex={-1}>ページが見つかりません</h1><Link to={home}>ホームに戻る</Link></>} />
       </Route>
     </Routes>
     {state.issued && <TemporaryPasswordDialog issued={state.issued} onClose={api.closeIssued} />}

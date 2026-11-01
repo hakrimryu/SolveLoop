@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Link, useLocation, useParams, useSearchParams } from 'react-router'
+import { Link, Navigate, useLocation, useParams, useSearchParams } from 'react-router'
 import { apiQuery, formatDate, knowledgeLabels, reviewUrl } from '../../lib/business'
 import type { BusinessProps, KnowledgeInput, Page, Published, PublishedItem, Review, ReviewItem } from '../../lib/business'
 import { useLoad } from '../../lib/useBusiness'
@@ -9,7 +9,6 @@ import styles from './Knowledge.module.css'
 import KnowledgeManagement from './KnowledgeManagement'
 import KnowledgeSearch, { SearchMode } from './KnowledgeSearch'
 import SearchInquiry from '../../components/SearchInquiry'
-import EmployeeGuidance from './EmployeeGuidance'
 
 export type KnowledgeProps = BusinessProps
 let listPosition: { url: string; y: number; id: string } | undefined
@@ -22,7 +21,7 @@ export function KnowledgeBody({ input, match }: { input: Pick<KnowledgeInput, 'a
 
 export default function KnowledgeList(props: KnowledgeProps & { review?: boolean }) {
   const [params] = useSearchParams()
-  return props.review && props.role !== 'operator' ? <KnowledgeUnavailable /> : !props.review && params.get('mode') === 'guidance' ? <EmployeeGuidance /> : !props.review && params.get('mode') === 'semantic' ? <KnowledgeSearch {...props} /> : <List {...props} key={props.review ? 'reviews' : 'published'} />
+  return props.review && props.role !== 'operator' ? <KnowledgeUnavailable /> : !props.review && params.get('mode') === 'guidance' ? <Navigate to={`/ask${params.get('q') ? `?q=${encodeURIComponent(params.get('q')!)}` : ''}`} replace /> : !props.review && params.get('mode') === 'semantic' ? <KnowledgeSearch {...props} /> : <List {...props} key={props.review ? 'reviews' : 'published'} />
 }
 function List({ role, departments, review = false }: KnowledgeProps & { review?: boolean }) {
   const [params, setParams] = useSearchParams()
@@ -39,8 +38,8 @@ function List({ role, departments, review = false }: KnowledgeProps & { review?:
     return () => cancelAnimationFrame(frame)
   }, [data, location.pathname, location.search, role])
   function filter(name: string, value: string) { const next = new URLSearchParams(params); if (value) next.set(name, value); else next.delete(name); if (name !== 'page') next.delete('page'); setParams(next) }
-  const title = review ? 'ナレッジレビュー' : 'ナレッジ'
-  return <>{typeof location.state?.message === 'string' && <p role="status" className={common.success}>{location.state.message}</p>}<div className={common.heading}><div><p className="eyebrow">{review ? '担当者専用 · レビューと公開状態' : '社員全員に公開された文書'}</p><h1 ref={heading} tabIndex={-1}>{title}</h1><p className="muted">{review ? '保存した下書きと解決根拠を確認し、公開する内容を判断します。' : '承認された現在の版をキーワードで検索します。Ollamaが停止していても利用できます。'}</p>{!review && <SearchMode />}</div>{review && <Link className="button buttonPrimary" to="/knowledge/reviews/new">手動で下書きを作成</Link>}</div>
+  const title = review ? '文書レビュー' : '社内文書'
+  return <>{typeof location.state?.message === 'string' && <p role="status" className={common.success}>{location.state.message}</p>}<div className={common.heading}><div><p className="eyebrow">{review ? '担当者専用 · レビューと公開状態' : '社員全員に公開された文書'}</p><h1 ref={heading} tabIndex={-1}>{title}</h1><p className="muted">{review ? '保存した下書きと解決根拠を確認し、公開する内容を判断します。' : '文書の件名や本文に含まれる言葉、文書番号から探せます。'}</p>{!review && <SearchMode />}</div>{review && <Link className="button buttonPrimary" to="/knowledge/reviews/new">手動で下書きを作成</Link>}</div>
     <section className={common.section} aria-label={`${title}一覧`}>
       {review ? <div className={common.filters}><label>状態<select value={params.get('status') ?? ''} onChange={e => filter('status', e.target.value)}><option value="">下書き・差し戻し・公開停止</option><option value="draft">下書き</option><option value="rejected">差し戻し</option><option value="suspended">公開停止</option></select></label><button className="button" onClick={() => setParams({})}>条件をクリア</button></div> : <form className={common.filters} onSubmit={e => { e.preventDefault(); filter('q', query.trim()) }} onKeyDown={e => { if (e.key === 'Enter' && e.nativeEvent.isComposing) e.preventDefault() }}><label className={common.search}>キーワード<input type="search" value={query} maxLength={200} onChange={e => setQuery(e.target.value)} placeholder="件名・適用対象・本文・文書番号" /></label><label>担当部署<select value={params.get('department_id') ?? ''} onChange={e => filter('department_id', e.target.value)}><option value="">すべて</option>{departments.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></label><button className="button buttonPrimary">検索</button><button type="button" className="button" onClick={() => { setQuery(''); setParams({}) }}>条件をクリア</button></form>}
       <div className={common.results}><p role="status">{data ? <><strong>{data.filtered_count}件</strong> / {review ? 'レビュー対象' : '承認済み'} {data.visible_total}件</> : '件数を取得していません'}<span className={common.sort}>更新日時順 · 日本時間</span></p><button className="button" onClick={resource.reload}>再取得</button></div>

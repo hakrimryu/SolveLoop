@@ -5,6 +5,7 @@ import type { Department } from '../../lib/api'
 import { formatDate } from '../../lib/business'
 import type { Ticket } from '../../lib/business'
 import { useBusinessCall } from '../../lib/useBusiness'
+import { employeeAnswerDraft } from '../../lib/answerDraft'
 import styles from './Requests.module.css'
 
 type Classification = { department_code: string | null; department: Department | null; reason: string; needs_review: boolean }
@@ -12,7 +13,7 @@ type Answer = { status: 'answered' | 'insufficient_evidence'; summary: string; s
 type Source = { id: string; kind: 'knowledge' | 'ticket'; number: string; title: string; href: string; text: string; version_no?: number; ticket_version?: number; version_id?: string }
 type Proposal<T> = { ticket_version: number; generated_at: string; generation: { model: string; attempts: number } | null; result: T; sources: Source[] }
 
-export default function RequestAI({ ticket, disabled }: { ticket: Ticket; disabled: boolean }) {
+export default function RequestAI({ ticket, disabled, onUseDraft }: { ticket: Ticket; disabled: boolean; onUseDraft?: (text: string) => void }) {
   const [classification, setClassification] = useState<Proposal<Classification> | null>(null)
   const [answer, setAnswer] = useState<Proposal<Answer> | null>(null)
   const [busy, setBusy] = useState<'classification' | 'answer' | null>(null)
@@ -51,10 +52,11 @@ export default function RequestAI({ ticket, disabled }: { ticket: Ticket; disabl
     {(classification || answer) && !assigned && !draft && <p role="status">保存版が変わりました。最新の問い合わせで提案を再実行してください。</p>}
     {assigned && <div className={styles.nextStep}><h3>担当部署の提案：{assigned.result.department?.name ?? '判断できません'}</h3>{metadata(assigned)}<p className={styles.body}>{assigned.result.reason}</p><p className={styles.help}>{assigned.result.needs_review ? '部署の判断には追加確認が必要です。' : '提案の理由を確認してください。'} 担当部署欄で人が選び、「割り当てを反映」で確定します。</p></div>}
     {draft && <div className={styles.nextStep}><h3>{draft.result.status === 'answered' ? '回答案（未確認）' : '根拠不足・回答案は作成していません'}</h3>{metadata(draft)}<p className={styles.body}>{draft.result.summary}</p>
-      <ol>{draft.result.steps.map((step, index) => <li key={index}><p className={styles.body}>{step.text}</p><p>{step.citation_ids.map(id => { const source = draft.sources.find(item => item.id === id); return source && <a key={id} className={styles.citation} href={`#ai-source-${id}`}>{source.number} を確認</a> })}</p></li>)}</ol>
+      {draft.result.status === 'answered' && ticket.status !== 'resolved' && onUseDraft && <button className="button" disabled={disabled || !!busy} onClick={() => onUseDraft(employeeAnswerDraft(draft.result, draft.sources, window.location.origin))}>確認して回答欄へ渡す</button>}
+      <ol>{draft.result.steps.map((step, index) => <li key={index}><p className={styles.body}>{step.text}</p><p>{step.citation_ids.map(id => { const source = draft.sources.find(item => item.id === id); return source && <a key={id} className={styles.citation} href={`#ai-source-${id}`} onClick={() => { const source = document.getElementById(`ai-source-${id}`); if (source instanceof HTMLDetailsElement) source.open = true }}>{source.number} を確認</a> })}</p></li>)}</ol>
       {draft.result.missing_information.length > 0 && <><h3>不足情報・確認事項</h3><ul>{draft.result.missing_information.map((item, index) => <li key={index}>{item}</li>)}</ul></>}
-      {draft.sources.length > 0 && <><h3>回答案に使った根拠</h3><p className={styles.help}>生成時点の根拠です。原文の対象・例外と現在の公開状態を確認してください。公開文書は意味検索、解決事例は文字の組み合わせによる検索で各最大2件を参照します。</p><ul className={styles.aiSources}>{draft.sources.map(source => <li key={source.id} id={`ai-source-${source.id}`} tabIndex={-1}><Link to={source.href}>{source.number} · {source.title} · {source.kind === 'knowledge' ? `公開版 ${source.version_no}` : `解決記録・保存版 ${source.ticket_version}`}</Link><p className={styles.body}>{source.text}</p><p className={styles.help}>根拠ID：{source.id}{source.version_id && <> · 版ID：{source.version_id}</>}</p></li>)}</ul></>}
-      <p className={styles.help}>引用先の存在と権限を検査しています。内容の正しさや適用可能性は保証しません。送信・解決記録への自動転記はありません。</p>
+      {draft.sources.length > 0 && <><h3>回答案に使った根拠</h3><p className={styles.help}>生成時点の根拠です。原文の対象・例外と現在の公開状態を確認してください。公開文書は意味検索、解決事例は文字の組み合わせによる検索で各最大2件を参照します。</p><ul className={styles.aiSources}>{draft.sources.map(source => <li key={source.id}><details id={`ai-source-${source.id}`} tabIndex={-1}><summary>{source.number} · {source.title}</summary><Link target="_blank" rel="noopener noreferrer" to={source.href}>{source.number} · {source.title} · {source.kind === 'knowledge' ? `公開版 ${source.version_no}` : `解決記録・保存版 ${source.ticket_version}`}</Link><p className={styles.body}>{source.text}</p><details><summary>根拠の追跡情報</summary><p className={styles.help}>根拠ID：{source.id}{source.version_id && <> · 版ID：{source.version_id}</>}</p></details></details></li>)}</ul></>}
+      <p className={styles.help}>引用先の存在と権限を検査しています。内容の正しさや適用可能性は保証しません。回答欄への反映後も、人が確認して送信します。</p>
     </div>}
   </section>
 }

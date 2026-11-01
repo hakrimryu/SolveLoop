@@ -50,3 +50,14 @@ test('検索語のない通常登録は空欄にし、文書からの登録に�
   assert.match(input.body, /KB-0002/)
   clearSearchInquiry()
 })
+
+test('編集できる問い合わせ本文とサーバーのAI案内参照を別に引き継ぐ', () => {
+  const id = prepareSearchInquiry('端末の登録', [], { id: 'synthetic-guidance', reason: '  試したが未解決  ' })
+  const input = readSearchInquiry(id)
+  assert.equal(input.guidance_id, 'synthetic-guidance')
+  assert.equal(input.handoff_reason, '試したが未解決')
+  input.body = '社員が編集した説明'
+  assert.equal(readSearchInquiry(id).guidance_id, 'synthetic-guidance')
+  clearSearchInquiry()
+  assert.equal(readSearchInquiry(id), undefined)
+})

@@ -6,7 +6,11 @@ import RequestDialog from '../src/features/requests/RequestDialog'
 import KnowledgeReview from '../src/features/knowledge/KnowledgeReview'
 import KnowledgeList, { KnowledgeDetail } from '../src/features/knowledge/Knowledge'
 import Radar from '../src/features/dashboard/Radar'
+import Improvements from '../src/features/dashboard/Improvements'
 import EmployeeGuidance from '../src/features/knowledge/EmployeeGuidance'
+import Accounts from '../src/features/accounts/Accounts'
+import AppLayout from '../src/components/AppLayout'
+import { clearGuidance } from '../src/lib/guidanceState'
 import { api, ApiError } from '../src/lib/api'
 import '../src/index.css'
 
@@ -34,10 +38,14 @@ async function fill(node, value) {
     node.dispatchEvent(new Event(node.tagName === 'SELECT' ? 'change' : 'input', { bubbles: true }))
   })
 }
+async function openGenerationTool() {
+  const summary = [...fixture.querySelectorAll('summary')].find(node => node.textContent === '解決記録からAI下書き案を生成')
+  if (summary && !summary.parentElement.open) await click(summary)
+}
 let root, dirty
 async function mount(Component, path, request, role = 'operator') {
   dirty = false
-  api.request = request
+  api.request = Component === EmployeeGuidance ? (path, body, options) => path.startsWith('/knowledge/guidance/history') ? Promise.resolve({ items: [] }) : request(path, body, options) : request
   root = createRoot(fixture)
   const props = { role, departments: [dept], operators: [user, other], onDirtyChange: value => { dirty = value }, onClose() {} }
   const route = Component === RequestDetail ? '/requests/:requestId' : Component === KnowledgeDetail ? '/knowledge/:documentId' : Component === KnowledgeReview && path.includes('/versions/') ? '/knowledge/reviews/:documentId/versions/:version' : '*'
@@ -47,7 +55,7 @@ const cases = []
 async function check(name, run) {
   try { await run(); cases.push(`PASS ${name}`) }
   catch (error) { cases.push(`FAIL ${name}: ${error.message}`) }
-  finally { if (root) await act(async () => root.unmount()); root = null; api.request = originalRequest; results.textContent = cases.join('\n') }
+  finally { if (root) await act(async () => root.unmount()); root = null; api.request = originalRequest; clearGuidance(); results.textContent = cases.join('\n') }
 }
 
 await check('R1 配属・本文の保存と再取得で他の入力を保持', async () => {
@@ -203,11 +211,11 @@ await check('S15 意味検索の待機・AI失敗・再検索・空結果を区�
     return { items: [], top_k: 5, profile_id: 'test', as_of: now }
   })
   await fill(field('質問・探したい内容'), 'スマホを替えたら入れない')
-  await click(button('意味検索する'))
+  await click(button('関連する文書を探す'))
   assert(fixture.textContent.includes('ローカルAIで質問を変換') && field('質問・探したい内容').matches(':disabled'), '待機を表示していません。')
   await act(async () => failSearch())
   assert(field('質問・探したい内容').value === 'スマホを替えたら入れない', '質問を失いました。')
-  assert(fixture.textContent.includes('意味検索は完了していません') && !fixture.textContent.includes('0箇所'), 'AI失敗を0件に見せています。')
+  assert(fixture.textContent.includes('文書を検索できませんでした') && !fixture.textContent.includes('0箇所'), 'AI失敗を0件に見せています。')
   empty = true
   await click(button('同じ条件で再検索'))
   assert(writes.length === 2 && JSON.stringify(writes[0]) === JSON.stringify(writes[1]) && fixture.textContent.includes('0箇所'), '同じ条件の空結果を表示できません。')
@@ -216,9 +224,9 @@ await check('S15 意味検索の待機・AI失敗・再検索・空結果を区�
 await check('S15 経路を離れた後の遅い検索応答を破棄', async () => {
   let resolveSearch
   await mount(KnowledgeList, '/knowledge?mode=semantic&q=認証', async (path, body) => body ? new Promise(resolve => { resolveSearch = resolve }) : page([]))
-  await click([...fixture.querySelectorAll('a')].find(item => item.textContent === 'キーワード検索へ'))
+  await click([...fixture.querySelectorAll('a')].find(item => item.textContent === 'キーワードで探す'))
   await act(async () => resolveSearch({ items: [{ ...reviewOf(), chunk_id: 'late', text: '遅い応答の秘密', cosine_distance: 0 }], top_k: 5, profile_id: 'test', as_of: now }))
-  assert(!fixture.textContent.includes('遅い応答の秘密') && fixture.textContent.includes('キーワード検索を使用中'), '離脱後の結果が混ざりました。')
+  assert(!fixture.textContent.includes('遅い応答の秘密') && fixture.querySelector('nav[aria-label="文書の検索方法"] a[aria-current="page"]')?.textContent === 'キーワードで探す', '離脱後の結果が混ざりました。')
 })
 
 for (const currentVersion of [1, 2]) await check(`S15 原文位置のUnicode表示・公開版${currentVersion === 1 ? '一致' : '更新'}`, async () => {
@@ -392,6 +400,7 @@ await check('S17 生成・再生成は入力を保持し、反映は明示確認
   })
   await fill(field('適用対象'), '途中の対象')
   await fill(field('本文'), '人が書いた未保存本文')
+  await openGenerationTool()
   await click(button('選択した根拠からAI案を生成'))
   assert(field('本文').value === '人が書いた未保存本文' && writes.length === 1, '生成が入力を上書き・保存しました。')
   assert(Object.keys(writes[0].body).join() === 'source_refs', '生成に未保存本文を送信しました。')
@@ -415,6 +424,7 @@ await check('S17 生成失敗後も手動本文を保持して保存可能', asy
     return ticket
   })
   await fill(field('本文'), '障害時にも残る本文')
+  await openGenerationTool()
   await click(button('選択した根拠からAI案を生成'))
   assert(attempts === 1 && field('本文').value === '障害時にも残る本文' && !button('下書きを保存').disabled && fixture.textContent.includes('生成の時間切れ'), '障害時の入力・手動保存境界が違います。')
 })
@@ -424,6 +434,7 @@ await check('S17 受取中止後の遅延結果を破棄し入力を保持', asy
   let release
   await mount(KnowledgeReview, `/knowledge/reviews/new?source=${ticket.id}`, async (path, body) => body ? new Promise(resolve => { release = () => resolve(generatedOf(ticket)) }) : ticket)
   await fill(field('本文'), '中止時に保持する本文')
+  await openGenerationTool()
   await click(button('選択した根拠からAI案を生成'))
   await click(button('生成結果の受け取りを中止'))
   await act(async () => release())
@@ -439,6 +450,7 @@ await check('S17 AI反映後の編集保存に生成IDと実根拠版を渡す',
     if (body) { received = structuredClone(body); return { ...saved, ...body, row_version: 2 } }
     return saved
   })
+  await openGenerationTool()
   await click(button('選択した根拠からAI案を生成'))
   await click(button('生成案を確認して編集欄へ反映')); await click(button('置き換えて編集を続ける'))
   await fill(field('本文'), 'AI案を人が修正')
@@ -500,6 +512,7 @@ await check('S19 Radarで選んだ複数の解決根拠と版をS17で再検査'
   const second = { ...first, id:'00000000-0000-0000-0000-000000000302', number:'REQ-0002' }
   let received
   await mount(KnowledgeReview, `/knowledge/reviews/new?source=${first.id}&source=${second.id}&source_version=3&source_version=3`, async (path, body) => { if (body) { received = body; return { ...generatedOf(first), sources:[generatedOf(first).sources[0], {...generatedOf(second).sources[0], ticket_id:second.id}] } } return path.endsWith(second.id) ? second : first })
+  await openGenerationTool()
   await click(button('選択した根拠からAI案を生成'))
   assert(received.source_refs.length === 2 && received.source_refs.every(item => item.expected_ticket_version === 3), '選択済み根拠を切り捨てました。')
 })
@@ -511,18 +524,19 @@ await check('F02 正常な根拠不足と生成障害を区別し、質問・手
     return { query:'未知の質問', generated_at:now, prompt_version:'employee-guidance-v1', request_id:'fixed', sources:[], result:{status:'insufficient_evidence',summary:'根拠となる情報が不足しています。',steps:[],missing_information:['担当者へ確認']} }
   })
   await fill(field('質問・困っていること'), '未知の質問')
-  await act(async () => button('公開文書からAI案内を作成').form.requestSubmit())
+  await act(async () => button('AIに質問する').form.requestSubmit())
   assert(fixture.textContent.includes('根拠となる情報が不足しています') && button('担当者に問い合わせ'), '根拠不足・手動経路がありません。')
   failure = true
-  await act(async () => button('公開文書からAI案内を作成').form.requestSubmit())
-  assert(fixture.textContent.includes('正常な「根拠不足」とは異なります') && field('質問・困っていること').value === '未知の質問', '障害を根拠不足に置換したか入力を失いました。')
+  await click(button('質問を修正して再実行'))
+  await act(async () => button('AIに質問する').form.requestSubmit())
+  assert(fixture.textContent.includes('出力を検証できません。') && !fixture.querySelector('section[aria-label="AI案内の結果"]') && field('質問・困っていること').value === '未知の質問', '障害を根拠不足に置換したか入力を失いました。')
 })
 
 await check('F02 原文へ移動しても質問と表示版を問い合わせへ引き継ぐ', async () => {
   const source = {id:'chunk',document_id:'doc-1',version_no:2,number:'KB-0001',title:'公開手順',audience:'社員',text:'手順',href:'/knowledge/doc-1?match_version=2&start=0&end=2#search-passage'}
   await mount(EmployeeGuidance, '/knowledge?mode=guidance', async () => ({query:'元の質問',generated_at:now,prompt_version:'employee-guidance-v1',request_id:'fixed',sources:[source],result:{status:'answered',summary:'案内',steps:[{text:'手順',citation_ids:['chunk']}],missing_information:[]}}))
   await fill(field('質問・困っていること'), '元の質問')
-  await act(async () => button('公開文書からAI案内を作成').form.requestSubmit())
+  await act(async () => button('AIに質問する').form.requestSubmit())
   const link = [...fixture.querySelectorAll('a')].find(item => item.textContent.includes('v2 の原文'))
   const url = new URL(link.href)
   assert(url.searchParams.get('q') === '元の質問' && url.searchParams.get('match_version') === '2' && url.hash === '#search-passage', '原文リンクで質問か表示位置を失いました。')
@@ -546,15 +560,110 @@ await check('F03 全原本の確認・文書版・理由を保存しAI判定を�
   assert(!dirty && fixture.textContent.includes('AIの判定・件数は変更していません'), '保存後も未保存扱いです。')
 })
 
+const guidanceOf = query => ({ guidance_id: 'guidance-result', feedback_version: 1, query, generated_at: now, mode: 'live', prompt_version: 'employee-guidance-v1', request_id: query, sources: [], result: { status: 'answered', summary: `案内：${query}`, steps: [], missing_information: [] } })
+
+await check('D34 結果は一件ずつ・明示的な質問修正と新規入力', async () => {
+  const writes = []
+  await mount(EmployeeGuidance, '/ask', async (path, body) => { if (body) writes.push({ path, body }); return guidanceOf(body.query) })
+  await fill(field('質問・困っていること'), '最初の質問')
+  const composing = new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true, cancelable: true })
+  await act(async () => field('質問・困っていること').dispatchEvent(composing))
+  assert(composing.defaultPrevented && writes.length === 0, '日本語の変換確定Enterで送信しました。')
+  await act(async () => button('AIに質問する').form.requestSubmit())
+  const result = fixture.querySelector('section[aria-label="AI案内の結果"]')
+  assert(result && !fixture.querySelector('#employee-question'), '結果に質問の常設入力欄があります。')
+  assert(result.contains(button('担当者に問い合わせ')), '問い合わせが結果の外にあります。')
+  await click(button('質問を修正して再実行'))
+  assert(writes.length === 1 && field('質問・困っていること').value === '最初の質問', '修正ボタンで自動実行したか質問を失いました。')
+  assert(!fixture.querySelector('section[aria-label="AI案内の結果"]'), '編集中の質問と前の結果が混ざっています。')
+  await fill(field('質問・困っていること'), '修正した質問')
+  await act(async () => button('AIに質問する').form.requestSubmit())
+  assert(fixture.querySelectorAll('section[aria-label="AI案内の結果"]').length === 1, '結果が大きな会話として累積しました。')
+  assert(!fixture.querySelector('section[aria-label="AI案内の結果"]').textContent.includes('案内：最初の質問'), '古い案内が残っています。')
+  await click(button('別の質問をする'))
+  assert(field('質問・困っていること').value === '' && writes.length === 2, '新規質問が空でないか、自動で送信しました。')
+  await fill(field('質問・困っていること'), '別の質問')
+  await act(async () => button('AIに質問する').form.requestSubmit())
+  assert(JSON.stringify(writes[2].body) === JSON.stringify({ query: '別の質問' }), '以前の会話や引き継ぎ内容を送信しました。')
+})
+
+await check('D34 受信中止後の遅い応答を次の質問へ反映しない', async () => {
+  let finish
+  await mount(EmployeeGuidance, '/ask', async (path, body) => body.query === '中止する質問' ? new Promise(resolve => { finish = resolve }) : guidanceOf(body.query))
+  await fill(field('質問・困っていること'), '中止する質問')
+  await act(async () => { button('AIに質問する').form.requestSubmit() })
+  await click(button('結果の受信を中止'))
+  assert(field('質問・困っていること').value === '中止する質問', '中止で入力を失いました。')
+  await fill(field('質問・困っていること'), '次の質問')
+  await act(async () => button('AIに質問する').form.requestSubmit())
+  await act(async () => finish(guidanceOf('中止する質問')))
+  assert(fixture.querySelector('section[aria-label="AI案内の結果"]').textContent.includes('案内：次の質問'), '中止済みの応答で新しい結果を上書きしました。')
+  assert(!fixture.querySelector('#employee-question'), '古いfinallyで入力状態へ戻りました。')
+})
+
+await check('D34 解決確認と任意の引き継ぎ入力を区別し、結果を復元', async () => {
+  let response = guidanceOf('保持する質問'), feedbackBody
+  const request = async (path, body) => {
+    if (path.endsWith('/feedback')) { feedbackBody = body; response = { ...response, outcome: body.outcome, feedback_version: 2 }; return { version: 2 } }
+    if (!body) return { response, version: 2, outcome: response.outcome, requester: { id: 'requester' } }
+    return response
+  }
+  await mount(EmployeeGuidance, '/ask', request)
+  await fill(field('質問・困っていること'), response.query)
+  await act(async () => button('AIに質問する').form.requestSubmit())
+  await click(button('解決しない'))
+  const note = [...fixture.querySelectorAll('details')].find(item => item.querySelector('summary')?.textContent === '担当者に伝える内容（任意）')
+  assert(note.open && feedbackBody.outcome === 'unresolved', '未解決後の引き継ぎ用入力がありません。')
+  await fill(field('試したこと・解決しない理由'), '再接続を試しました')
+  await act(async () => root.unmount()); root = null
+  await mount(EmployeeGuidance, '/ask', request)
+  assert(!fixture.querySelector('#employee-question') && fixture.querySelector('section[aria-label="AI案内の結果"]'), '再表示で結果をチャット入力へ変えてしまいました。')
+})
+
+await check('D34 Radar確認の編集中は表示切替で入力を隠さない', async () => {
+  const run = radarRunOf()
+  await mount(Improvements, '/improvements?view=radar&radar=run-1', async path => {
+    if (path.startsWith('/knowledge/guidance/history')) return { items: [] }
+    if (path === '/knowledge/guidance/metrics') return { total: 0, states: {}, outcomes: {}, unconfirmed: 0, median_processing_ms: null, tickets: 0, escalated: 0, first_reply_samples: 0, mean_first_reply_seconds: null }
+    return path === '/radar/runs' ? { items: [run] } : run
+  })
+  await click(button('構成・判定を確認'))
+  await fill(field('適用条件・不足・判断理由'), '比較途中の理由')
+  assert(button('未解決のAI質問').disabled && button('利用状況').disabled && dirty, '編集中でも表示を切り替えられます。')
+  await click(button('利用状況'))
+  assert(field('適用条件・不足・判断理由').value === '比較途中の理由' && !field('適用条件・不足・判断理由').closest('[hidden]'), '編集中の確認を隠すか消しました。')
+})
+
 globalThis.fetch = originalFetch
 results.textContent += `\n${cases.filter(item => item.startsWith('PASS')).length}/${cases.length} 通過`
 document.title = cases.some(item => item.startsWith('FAIL')) ? 'FAIL 業務画面の回帰検証' : 'PASS 業務画面の回帰検証'
 
 if (new URLSearchParams(location.search).has('preview')) {
+  const preview = new URLSearchParams(location.search).get('preview')
   for (const node of document.body.children) if (node.id !== 'fixture' && node.tagName !== 'SCRIPT') node.hidden = true
   globalThis.fetch = async () => { throw new Error('検証中の実通信は禁止です。') }
-  const saved = { ...reviewOf(), status: 'approved', approved_at: now, published_version_no: 1, draft_version_no: null }
-  await mount(KnowledgeDetail, `/knowledge/${saved.document_id}`, async () => structuredClone(saved))
-  if (new URLSearchParams(location.search).get('preview') === 'delete') await click(button('文書を削除…'))
+  if (preview === 'accounts') {
+    const manager = { ...user, login_id: 'fixture-manager', role: 'operator', department: dept, can_manage_accounts: true, must_change_password: false, active: true, row_version: 1 }
+    const employee = { ...other, display_name: '確認用の社員', login_id: 'fixture-employee', role: 'employee', department: dept, can_manage_accounts: false, must_change_password: false, active: true, row_version: 1 }
+    const renderAccounts = () => h(AppLayout, { session: manager, notice: '', onSessionEnd() {} }, h('p', { className: 'sampleLabel' }, '表示確認用の固定応答 · 実APIには接続しません'), h(Accounts, { user: manager, departments: [dept], onDirtyChange() {} }))
+    await mount(renderAccounts, '/settings/accounts', async (path, body) => {
+      if (body) throw new Error('表示確認ではアカウントを変更しません。')
+      return path === '/accounts' ? { items: [manager, employee], total: 2 } : { items: [], total: 0, page: 1, page_count: 1 }
+    })
+    await click(button('確認用の社員'))
+  } else if (preview === 'radar') {
+    const run = radarRunOf(); run.coverages = [radarCoverageOf(run)]
+    const operator = { ...user, role: 'operator', department: dept, can_manage_accounts: false, must_change_password: false }
+    const renderRadar = () => h(AppLayout, { session: operator, notice: '', onSessionEnd() {} }, h('p', { className: 'sampleLabel' }, '表示確認用の固定応答 · 実APIには接続しません'), h(Radar, { onDirtyChange() {} }))
+    await mount(renderRadar, '/improvements?radar=run-1', async (path, body) => {
+      if (body) throw new Error('表示確認では分析・検討記録を変更しません。')
+      return path === '/radar/runs' ? { items: [run] } : run
+    })
+    await click(button('構成・判定を確認'))
+  } else {
+    const saved = { ...reviewOf(), status: 'approved', approved_at: now, published_version_no: 1, draft_version_no: null }
+    await mount(KnowledgeDetail, `/knowledge/${saved.document_id}`, async () => structuredClone(saved))
+    if (preview === 'delete') await click(button('文書を削除…'))
+  }
   globalThis.IS_REACT_ACT_ENVIRONMENT = false
 }

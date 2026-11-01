@@ -1,7 +1,7 @@
-.radar { min-width: 0; margin-top: 20px; padding: 24px; border: 1px solid var(--border); border-radius: 7px; background: white; font-size: .875rem; line-height: 1.7; overflow-wrap: anywhere; }
+.radar { min-width: 0; margin-top: 20px; padding: 24px; border: 1px solid var(--border); border-radius: var(--radius); background: white; font-size: .875rem; line-height: 1.7; overflow-wrap: anywhere; }
 .heading { display: flex; align-items: baseline; flex-wrap: wrap; gap: 12px; }
 .radar h3 { margin-top: 24px; }
-.conditions { display: grid; grid-template-columns: minmax(220px, 2fr) minmax(120px, 1fr) minmax(120px, 1fr) auto; align-items: end; gap: 12px; margin-block: 20px; }
+.conditions { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 12px; margin-block: 20px; }
 .conditions label, .history label, .round { display: grid; gap: 6px; }
 .conditions input, .history select, .round select { min-width: 0; max-width: 100%; min-height: 40px; padding: 8px; border: 1px solid var(--border); border-radius: 4px; font: inherit; background: white; }
 .history { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; margin-block: 20px; }
@@ -9,7 +9,7 @@
 .tableScroll { overflow-x: auto; }
 .tableScroll table { width: 100%; min-width: 570px; border-collapse: collapse; text-align: left; }
 .tableScroll th, .tableScroll td { padding: 12px; border-bottom: 1px solid var(--border); }
-.tableScroll thead { background: #f5f7fa; }
+.tableScroll thead { background: var(--subtle); }
 .tableScroll caption { text-align: left; color: var(--muted); }
 .detail { margin-top: 24px; padding-top: 8px; border-top: 1px solid var(--border); }
 .members { list-style: none; padding: 0; }
@@ -19,7 +19,7 @@
 .round { margin-block: 16px; }
 .judgment { border-bottom: 1px solid var(--border); padding-block: 14px; }
 .radar summary { cursor: pointer; font-weight: 600; padding-block: 8px; }
-.radar blockquote { margin: 12px 0; padding: 12px 16px; border-left: 3px solid #99a9bf; background: #f5f7fa; white-space: pre-wrap; }
+.radar blockquote { margin: 12px 0; padding: 12px 16px; border-left: 3px solid #a2b7a7; background: var(--subtle); white-space: pre-wrap; }
 .radar dd { margin: 4px 0 12px; font-size: .8125rem; }
 .radar button + button { margin-left: 8px; }
 .reviewForm label { display: flex; align-items: flex-start; gap: 8px; margin-block: 12px; }
@@ -29,3 +29,11 @@
 .reviewForm legend { font-weight: 600; }
 @media (max-width: 1000px) { .conditions { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
 @media (max-width: 600px) { .radar { padding: 16px; } .conditions { grid-template-columns: minmax(0, 1fr); } }
+
+.conditions { padding: 16px; background: var(--subtle); border: 1px solid var(--border); border-radius: 6px; }
+.conditions details > label { margin-top: 12px; }
+.radar > p { margin-top: 12px; }
+.history select { width: 100%; }
+.reviewForm { margin-top: 24px; padding: 20px; border: 1px solid var(--border); border-radius: 8px; background: var(--subtle); }
+.detail { padding-top: 24px; }
+@media (max-width: 600px) { .conditions { grid-template-columns: minmax(0, 1fr); } .radar button + button { margin-left: 0; margin-top: 8px; } .reviewForm { padding: 16px; } }

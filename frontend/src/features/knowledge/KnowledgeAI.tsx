@@ -58,9 +58,9 @@ export default function KnowledgeAI({ refs, disabled, applied, onApply, onBusy }
       <h3>未確認の生成案：{proposal.draft.title}</h3><p>適用対象：{proposal.draft.audience}</p>
       <p className={common.body}>{proposal.draft.body}</p>
       <p className={common.meta}>実推論 · {proposal.trace.model} · {proposal.trace.prompt_version} · {formatDate(proposal.generated_at)} JST</p>
-      <p className={common.help}>要求番号：{proposal.trace.request_id}</p>
+      <details><summary>生成の詳細</summary><p className={common.help}>要求番号：{proposal.trace.request_id}</p></details>
       <h3>生成に使用した問い合わせ</h3>
-      {proposal.sources.map(source => <div key={source.ticket_id}><Link to={`/requests/${source.ticket_id}`}>{source.ticket_number} {source.title}</Link><p className={common.help}>版 {source.ticket_version} · ID {source.ticket_id}<br />SHA-256 {source.content_hash}</p><p className={common.body}>{source.resolution}</p></div>)}
+      {proposal.sources.map(source => <details key={source.ticket_id}><summary>{source.ticket_number} の解決原文・追跡情報</summary><Link target="_blank" rel="noopener noreferrer" to={`/requests/${source.ticket_id}`}>{source.ticket_number} {source.title}</Link><p className={common.help}>版 {source.ticket_version} · ID {source.ticket_id}<br />SHA-256 {source.content_hash}</p><p className={common.body}>{source.resolution}</p></details>)}
       <button type="button" className="button" disabled={busy || disabled || applied === proposal.generation_id} onClick={() => setConfirm(true)}>生成案を確認して編集欄へ反映</button>
     </div>}
     {confirm && proposal && <dialog ref={dialog} className={common.dialog} aria-modal="true" aria-labelledby="apply-ai-heading" onKeyDown={trapDialogFocus} onCancel={e => { e.preventDefault(); setConfirm(false) }}>

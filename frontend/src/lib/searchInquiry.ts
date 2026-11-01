@@ -1,9 +1,9 @@
-type InquiryInput = { title: string; body: string; department_id: string }
+type InquiryInput = { title: string; body: string; department_id: string; guidance_id?: string; handoff_reason?: string }
 export type SearchDocument = { number: string; title: string; version_no: number; url: string }
 
 let pending: { id: string; input: InquiryInput } | undefined
 
-export function prepareSearchInquiry(query: string, document?: SearchDocument | SearchDocument[]) {
+export function prepareSearchInquiry(query: string, document?: SearchDocument | SearchDocument[], guidance?: { id: string; reason?: string }) {
   const documents = document ? (Array.isArray(document) ? document : [document]) : []
   const first = documents[0]
   const question = query.trim()
@@ -14,7 +14,7 @@ export function prepareSearchInquiry(query: string, document?: SearchDocument | 
     ...documents.map(item => `参考文書（問い合わせ作成時の表示）\n${item.number} ${item.title} / v${item.version_no}\n${item.url}`),
   ].join('\n\n') : ''
   const id = crypto.randomUUID()
-  pending = { id, input: { title, body, department_id: '' } }
+  pending = { id, input: { title, body, department_id: '', ...(guidance ? { guidance_id: guidance.id, ...(guidance.reason?.trim() ? { handoff_reason: guidance.reason.trim() } : {}) } : {}) } }
   return id
 }
 

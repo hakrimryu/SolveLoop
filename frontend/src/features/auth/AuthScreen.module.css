@@ -1,4 +1,4 @@
-.screen { max-width: 480px; margin: 12px auto 32px; overflow-wrap: anywhere; }
+.screen { max-width: 480px; margin: 12px auto 32px; padding: 32px; border: 1px solid var(--border); border-radius: 12px; background: white; overflow-wrap: anywhere; }
 .disclosure { margin-top: 16px; color: var(--muted); font-size: .75rem; }
 .form { margin-top: 24px; padding-top: 24px; border-top: 1px solid var(--border); display: grid; gap: 20px; }
 .field { display: grid; gap: 6px; }
@@ -17,3 +17,6 @@
 .examples dl { margin: 16px 0; display: grid; gap: 16px; }
 .examples dt { font-size: .8125rem; font-weight: 600; }
 .examples dd { margin: 4px 0 0; color: var(--muted); font-size: .8125rem; }
+
+.actions > button[type="submit"] { width: 100%; }
+@media (max-width: 600px) { .screen { padding: 24px 20px; } }

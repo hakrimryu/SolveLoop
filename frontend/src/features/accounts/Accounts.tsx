@@ -47,7 +47,7 @@ export function TemporaryPasswordDialog({ issued, onClose }: { issued: IssuedPas
 export default function Accounts(props: Props) {
   if (!props.user.can_manage_accounts) return <>
     <h1 tabIndex={-1}>アカウント管理を表示できません</h1>
-    <div className="notice"><p>アカウント管理権限が必要です。業務上の役割とは別の権限です。</p><Link to="/dashboard">ダッシュボードに戻る</Link></div>
+    <div className="notice"><p>アカウント管理権限が必要です。業務上の役割とは別の権限です。</p><Link to="/">ワークスペースに戻る</Link></div>
   </>
   return <AccountList {...props} />
 }
