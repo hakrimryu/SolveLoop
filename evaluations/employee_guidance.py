@@ -123,7 +123,8 @@ def main():
             with (args.output / "records.jsonl").open("a", encoding="utf-8") as output:
                 output.write(json.dumps(record, ensure_ascii=False) + "\n")
             print(
-                f"{case['id']}: HTTP {code}, {response.get('result', {}).get('status', response.get('code'))}, {elapsed}ms",
+                f"{case['id']}: HTTP {code}, "
+                f"{response.get('result', {}).get('status', response.get('code'))}, {elapsed}ms",
                 flush=True,
             )
         with ThreadPoolExecutor(max_workers=2) as pool:
@@ -168,14 +169,16 @@ def main():
                 else "不一致・要確認"
             )
             lines.append(
-                f"| {row['case']['id']} | {row['http_status']} | {actual or row['response'].get('code')} | {row['elapsed_ms']}ms | {matched} |"
+                f"| {row['case']['id']} | {row['http_status']} | "
+                f"{actual or row['response'].get('code')} | {row['elapsed_ms']}ms | {matched} |"
             )
         lines += [
             "",
             "## 同時2要求",
             "",
             *[
-                f"- HTTP {code} / {elapsed}ms / {value.get('result', {}).get('status', value.get('code'))}"
+                f"- HTTP {code} / {elapsed}ms / "
+                f"{value.get('result', {}).get('status', value.get('code'))}"
                 for code, value, elapsed in parallel
             ],
             "",
