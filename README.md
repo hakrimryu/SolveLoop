@@ -2,9 +2,9 @@
 
 # SolveLoop
 
-[![SolveLoop デモ動画（3分3秒・日本語字幕）](demo/screenshots/demo-video-preview.jpg)](demo/videos/solveloop-portfolio.mp4)
+https://github.com/user-attachments/assets/c3ee41a4-0fc4-4ff8-a416-ff0dc6fc575c
 
-*3分3秒 · 日本語字幕 · 画像をクリックして動画を開く*
+*3分3秒 · 日本語字幕*
 
 **社員の疑問を解決し、その経験を次の問い合わせに生かす社内サポート・ナレッジ管理システム**
 

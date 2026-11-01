@@ -2,9 +2,9 @@
 
 # SolveLoop
 
-[![SolveLoop 시연 영상: 3분 3초, 일본어 자막](demo/screenshots/demo-video-preview.jpg)](demo/videos/solveloop-portfolio.mp4)
+https://github.com/user-attachments/assets/c3ee41a4-0fc4-4ff8-a416-ff0dc6fc575c
 
-*3분 3초 · 일본어 자막 · 이미지를 누르면 영상이 열립니다.*
+*3분 3초 · 일본어 자막*
 
 **직원의 질문을 해결하고 해결 경험을 다음 질문에 활용하는 사내 문의·지식 관리 시스템**
 

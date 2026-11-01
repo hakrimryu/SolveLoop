@@ -2,9 +2,9 @@
 
 # SolveLoop
 
-[![SolveLoop demo: 3:03, Japanese subtitles](demo/screenshots/demo-video-preview.jpg)](demo/videos/solveloop-portfolio.mp4)
+https://github.com/user-attachments/assets/c3ee41a4-0fc4-4ff8-a416-ff0dc6fc575c
 
-*3:03 · Japanese subtitles · Select the image to open the video.*
+*3:03 · Japanese subtitles*
 
 **An internal support and knowledge system that puts resolved questions to use the next time someone asks.**
 
