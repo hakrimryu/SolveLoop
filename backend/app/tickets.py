@@ -31,7 +31,15 @@ from app.business import (
     write_actor,
 )
 from app.errors import ApiError
-from app.models import Department, Ticket, TicketEvent, User, ticket_number_sequence
+from app.models import (
+    Department,
+    Ticket,
+    TicketEvent,
+    TicketMessage,
+    TicketRead,
+    User,
+    ticket_number_sequence,
+)
 
 router = APIRouter(prefix="/api/v1/tickets", tags=["問い合わせ"])
 
@@ -40,6 +48,14 @@ class TicketInput(Input):
     title: Title
     body: Body
     department_id: UUID | None
+    guidance_id: UUID | None = None
+    handoff_reason: Body | None = None
+
+    @model_validator(mode="after")
+    def handoff_fields(self):
+        if self.handoff_reason and not self.guidance_id:
+            raise ValueError("AI案内を指定してください。")
+        return self
 
 
 class EditInput(Input):
@@ -74,18 +90,26 @@ class TransitionInput(Input):
 
 
 class TicketQuery(PageQuery):
+    scope: Literal["all", "mine"] = "all"
     q: Annotated[str, BeforeValidator(clean), Field(max_length=200)] = ""
     status: Literal["open", "in_progress", "resolved", "unresolved"] | None = None
     department_id: str | None = None
     assignee: str | None = None
+    queue: Literal["needs_reply", "waiting_requester", "unread"] | None = None
+
+
+class TicketDetailQuery(Input):
+    scope: Literal["all", "mine"] = "all"
 
 
 # 所有者条件をサーバーの検索に含め、他人の問い合わせと未存在を区別させない。
 # [ko] 서버 조회에 소유자 조건을 포함해 타인의 문의와 없는 문의를 구분할 수 없게 한다.
 # [en] Apply ownership in the server query so foreign tickets and missing tickets look alike.
-def visible_ticket(session: Session, actor: User, ticket_id: UUID, lock: bool = False) -> Ticket:
+def visible_ticket(
+    session: Session, actor: User, ticket_id: UUID, lock: bool = False, mine: bool = False
+) -> Ticket:
     stmt = select(Ticket).where(Ticket.id == ticket_id)
-    if actor.role != "operator":
+    if actor.role != "operator" or mine:
         stmt = stmt.where(Ticket.requester_id == actor.id)
     if lock:
         stmt = stmt.with_for_update()
@@ -114,6 +138,8 @@ def ticket_item(
 
 
 def ticket_detail(session: Session, actor: User, ticket: Ticket) -> dict:
+    from app.guidance_history import visible_context
+
     item = ticket_item(
         ticket,
         user_ref(session, ticket.requester_id),
@@ -162,6 +188,47 @@ def ticket_detail(session: Session, actor: User, ticket: Ticket) -> dict:
         resolved_at=ticket.resolved_at,
         version=ticket.version,
         events=events,
+        guidance_context=visible_context(session, actor, ticket.guidance_context),
+        messages=[
+            dict(
+                id=str(message.id),
+                actor=user_ref(session, message.actor_id),
+                actor_role=message.actor_role,
+                body=message.body,
+                ticket_version=message.ticket_version,
+                created_at=message.created_at,
+            )
+            for message in ticket_messages(session, ticket.id)
+        ],
+        **conversation_summary(session, actor, ticket),
+    )
+
+
+def ticket_messages(session, ticket_id):
+    return session.scalars(
+        select(TicketMessage)
+        .where(TicketMessage.ticket_id == ticket_id)
+        .order_by(TicketMessage.ticket_version)
+    ).all()
+
+
+def conversation_summary(session, actor, ticket):
+    messages = ticket_messages(session, ticket.id)
+    seen = session.get(TicketRead, (ticket.id, actor.id))
+    next_action = (
+        None
+        if ticket.status == "resolved"
+        else ("requester" if messages and messages[-1].actor_role == "operator" else "operator")
+    )
+    first = next((m for m in messages if m.actor_role == "operator"), None)
+    return dict(
+        next_action=next_action,
+        unread_count=sum(
+            m.actor_id != actor.id and m.ticket_version > (seen.message_version if seen else 0)
+            for m in messages
+        ),
+        last_message_at=messages[-1].created_at if messages else None,
+        first_reply_at=first.created_at if first else None,
     )
 
 
@@ -181,7 +248,7 @@ def record(session: Session, ticket: Ticket, actor: User, event_type: str, paylo
     session.flush()
 
 
-def ticket_rows(session: Session, actor: User) -> tuple[list[dict], datetime]:
+def ticket_rows(session: Session, actor: User, mine: bool = False) -> tuple[list[dict], datetime]:
     requester, assignee = aliased(User), aliased(User)
     stmt = (
         select(Ticket, requester, assignee, Department, func.statement_timestamp())
@@ -189,7 +256,7 @@ def ticket_rows(session: Session, actor: User) -> tuple[list[dict], datetime]:
         .outerjoin(assignee, Ticket.assignee_id == assignee.id)
         .outerjoin(Department, Ticket.department_id == Department.id)
     )
-    if actor.role != "operator":
+    if actor.role != "operator" or mine:
         stmt = stmt.where(Ticket.requester_id == actor.id)
     rows = session.execute(stmt).all()
     items = []
@@ -206,6 +273,7 @@ def ticket_rows(session: Session, actor: User) -> tuple[list[dict], datetime]:
             actor.role == "operator",
         )
         item["_search"] = normalized(f"{ticket.number} {ticket.title} {ticket.body}")
+        item.update(conversation_summary(session, actor, ticket))
         items.append(item)
     return items, rows[0][-1] if rows else datetime.now(UTC)
 
@@ -240,9 +308,15 @@ def list_tickets(
         if query.assignee is not None
         else None
     )
-    items, as_of = ticket_rows(session, actor)
+    items, as_of = ticket_rows(session, actor, mine=query.scope == "mine")
     filtered = []
     for item in items:
+        if query.queue == "needs_reply" and item["next_action"] != "operator":
+            continue
+        if query.queue == "waiting_requester" and item["next_action"] != "requester":
+            continue
+        if query.queue == "unread" and not item["unread_count"]:
+            continue
         if normalized(query.q.strip()) not in item["_search"]:
             continue
         if query.status == "unresolved" and item["status"] == "resolved":
@@ -269,10 +343,17 @@ def list_tickets(
 @router.get(
     "/{ticket_id}",
     summary="問い合わせと公開可能な履歴を取得",
-    dependencies=[Depends(no_body), Depends(no_query)],
+    dependencies=[Depends(no_body)],
 )
-def get_ticket(ticket_id: UUID, auth: FullAuthenticated, session: DbSession):
-    return ticket_detail(session, auth[1], visible_ticket(session, auth[1], ticket_id))
+def get_ticket(
+    ticket_id: UUID,
+    query: Annotated[TicketDetailQuery, Query()],
+    auth: FullAuthenticated,
+    session: DbSession,
+):
+    return ticket_detail(
+        session, auth[1], visible_ticket(session, auth[1], ticket_id, mine=query.scope == "mine")
+    )
 
 
 @router.post(
@@ -292,11 +373,34 @@ def create_ticket(
     key, digest, previous = idempotent_result(request, session, actor, data)
     if previous:
         response.headers["Location"] = f"/api/v1/tickets/{previous['id']}"
+        from app.guidance_history import visible_context
+
+        if previous.get("guidance_context"):
+            previous = {
+                **previous,
+                "guidance_context": visible_context(session, actor, previous["guidance_context"]),
+            }
         return previous
     department(session, data.department_id)
+    guidance_context = None
+    if data.guidance_id:
+        from app.guidance_history import history_item, visible_guidance
+
+        guidance = visible_guidance(session, actor, data.guidance_id, owner=True, lock=True)
+        if guidance.state == "processing":
+            invalid("AI案内の処理が終了してから引き継いでください。")
+        guidance_context = dict(
+            **history_item(session, guidance),
+            response=guidance.response,
+            handoff_reason=data.handoff_reason,
+        )
+        from fastapi.encoders import jsonable_encoder
+
+        guidance_context = jsonable_encoder(guidance_context)
     now = datetime.now(UTC)
     number = session.scalar(select(ticket_number_sequence.next_value()))
     ticket = Ticket(
+        guidance_context=guidance_context,
         number=f"REQ-{number:04d}",
         requester_id=actor.id,
         department_id=data.department_id,
@@ -370,6 +474,88 @@ def edit_ticket(
         {"fields": ["body"], "before": {"body": before}, "after": {"body": data.body}},
     )
     return finish(session, ticket_detail(session, actor, ticket))
+
+
+class MessageInput(Input):
+    body: Body
+    expected_version: Expected
+
+
+@router.post(
+    "/{ticket_id}/messages",
+    status_code=201,
+    dependencies=[Depends(require_json), Depends(no_query)],
+)
+def add_message(
+    ticket_id: UUID,
+    data: MessageInput,
+    request: Request,
+    auth: FullAuthenticated,
+    session: DbSession,
+):
+    discovered = visible_ticket(session, auth[1], ticket_id)
+    actor, _ = write_actor(
+        request, session, auth, {x for x in (discovered.requester_id, discovered.assignee_id) if x}
+    )
+    key, digest, previous = idempotent_result(request, session, actor, data)
+    if previous:
+        from app.guidance_history import visible_context
+
+        if previous.get("guidance_context"):
+            previous = {
+                **previous,
+                "guidance_context": visible_context(session, actor, previous["guidance_context"]),
+            }
+        return previous
+    ticket = visible_ticket(session, actor, ticket_id, True)
+    conflict(data.expected_version, ticket.version)
+    if ticket.status == "resolved":
+        invalid_state()
+    ticket.version += 1
+    ticket.updated_at = datetime.now(UTC)
+    session.add(
+        TicketMessage(
+            ticket_id=ticket.id,
+            actor_id=actor.id,
+            # 管理権限があっても、自分の問い合わせでは申請者として送信する。
+            actor_role="employee" if actor.id == ticket.requester_id else actor.role,
+            body=data.body,
+            ticket_version=ticket.version,
+            created_at=ticket.updated_at,
+        )
+    )
+    session.flush()
+    return finish_create(
+        request, session, actor, key, digest, ticket_detail(session, actor, ticket), ticket.id
+    )
+
+
+class ReadInput(Input):
+    message_version: Expected
+
+
+@router.post("/{ticket_id}/read", dependencies=[Depends(require_json), Depends(no_query)])
+def mark_read(
+    ticket_id: UUID, data: ReadInput, request: Request, auth: FullAuthenticated, session: DbSession
+):
+    from sqlalchemy.dialects.postgresql import insert
+
+    actor, _ = write_actor(request, session, auth)
+    ticket = visible_ticket(session, actor, ticket_id)
+    if data.message_version > ticket.version:
+        invalid()
+    stmt = insert(TicketRead).values(
+        ticket_id=ticket.id, user_id=actor.id, message_version=data.message_version
+    )
+    session.execute(
+        stmt.on_conflict_do_update(
+            index_elements=[TicketRead.ticket_id, TicketRead.user_id],
+            set_={
+                "message_version": func.greatest(TicketRead.message_version, data.message_version)
+            },
+        )
+    )
+    return finish(session, {"read": True})
 
 
 def active_assignee(users: dict[UUID, User], user_id: UUID | None, required: bool):

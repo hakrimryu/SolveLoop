@@ -295,6 +295,10 @@ def test_postgresql_foundation_and_migrations() -> None:
                     "ticket_embeddings",
                     "radar_runs",
                     "radar_coverages",
+                    "radar_reviews",
+                    "guidance_sessions",
+                    "ticket_messages",
+                    "ticket_reads",
                     "embedding_profiles",
                     "knowledge_search_state",
                     "knowledge_preparations",
@@ -307,7 +311,9 @@ def test_postgresql_foundation_and_migrations() -> None:
                 connection.execute(text("UPDATE alembic_version SET version_num = 'unknown_test'"))
             assert client.get("/health/ready").status_code == 503
             with engine.begin() as connection:
-                connection.execute(text("UPDATE alembic_version SET version_num = '0008_radar'"))
+                connection.execute(
+                    text("UPDATE alembic_version SET version_num = '0010_self_service'")
+                )
             assert client.get("/health/ready").status_code == 200
             assert app.state.engine.pool.checkedout() == 0
 

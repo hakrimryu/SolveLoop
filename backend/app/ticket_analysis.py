@@ -29,7 +29,7 @@ from app.knowledge_search import (
     supported_profile,
 )
 from app.models import Department, KnowledgeDocument, KnowledgeVersion, Ticket
-from app.tickets import visible_ticket
+from app.tickets import ticket_messages, visible_ticket
 
 router = APIRouter(prefix="/api/v1/tickets", tags=["問い合わせのAI提案"])
 ANALYSIS_LOCK = Lock()
@@ -60,6 +60,16 @@ def ticket_context(ticket):
         "title": ticket.title,
         "body": ticket.body,
     }
+
+
+def analysis_context(session, ticket):
+    context = ticket_context(ticket)
+    messages = ticket_messages(session, ticket.id)
+    context["messages"] = [
+        {"role": message.actor_role, "body": message.body} for message in messages[-4:]
+    ]
+    context["message_count"] = len(messages)
+    return context
 
 
 def knowledge_source(item):
@@ -149,7 +159,7 @@ def recheck(session, request, expected, target, departments, sources, vector, re
     )
     ticket = visible_ticket(session, actor, UUID(target["id"]))
     conflict(expected, ticket.version)
-    if ticket_context(ticket) != target or departments_for(session) != departments:
+    if analysis_context(session, ticket) != target or departments_for(session) != departments:
         context_changed()
     if vector is None:
         return actor
@@ -223,7 +233,7 @@ def analyze(
     try:
         ticket = visible_ticket(session, auth[1], ticket_id)
         conflict(data.expected_version, ticket.version)
-        target, departments = ticket_context(ticket), departments_for(session)
+        target, departments = analysis_context(session, ticket), departments_for(session)
         sources, vector, revision = [], None, None
         if data.task == "answer":
             state = search_state(session)
@@ -234,7 +244,11 @@ def analyze(
             vector, _ = embed(
                 client,
                 SPECIFICATION["query_template"].format(
-                    query=target["title"] + "\n" + target["body"],
+                    query=target["title"]
+                    + "\n"
+                    + target["body"]
+                    + "\n"
+                    + "\n".join(message["body"][:500] for message in target["messages"]),
                 ),
             )
             actor = recheck(

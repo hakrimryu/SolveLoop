@@ -25,6 +25,60 @@ class Base(DeclarativeBase):
     pass
 
 
+class GuidanceSession(Base):
+    __tablename__ = "guidance_sessions"
+    __table_args__ = (
+        CheckConstraint(
+            "state IN ('processing','answered','insufficient_evidence','error')",
+            name="ck_guidance_state",
+        ),
+        CheckConstraint(
+            "outcome IS NULL OR outcome IN ('solved','unresolved')", name="ck_guidance_outcome"
+        ),
+        Index("ix_guidance_owner_created", "user_id", "created_at"),
+        Index("ix_guidance_expiry", "expires_at"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    query: Mapped[str] = mapped_column(Text)
+    state: Mapped[str] = mapped_column(String(24))
+    response: Mapped[dict | None] = mapped_column(JSONB)
+    error_code: Mapped[str | None] = mapped_column(String(64))
+    outcome: Mapped[str | None] = mapped_column(String(16))
+    feedback: Mapped[str | None] = mapped_column(Text)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    elapsed_ms: Mapped[int | None] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class TicketMessage(Base):
+    __tablename__ = "ticket_messages"
+    __table_args__ = (
+        UniqueConstraint("ticket_id", "ticket_version", name="uq_ticket_message_version"),
+        CheckConstraint("actor_role IN ('employee','operator')", name="ck_message_role"),
+        CheckConstraint("length(btrim(body)) BETWEEN 1 AND 5000", name="ck_message_body"),
+    )
+    id: Mapped[UUID] = mapped_column(primary_key=True, default=uuid4)
+    ticket_id: Mapped[UUID] = mapped_column(ForeignKey("tickets.id", ondelete="RESTRICT"))
+    actor_id: Mapped[UUID] = mapped_column(ForeignKey("users.id", ondelete="RESTRICT"))
+    actor_role: Mapped[str] = mapped_column(String(16))
+    body: Mapped[str] = mapped_column(Text)
+    ticket_version: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+
+
+class TicketRead(Base):
+    __tablename__ = "ticket_reads"
+    ticket_id: Mapped[UUID] = mapped_column(
+        ForeignKey("tickets.id", ondelete="RESTRICT"), primary_key=True
+    )
+    user_id: Mapped[UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT"), primary_key=True
+    )
+    message_version: Mapped[int] = mapped_column(Integer)
+
+
 ticket_number_sequence = Sequence("ticket_number_seq", metadata=Base.metadata)
 knowledge_number_sequence = Sequence("knowledge_number_seq", metadata=Base.metadata)
 
@@ -107,6 +161,7 @@ class AuditEvent(Base):
 
 class Ticket(Base):
     __tablename__ = "tickets"
+    guidance_context: Mapped[dict | None] = mapped_column(JSONB)
     __table_args__ = (
         CheckConstraint("version >= 1", name="ck_tickets_version"),
         CheckConstraint("length(btrim(title)) BETWEEN 1 AND 120", name="ck_tickets_title"),

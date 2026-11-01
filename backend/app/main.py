@@ -1,6 +1,7 @@
+import asyncio
 import logging
 from collections.abc import AsyncIterator
-from contextlib import asynccontextmanager
+from contextlib import asynccontextmanager, suppress
 from typing import Annotated
 from uuid import uuid4
 
@@ -20,6 +21,8 @@ from app.dashboard import router as dashboard_router
 from app.database import build_engine, get_session
 from app.employee_guidance import router as employee_guidance_router
 from app.errors import error_response, register_error_handlers
+from app.guidance_history import purge_expired
+from app.guidance_history import router as guidance_history_router
 from app.knowledge import router as knowledge_router
 from app.knowledge_generation import router as knowledge_generation_router
 from app.knowledge_search import router as knowledge_search_router
@@ -40,8 +43,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
-        yield
-        engine.dispose()
+        def cleanup():
+            with Session(app.state.engine) as session, session.begin():
+                purge_expired(session)
+
+        async def retention():
+            while True:
+                try:
+                    await asyncio.to_thread(cleanup)
+                except SQLAlchemyError:
+                    logger.warning(
+                        "期限切れのAI案内履歴を削除できません。DBと適用版を確認してください。"
+                    )
+                await asyncio.sleep(3600)
+
+        task = asyncio.create_task(retention())
+        try:
+            yield
+        finally:
+            task.cancel()
+            with suppress(asyncio.CancelledError):
+                await task
+            engine.dispose()
 
     app = FastAPI(title="SolveLoop API", version="0.1.0", lifespan=lifespan)
     app.state.engine = engine
@@ -55,6 +78,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(knowledge_generation_router)
     app.include_router(knowledge_search_router)
     app.include_router(employee_guidance_router)
+    app.include_router(guidance_history_router)
     app.include_router(dashboard_router)
     app.include_router(radar_router)
     app.include_router(radar_review_router)

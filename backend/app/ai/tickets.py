@@ -7,7 +7,7 @@ from app.ai.knowledge import fingerprint
 from app.ai.ollama import OllamaError
 
 PROMPT_VERSION = "ticket-proposal-v1"
-GUIDANCE_PROMPT_VERSION = "employee-guidance-v1"
+GUIDANCE_PROMPT_VERSION = "employee-guidance-v3"
 CHAT_MODEL = "qwen3:8b"
 CHAT_DIGEST = "500a1f067a9f782620b40bee6f7b0c89e17ae61f686b92c24933e4ca4b2b8b41"
 Text = Annotated[str, Field(min_length=1, max_length=600, pattern=r"\S")]
@@ -87,8 +87,16 @@ def propose(client, task, ticket, departments, sources):
                 "文書にない操作・連絡先・社内規則を補わない。一般手順と個別案件の実行を区別し、"
                 "対象が合う文書の一般手順は案内できるが、条件不一致なら不足として問い合わせを案内する。"
                 "注意・例外を省いて危険な操作を勧めない。回答は最大3手順にまとめる。"
+                "不足情報は対象サービス・症状・適用条件の確認を最大3点だけ示す。"
+                "パスワードや秘密情報の入力を求めない。文書にない規則・承認の存在を前提にしない。"
+                "文書に答えがなければ、担当者への問い合わせを短く案内する。"
+                "質問にすでに書かれた条件を聞き直さない。回答でき、追加確認が不要なら"
+                "missing_information=[]。根拠が質問の分野を扱わない場合は対象や症状を聞かず、"
+                "『この内容の公開文書がないため担当者に問い合わせてください。』の1点だけ示す。"
+                "不足情報を『対象サービス・症状・適用条件』という見出しだけで返さない。"
             )
             schema["properties"]["steps"]["maxItems"] = 3
+            schema["properties"]["missing_information"]["maxItems"] = 3
     payload = {"ticket": ticket, "departments": departments, "sources": sources}
     prompt = (
         "あなたは社内問い合わせの担当者を補助します。分類・回答は人が確認する提案です。"
@@ -122,7 +130,9 @@ def propose(client, task, ticket, departments, sources):
                 if value.department_code is not None and value.department_code not in codes:
                     raise ValueError
             else:
-                if task == "guidance" and len(value.steps) > 3:
+                if task == "guidance" and (
+                    len(value.steps) > 3 or len(value.missing_information) > 3
+                ):
                     raise ValueError
                 for step in value.steps:
                     if len(step.citation_ids) != len(set(step.citation_ids)) or not set(
