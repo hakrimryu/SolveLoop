@@ -210,11 +210,11 @@ await check('S15 意味検索の待機・AI失敗・再検索・空結果を区�
     if (!empty) return new Promise((resolve, reject) => { failSearch = () => reject(new ApiError(504, 'AI_TIMEOUT', 'ローカルAIの時間切れです。')) })
     return { items: [], top_k: 5, profile_id: 'test', as_of: now }
   })
-  await fill(field('質問・探したい内容'), 'スマホを替えたら入れない')
+  await fill(field('困っていること・探したい内容'), 'スマホを替えたら入れない')
   await click(button('関連する文書を探す'))
-  assert(fixture.textContent.includes('ローカルAIで質問を変換') && field('質問・探したい内容').matches(':disabled'), '待機を表示していません。')
+  assert(fixture.textContent.includes('入力内容に関連する文書を探しています') && field('困っていること・探したい内容').matches(':disabled'), '待機を表示していません。')
   await act(async () => failSearch())
-  assert(field('質問・探したい内容').value === 'スマホを替えたら入れない', '質問を失いました。')
+  assert(field('困っていること・探したい内容').value === 'スマホを替えたら入れない', '質問を失いました。')
   assert(fixture.textContent.includes('文書を検索できませんでした') && !fixture.textContent.includes('0箇所'), 'AI失敗を0件に見せています。')
   empty = true
   await click(button('同じ条件で再検索'))
